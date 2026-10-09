@@ -1,26 +1,32 @@
+import type { Request, Response } from 'express';
 import { ERROR_CODES, Locale } from '@bzim/types';
 
 import { env } from '../../config/app';
 import type { Handler } from '../../interfaces/IHttp';
 import { queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
+import type User from '../models/User.entity';
 import { AuthService, safeReturnTo } from '../services/AuthService';
 import { SessionService } from '../services/SessionService';
 import { sendConflict, sendError, sendUnauthenticated } from '../utils/ApiResponses';
 import { REFRESH_COOKIE, clearAuthCookies, cookieOf, setAuthCookies } from '../utils/Cookies';
 import {
+    emailOnlySchema,
     googleCallbackQuerySchema,
     googleStartQuerySchema,
     loginSchema,
     registerSchema,
+    resetPasswordSchema,
+    verifyEmailSchema,
 } from '../validators/authSchemas';
 
 /**
- * Sign-in, by Google or by password, and the session endpoints.
+ * Sign-in, by Google or by password, the emailed links, and the session
+ * endpoints.
  *
- * Both sign-in methods end the same way: `SessionService.issue` and the same
- * two cookies. Google answers with redirects because the browser arrives by
- * navigation; the password endpoints answer JSON because a form posted them.
+ * Every sign-in ends the same way: `SessionService.issue` and the same two
+ * cookies. Google answers with redirects because the browser arrives by
+ * navigation; everything else answers JSON because the web app called it.
  */
 export default class AuthController {
     private readonly auth = new AuthService();
@@ -51,8 +57,7 @@ export default class AuthController {
             return;
         }
 
-        const session = await this.sessions.issue(result.user, req.header('user-agent') ?? null);
-        setAuthCookies(res, session);
+        await this.signIn(req, res, result.user);
         const target = result.user.onboardingDone()
             ? (result.returnTo ?? '/groups')
             : '/onboarding';
@@ -66,8 +71,8 @@ export default class AuthController {
             sendConflict(res, 'That email already has an account');
             return;
         }
-        // No session yet: the address has to be verified first (task 8b sends
-        // the link). 201 with an empty body says "created, now check your mail".
+        // No session yet: the address has to be verified first. 201 with an
+        // empty body says "created, now check your mail".
         res.status(201).end();
     };
 
@@ -83,8 +88,41 @@ export default class AuthController {
             return;
         }
 
-        const session = await this.sessions.issue(result.user, req.header('user-agent') ?? null);
-        setAuthCookies(res, session);
+        await this.signIn(req, res, result.user);
+        res.status(204).end();
+    };
+
+    /** Always 204: whether the address exists is not for the caller to learn. */
+    resendVerification: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
+        await this.auth.resendVerification(req.body.email);
+        res.status(204).end();
+    };
+
+    /** The link signs the person in, so onboarding can start right away. */
+    verifyEmail: Handler<BodyOf<typeof verifyEmailSchema>> = async (req, res) => {
+        const result = await this.auth.verifyEmail(req.body.token);
+        if (!result.ok) {
+            sendError(res, ERROR_CODES.TOKEN_INVALID, 'This link is no longer valid', 400);
+            return;
+        }
+        await this.signIn(req, res, result.user);
+        res.status(204).end();
+    };
+
+    forgotPassword: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
+        await this.auth.forgotPassword(req.body.email);
+        res.status(204).end();
+    };
+
+    /** No session afterwards, on purpose: every session was just revoked, including any on this device. */
+    resetPassword: Handler<BodyOf<typeof resetPasswordSchema>> = async (req, res) => {
+        const { token, password } = req.body;
+        const result = await this.auth.resetPassword(token, password);
+        if (!result.ok) {
+            sendError(res, ERROR_CODES.TOKEN_INVALID, 'This link is no longer valid', 400);
+            return;
+        }
+        clearAuthCookies(res);
         res.status(204).end();
     };
 
@@ -120,4 +158,10 @@ export default class AuthController {
         clearAuthCookies(res);
         res.status(204).end();
     };
+
+    /** Shared by every way of signing in: one session, the same two cookies. */
+    private async signIn(req: Request, res: Response, user: User): Promise<void> {
+        const session = await this.sessions.issue(user, req.header('user-agent') ?? null);
+        setAuthCookies(res, session);
+    }
 }

@@ -35,6 +35,18 @@ export const registerLimit = rateLimit({
 });
 
 /**
+ * Anything that sends an email on request: resend verification, forgot
+ * password. Tight, because each call costs a Brevo send and lands in somebody's
+ * inbox, and nobody legitimately needs more than a few an hour.
+ */
+export const mailLimit = rateLimit({
+    name: 'mail',
+    limit: 5,
+    windowMs: 60 * MINUTE,
+    key: addressOf,
+});
+
+/**
  * Password guessing, from two directions.
  *
  * Per address, so one machine cannot try many passwords across many accounts;

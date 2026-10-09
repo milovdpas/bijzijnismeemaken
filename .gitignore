@@ -12,6 +12,10 @@ next-env.d.ts
 # env: never commit real keys (Google OAuth, Brevo, JWT, calendar token key)
 .env
 .env.*
+# Google Cloud client downloads. The values belong in .env; the file itself
+# never belongs in the repo.
+client_secret*.json
+*.googleusercontent.com.json
 # Templates, not real files: examples hold empty values and .env.dist holds
 # envsubst placeholders. All are meant to be committed.
 !.env.example

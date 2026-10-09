@@ -1,11 +1,17 @@
 import { DateTime } from 'luxon';
 import { Locale } from '@bzim/types';
 
+import { env } from '../../config/app';
 import GoogleAuthModule from '../modules/google/GoogleAuthModule';
+import { mailer } from '../modules/mail';
+import { renderResetPassword, renderVerifyEmail } from '../modules/mail/templates';
+import { EmailTokenPurpose } from '../models/EmailToken.entity';
 import OAuthState, { OAuthPurpose } from '../models/OAuthState.entity';
 import User from '../models/User.entity';
 import { DUMMY_HASH_PROMISE, hashPassword, verifyPassword } from '../utils/Password';
 import { generateToken } from '../utils/Token';
+import { EmailTokenService } from './EmailTokenService';
+import { SessionService } from './SessionService';
 
 /** How long a Google round trip may take before the state is stale. */
 const OAUTH_STATE_MINUTES = 10;
@@ -19,12 +25,17 @@ export type RegisterResult = { ok: true; user: User } | { ok: false; problem: 'E
 export type LoginResult =
     { ok: true; user: User } | { ok: false; problem: 'INVALID_CREDENTIALS' | 'EMAIL_NOT_VERIFIED' };
 
+export type TokenResult = { ok: true; user: User } | { ok: false; problem: 'TOKEN_INVALID' };
+
 /**
- * Who a person is, by Google or by password. Sessions are the
- * `SessionService`'s business; this only establishes the user.
+ * Who a person is, by Google or by password, and the emailed links that prove
+ * an address. Sessions are the `SessionService`'s business; this only
+ * establishes the user.
  */
 export class AuthService {
     private readonly google = new GoogleAuthModule();
+    private readonly emailTokens = new EmailTokenService();
+    private readonly sessions = new SessionService();
 
     /** The URL to send the browser to. `returnTo` is already validated. */
     async startGoogleLogin(returnTo: string | null): Promise<string> {
@@ -101,7 +112,7 @@ export class AuthService {
         return { ok: true, user, returnTo: row.returnTo };
     }
 
-    /** A new password account, unverified until the emailed link is clicked (task 8b). */
+    /** A new password account, unverified until the emailed link is clicked. */
     async register(email: string, password: string, locale: Locale): Promise<RegisterResult> {
         const normalised = email.toLowerCase();
         if ((await User.findOneBy({ email: normalised })) !== null) {
@@ -118,6 +129,8 @@ export class AuthService {
             avatarKey: null,
             locale,
         }).save();
+
+        await this.sendVerification(user);
         return { ok: true, user };
     }
 
@@ -141,6 +154,86 @@ export class AuthService {
         user.lastLoginAt = DateTime.utc().toJSDate();
         await user.save();
         return { ok: true, user };
+    }
+
+    /**
+     * Another verification email, for a password account that is still
+     * waiting on one. Silent otherwise: the caller learns nothing about
+     * whether the address exists or is already verified.
+     */
+    async resendVerification(email: string): Promise<void> {
+        const user = await User.findOneBy({ email: email.toLowerCase() });
+        if (user !== null && user.passwordHash !== null && !user.emailVerified()) {
+            await this.sendVerification(user);
+        }
+    }
+
+    /** The link was clicked: the address is confirmed and the person is signed in. */
+    async verifyEmail(token: string): Promise<TokenResult> {
+        const userId = await this.emailTokens.consume(token, EmailTokenPurpose.VERIFY_EMAIL);
+        const user = userId === null ? null : await User.findOneBy({ id: userId });
+        if (user === null) {
+            return { ok: false, problem: 'TOKEN_INVALID' };
+        }
+
+        const now = DateTime.utc().toJSDate();
+        user.emailVerifiedAt ??= now;
+        user.lastLoginAt = now;
+        await user.save();
+        return { ok: true, user };
+    }
+
+    /**
+     * Sends a reset link if the address has an account. Any account, Google
+     * only included: this is also how a Google user adds a password. Silent
+     * when the address is unknown.
+     */
+    async forgotPassword(email: string): Promise<void> {
+        const user = await User.findOneBy({ email: email.toLowerCase() });
+        if (user === null) {
+            return;
+        }
+        const token = await this.emailTokens.issue(user, EmailTokenPurpose.RESET_PASSWORD);
+        const link = `${env.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+        await this.deliver(renderResetPassword(user.locale, user.email, link));
+    }
+
+    /**
+     * Sets the new password and signs out every session: whoever holds an old
+     * cookie should not keep access past a reset. Clicking the link also proves
+     * the address, so an unverified account becomes verified here.
+     */
+    async resetPassword(token: string, password: string): Promise<TokenResult> {
+        const userId = await this.emailTokens.consume(token, EmailTokenPurpose.RESET_PASSWORD);
+        const user = userId === null ? null : await User.findOneBy({ id: userId });
+        if (user === null) {
+            return { ok: false, problem: 'TOKEN_INVALID' };
+        }
+
+        user.passwordHash = await hashPassword(password);
+        user.emailVerifiedAt ??= DateTime.utc().toJSDate();
+        await user.save();
+        await this.sessions.revokeAllForUser(user.id);
+        return { ok: true, user };
+    }
+
+    private async sendVerification(user: User): Promise<void> {
+        const token = await this.emailTokens.issue(user, EmailTokenPurpose.VERIFY_EMAIL);
+        const link = `${env.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
+        await this.deliver(renderVerifyEmail(user.locale, user.email, link));
+    }
+
+    /**
+     * Mail failures are logged, never thrown: the account or token row already
+     * exists, and the person can ask for the email again. Failing the request
+     * would tell them their registration did not happen when it did.
+     */
+    private async deliver(message: Parameters<typeof mailer.send>[0]): Promise<void> {
+        try {
+            await mailer.send(message);
+        } catch (error) {
+            console.error(`Could not send "${message.subject}" to ${message.to}:`, error);
+        }
     }
 }
 

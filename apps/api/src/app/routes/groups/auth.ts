@@ -6,15 +6,19 @@ import AuthController from '../../controllers/AuthController';
 import {
     loginAddressLimit,
     loginEmailLimit,
+    mailLimit,
     publicLimit,
     registerLimit,
 } from '../../middleware/ApiLimits';
 import { validate } from '../../middleware/ValidateRequest';
 import {
+    emailOnlySchema,
     googleCallbackQuerySchema,
     googleStartQuerySchema,
     loginSchema,
     registerSchema,
+    resetPasswordSchema,
+    verifyEmailSchema,
 } from '../../validators/authSchemas';
 
 /**
@@ -55,6 +59,31 @@ export default class AuthRoutes implements IRoute {
             validate({ body: loginSchema }),
             loginEmailLimit,
             this.controller.login,
+        );
+
+        router.post(
+            API_ENDPOINTS.AUTH.VERIFY_EMAIL,
+            publicLimit,
+            validate({ body: verifyEmailSchema }),
+            this.controller.verifyEmail,
+        );
+        router.post(
+            API_ENDPOINTS.AUTH.RESEND_VERIFICATION,
+            mailLimit,
+            validate({ body: emailOnlySchema }),
+            this.controller.resendVerification,
+        );
+        router.post(
+            API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
+            mailLimit,
+            validate({ body: emailOnlySchema }),
+            this.controller.forgotPassword,
+        );
+        router.post(
+            API_ENDPOINTS.AUTH.RESET_PASSWORD,
+            publicLimit,
+            validate({ body: resetPasswordSchema }),
+            this.controller.resetPassword,
         );
 
         router.post(API_ENDPOINTS.AUTH.REFRESH, publicLimit, this.controller.refresh);

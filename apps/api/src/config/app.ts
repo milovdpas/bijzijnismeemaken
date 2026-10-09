@@ -73,6 +73,24 @@ function integer(name: string, fallback: string, min: number, max: number): numb
     return value;
 }
 
+type MailDriver = 'console' | 'smtp' | 'brevo';
+
+/**
+ * Which way email goes out. Production defaults to Brevo so a deployment that
+ * forgot the variable still sends; everywhere else defaults to the log so a
+ * developer machine never emails anyone by accident.
+ */
+function mailDriver(): MailDriver {
+    const raw = optional(
+        'MAIL_DRIVER',
+        process.env.NODE_ENV === 'production' ? 'brevo' : 'console',
+    );
+    if (raw !== 'console' && raw !== 'smtp' && raw !== 'brevo') {
+        throw new Error(`MAIL_DRIVER is "${raw}", which is not console, smtp or brevo.`);
+    }
+    return raw;
+}
+
 /** Server configuration. Secrets live here and only here, never in apps/web. */
 export const env = {
     nodeEnv: optional('NODE_ENV', 'development'),
@@ -120,6 +138,18 @@ export const env = {
     google: {
         clientId: () => required('GOOGLE_CLIENT_ID'),
         clientSecret: () => required('GOOGLE_CLIENT_SECRET'),
+    },
+
+    mail: {
+        /** `console`, `smtp` (local catcher) or `brevo`. See `modules/mail`. */
+        driver: mailDriver(),
+        fromEmail: optional('MAIL_FROM_EMAIL', 'noreply@localhost'),
+        fromName: optional('MAIL_FROM_NAME', 'Bij zijn is meemaken'),
+        brevoApiKey: () => required('BREVO_API_KEY'),
+        smtp: {
+            host: optional('SMTP_HOST', 'localhost'),
+            port: port('SMTP_PORT', '1025'),
+        },
     },
 
     auth: {
