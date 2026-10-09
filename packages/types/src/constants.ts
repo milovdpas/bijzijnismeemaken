@@ -1,0 +1,253 @@
+import { Daypart } from './enums';
+
+/* -------------------------------------------------------------------------- */
+/* Time                                                                        */
+/* -------------------------------------------------------------------------- */
+
+/** The one timezone the platform reasons in. The database stores UTC. */
+export const TIME_ZONE = 'Europe/Amsterdam';
+
+export interface DaypartRange {
+    /** Inclusive start hour in Europe/Amsterdam wall-clock time. */
+    startHour: number;
+    /** Exclusive end hour; 24 means midnight at the end of the day. */
+    endHour: number;
+}
+
+/**
+ * Fixed daypart boundaries. Events outside them (between midnight and 08:00)
+ * never make anyone busy, because nothing gets planned then.
+ */
+export const DAYPARTS: Readonly<Record<Daypart, DaypartRange>> = {
+    [Daypart.MORNING]: { startHour: 8, endHour: 12 },
+    [Daypart.AFTERNOON]: { startHour: 12, endHour: 18 },
+    [Daypart.EVENING]: { startHour: 18, endHour: 24 },
+};
+
+/** Display and iteration order. */
+export const DAYPART_ORDER: readonly Daypart[] = [
+    Daypart.MORNING,
+    Daypart.AFTERNOON,
+    Daypart.EVENING,
+];
+
+/* -------------------------------------------------------------------------- */
+/* Limits                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export const PAGINATION = {
+    DEFAULT_PAGE_SIZE: 50,
+    MAX_PAGE_SIZE: 100,
+} as const;
+
+export const LEADERBOARD = {
+    /** Ranks below this are never listed; pages past it come back empty. */
+    RANK_LIMIT: 500,
+} as const;
+
+export const AVAILABILITY = {
+    /** Longest `from..to` range a single availability or occurrences request may ask for. */
+    MAX_RANGE_DAYS: 93,
+    /** How far ahead date suggestions look. */
+    SUGGESTION_WEEKS: 12,
+    /** How far ahead calendar events are synced. */
+    CALENDAR_SYNC_DAYS: 180,
+} as const;
+
+export const PROFILE = {
+    HANDLE_MIN_LENGTH: 3,
+    HANDLE_MAX_LENGTH: 24,
+    /** Lowercase letters, digits and underscores; checked after lowercasing the input. */
+    HANDLE_PATTERN: /^[a-z0-9_]+$/,
+    DISPLAY_NAME_MAX_LENGTH: 40,
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/* Avatars                                                                     */
+/*                                                                            */
+/* The built-in set. Keys map to `apps/web/public/avatars/<key>.svg`; the API */
+/* only validates that a key is in this list.                                 */
+/* -------------------------------------------------------------------------- */
+
+export const AVATAR_KEYS = [
+    'bear',
+    'cat',
+    'dog',
+    'fox',
+    'frog',
+    'hedgehog',
+    'koala',
+    'lion',
+    'monkey',
+    'octopus',
+    'owl',
+    'panda',
+    'penguin',
+    'rabbit',
+    'tiger',
+    'whale',
+] as const;
+
+export type AvatarKey = (typeof AVATAR_KEYS)[number];
+
+/* -------------------------------------------------------------------------- */
+/* Routes                                                                      */
+/* -------------------------------------------------------------------------- */
+
+const V1 = '/api/v1';
+
+/**
+ * Single source of truth for route paths, shared by the API and the web app.
+ *
+ * Every path is absolute so route groups mount at the root. Functions take ids
+ * so a typo in a path can only happen here. Paths for later milestones are
+ * declared now so the map mirrors docs/04-api.md; they are unused until the
+ * task that implements them.
+ */
+export const API_ENDPOINTS = {
+    HEALTH: `${V1}/health`,
+
+    AUTH: {
+        GOOGLE: `${V1}/auth/google`,
+        GOOGLE_CALLBACK: `${V1}/auth/google/callback`,
+        REFRESH: `${V1}/auth/refresh`,
+        LOGOUT: `${V1}/auth/logout`,
+    },
+
+    ME: {
+        /** GET profile, PATCH profile, DELETE account. */
+        ROOT: `${V1}/me`,
+        AVAILABILITY: `${V1}/me/availability`,
+        UNAVAILABILITY: `${V1}/me/unavailability`,
+        UNAVAILABILITY_RULES: `${V1}/me/unavailability-rules`,
+        UNAVAILABILITY_RULE: (ruleId: string) => `${V1}/me/unavailability-rules/${ruleId}`,
+        CALENDAR: `${V1}/me/calendar`,
+        CALENDAR_CONNECT: `${V1}/me/calendar/connect`,
+        CALENDAR_SOURCE: (sourceId: string) => `${V1}/me/calendar/sources/${sourceId}`,
+        CALENDAR_SYNC: `${V1}/me/calendar/sync`,
+        CALENDAR_EVENTS: `${V1}/me/calendar/events`,
+        CALENDAR_IGNORE_RULES: `${V1}/me/calendar/ignore-rules`,
+        CALENDAR_IGNORE_RULE: (ruleId: string) => `${V1}/me/calendar/ignore-rules/${ruleId}`,
+        PUSH_SUBSCRIPTIONS: `${V1}/me/push-subscriptions`,
+    },
+
+    USERS: {
+        HANDLE_AVAILABLE: `${V1}/users/handle-available`,
+        SEARCH: `${V1}/users/search`,
+    },
+
+    CALENDAR: {
+        GOOGLE_CALLBACK: `${V1}/calendar/google/callback`,
+    },
+
+    GROUPS: {
+        LIST: `${V1}/groups`,
+        CREATE: `${V1}/groups`,
+        PUBLIC: `${V1}/groups/public`,
+        DETAIL: (groupId: string) => `${V1}/groups/${groupId}`,
+        JOIN: (groupId: string) => `${V1}/groups/${groupId}/join`,
+        LEAVE: (groupId: string) => `${V1}/groups/${groupId}/leave`,
+        TRANSFER_OWNERSHIP: (groupId: string) => `${V1}/groups/${groupId}/transfer-ownership`,
+        REGENERATE_INVITE_LINK: (groupId: string) =>
+            `${V1}/groups/${groupId}/invite-link/regenerate`,
+        MEMBERS: (groupId: string) => `${V1}/groups/${groupId}/members`,
+        MEMBER: (groupId: string, userId: string) => `${V1}/groups/${groupId}/members/${userId}`,
+        INVITES: (groupId: string) => `${V1}/groups/${groupId}/invites`,
+        INVITE: (groupId: string, inviteId: string) =>
+            `${V1}/groups/${groupId}/invites/${inviteId}`,
+        AVAILABILITY: (groupId: string) => `${V1}/groups/${groupId}/availability`,
+        OCCURRENCES: (groupId: string) => `${V1}/groups/${groupId}/occurrences`,
+    },
+
+    JOIN: {
+        /** GET previews the group behind an invite link, POST joins it. */
+        BY_TOKEN: (token: string) => `${V1}/join/${token}`,
+    },
+
+    INVITES: {
+        /** The signed-in user's pending invites. */
+        LIST: `${V1}/invites`,
+        ACCEPT: (inviteId: string) => `${V1}/invites/${inviteId}/accept`,
+        DECLINE: (inviteId: string) => `${V1}/invites/${inviteId}/decline`,
+    },
+
+    ACTIVITIES: {
+        LIST: (groupId: string) => `${V1}/groups/${groupId}/activities`,
+        CREATE: (groupId: string) => `${V1}/groups/${groupId}/activities`,
+        DETAIL: (groupId: string, activityId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}`,
+        /** PUT marks the caller in, DELETE takes them out. */
+        INTEREST: (groupId: string, activityId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}/interest`,
+        /** Same for another member; admins only. */
+        INTEREST_OF: (groupId: string, activityId: string, userId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}/interest/${userId}`,
+        SUGGESTIONS: (groupId: string, activityId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}/suggestions`,
+        OCCURRENCES: (groupId: string, activityId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}/occurrences`,
+        OCCURRENCE: (groupId: string, activityId: string, occurrenceId: string) =>
+            `${V1}/groups/${groupId}/activities/${activityId}/occurrences/${occurrenceId}`,
+    },
+
+    OCCURRENCES: {
+        /** Signed link from the "add to calendar" email button; no login. */
+        ICS: (occurrenceId: string) => `${V1}/occurrences/${occurrenceId}/ics`,
+    },
+
+    LEADERBOARDS: {
+        LIST: (groupId: string) => `${V1}/groups/${groupId}/leaderboards`,
+        CREATE: (groupId: string) => `${V1}/groups/${groupId}/leaderboards`,
+        DETAIL: (groupId: string, leaderboardId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}`,
+        SCORES: (groupId: string, leaderboardId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/scores`,
+        PERIODS: (groupId: string, leaderboardId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/periods`,
+        HISTORY: (groupId: string, leaderboardId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/history`,
+        MEMBERS: (groupId: string, leaderboardId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members`,
+        MEMBER: (groupId: string, leaderboardId: string, memberId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members/${memberId}`,
+        /** PUT sets, DELETE clears the member's score for the current period. */
+        MEMBER_SCORE: (groupId: string, leaderboardId: string, memberId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members/${memberId}/score`,
+    },
+
+    /** Cron entry points, called by `tools/worker.ts` with the worker token. */
+    WORKER: {
+        CALENDAR_SYNC: `${V1}/worker/calendar-sync`,
+        CLEANUP: `${V1}/worker/cleanup`,
+        OCCURRENCE_REMINDERS: `${V1}/worker/occurrence-reminders`,
+    },
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/* Error codes                                                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The `code` field of every error response. The web app maps these to
+ * translated messages, so a new code needs a translation in both locales.
+ */
+export const ERROR_CODES = {
+    /** No valid access token. */
+    UNAUTHENTICATED: 'UNAUTHENTICATED',
+    /** Signed in, but this action is not allowed for this role or membership. */
+    FORBIDDEN: 'FORBIDDEN',
+    NOT_FOUND: 'NOT_FOUND',
+    VALIDATION_FAILED: 'VALIDATION_FAILED',
+    /** The request is well formed but conflicts with current state (duplicate handle, already a member). */
+    CONFLICT: 'CONFLICT',
+    RATE_LIMITED: 'RATE_LIMITED',
+    /** The owner tried to leave or delete their account without transferring first. */
+    OWNER_MUST_TRANSFER: 'OWNER_MUST_TRANSFER',
+    /** A worker endpoint was called while the same job was still running. */
+    WORKER_BUSY: 'WORKER_BUSY',
+    /** Google (OAuth or Calendar) or the mail provider failed or timed out. */
+    PROVIDER_ERROR: 'PROVIDER_ERROR',
+    INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

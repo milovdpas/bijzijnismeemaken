@@ -1,0 +1,30 @@
+{
+    "name": "@bzim/types",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Shared enums, DTOs, endpoint paths and constants for the Bij zijn is meemaken apps",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist/**/*",
+        "src/**/*"
+    ],
+    "scripts": {
+        "build": "tsc -b",
+        "dev": "tsc -b --watch --preserveWatchOutput",
+        "type-check": "tsc -b",
+        "clean": "rimraf dist tsconfig.tsbuildinfo",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
+    },
+    "devDependencies": {
+        "rimraf": "^6.0.1",
+        "typescript": "~6.0.3"
+    }
+}

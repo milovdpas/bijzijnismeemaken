@@ -4,14 +4,15 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 
 **Working agreement:** one task per session. Pick the first unchecked task below, build only that, run lint / type-check / tests, tick it here with a note, then stop for review. Task definitions live in [07-milestones.md](07-milestones.md). If a task changes a design decision, update the relevant doc in the same session and mention it in the note.
 
-**Current task:** task 2 (packages/types).
+**Current task:** task 3 (apps/api skeleton).
 
 
 ## M0 — Foundation (repo skeleton)
 
 - [x] **1.** Root workspace: **copy** dynamic_alarm root files (package.json, tsconfig.base, tsconfig, eslint base, prettier, editorconfig, gitignore, docker-compose.yml, docker-compose.prod.yml, deploy workflow), drop the custom eslint plugin, rename `alarm` → `bzim`, add mailpit to `docker-compose.yml`. Verify `npm install` works.
   _Done 2026-10-09._ Root `package.json` (workspaces, scripts without core/mobile), `tsconfig.base.json`, `tsconfig.json`, `.prettierrc`, `.editorconfig`, `eslint.config.base.mjs` (plugin dropped, `.next` ignored), `.gitignore`, `.dockerignore`, `docker-compose.yml` (MySQL on host port 3308 + mailpit), `docker-compose.prod.yml` (api + web, worker Ofelia labels), `.github/workflows/deploy-api.yml` (bzim names, worker secrets). `npm install` OK (241 packages), prettier clean, both compose files validate.
-- [ ] **2.** `packages/types`: **copy** the dynamic_alarm package shell, empty the alarm content, add `API_ENDPOINTS` (health + placeholders), `ERROR_CODES`, enums (Daypart, Weekday, GroupAccess, GroupRole, DateMode, OccurrenceStatus, ScoreType, SortOrder, EditMode, LeaderboardPeriod, NotificationType), `DAYPARTS` ranges, avatar keys. Verify `npm run build:packages`.
+- [x] **2.** `packages/types`: **copy** the dynamic_alarm package shell, empty the alarm content, add `API_ENDPOINTS` (health + placeholders), `ERROR_CODES`, enums (Daypart, Weekday, GroupAccess, GroupRole, DateMode, OccurrenceStatus, ScoreType, SortOrder, EditMode, LeaderboardPeriod, NotificationType), `DAYPARTS` ranges, avatar keys. Verify `npm run build:packages`.
+  _Done 2026-10-09._ `packages/types` shell copied (package.json, tsconfig, eslint). `src/enums.ts` (Daypart, Weekday ISO 1–7, Locale, GroupAccess, GroupRole, DateMode, ActivityLabel, OccurrenceStatus, ScoreType, SortOrder, EditMode, LeaderboardPeriod, NotificationType, CalendarProviderKey, CalendarConnectionStatus), `src/constants.ts` (TIME_ZONE, DAYPARTS, DAYPART_ORDER, PAGINATION, LEADERBOARD, AVAILABILITY, PROFILE limits, AVATAR_KEYS, full API_ENDPOINTS map mirroring docs/04, ERROR_CODES), `src/domain.ts` (string aliases), `src/api.ts` (ApiErrorResponse, Paginated, HealthResponse). Build, lint and prettier pass.
 - [ ] **3.** `apps/api`: **copy** the dynamic_alarm API per the list in [02-architecture.md](02-architecture.md) section 2.3, strip all alarm domain code/tests/migrations, rename, make it boot against the local MySQL, run `migrate` on an empty DB, pass the copied `health.test.ts`, lint and type-check. No new features in this task.
 - [ ] **4.** `apps/web` skeleton: Next.js App Router, Tailwind v4 + shadcn (Base UI), i18n (en/nl typed dicts + key test), QueryProvider, theme, `lib/api/client.ts`, Dockerfile (standalone), `/health`.
 - [ ] **5.** CI: `deploy-api.yml`, `deploy-web.yml`, `docker-compose.prod.yml`; lint/type-check/test workflow on PR.
@@ -73,3 +74,4 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 |---|---|---|
 | 2026-10-09 | planning | Planning docs 01–10, PROGRESS.md, AGENTS.md and README written. No application code yet. |
 | 2026-10-09 | 1 | Root workspace copied from dynamic_alarm and renamed; nothing to run yet beyond `npm install`. Note: `deploy-api.yml` only triggers on `apps/api/**`, so it stays inert until task 3. |
+| 2026-10-09 | 2 | Types package builds to `dist/`. Decision: weekdays use ISO numbering (Mon=1…Sun=7) as in dynamic_alarm and Luxon; docs/03 updated. Resource DTOs are added per endpoint task, not upfront. |
