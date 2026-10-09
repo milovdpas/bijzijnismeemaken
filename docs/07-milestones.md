@@ -9,6 +9,7 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 2. `packages/types`: **copy** the dynamic_alarm package shell, empty the alarm content, add `API_ENDPOINTS` (health + placeholders), `ERROR_CODES`, enums (Daypart, Weekday, GroupAccess, GroupRole, DateMode, OccurrenceStatus, ScoreType, SortOrder, EditMode, LeaderboardPeriod, NotificationType), `DAYPARTS` ranges, avatar keys. Verify `npm run build:packages`.
 3. `apps/api`: **copy** the dynamic_alarm API per the list in [02-architecture.md](02-architecture.md) section 2.3, strip all alarm domain code/tests/migrations, rename, make it boot against the local MySQL, run `migrate` on an empty DB, pass the copied `health.test.ts`, lint and type-check. No new features in this task.
 4. `apps/web` skeleton: Next.js App Router, Tailwind v4 + shadcn (Base UI), i18n (en/nl typed dicts + key test), QueryProvider, theme, `lib/api/client.ts`, Dockerfile (standalone), `/health`.
+4b. Design pass (added after review of task 4): visual direction (playful, minimal; yellow brand with a deep blue ink), tokens for light and dark, rounded typography, app shell (desktop top bar, mobile bottom nav), theme toggle, logo mark, `EmptyState` and `PageHeader` action slot, `docs/11-design.md` describing the system. No feature screens.
 5. CI: `deploy-api.yml`, `deploy-web.yml`, `docker-compose.prod.yml`; lint/type-check/test workflow on PR.
 
 ## M1 — MVP

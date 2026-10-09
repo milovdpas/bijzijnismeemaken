@@ -33,70 +33,93 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
-    /* Semantic colours of this app, beside the shadcn tokens. */
+    /* Semantic colours of this app, beside the shadcn tokens. See docs/11-design.md. */
     --color-brand: var(--brand);
+    --color-brand-foreground: var(--brand-foreground);
+    --color-ink: var(--ink);
+    --color-ink-foreground: var(--ink-foreground);
     --color-free: var(--free);
     --color-busy: var(--busy);
     --color-unknown: var(--unknown);
 }
 
+/*
+ * Palettes. `:root` and `.dark` hold the default palette ("sunny": warm
+ * off-white paper, deep blue ink, yellow for the things you can press). A new
+ * style adds `[data-palette='x'] { ... }` and `.dark[data-palette='x'] { ... }`
+ * blocks below, overriding only the tokens it changes, plus an entry in
+ * `lib/themes.ts`. Components never mention a palette; they use the tokens.
+ *
+ * Yellow is never used for text on a light surface, it cannot reach AA
+ * contrast there; it is a surface colour with ink on top.
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    --background: oklch(0.985 0.012 90);
+    --foreground: oklch(0.27 0.07 262);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.27 0.07 262);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    /* Darker than --brand on purpose: white text on the brand green itself
-       falls under the 4.5:1 WCAG AA ratio, so filled surfaces use this shade
-       while the mark, theme colour and manifest keep the exact brand green. */
-    --primary: oklch(0.52 0.14 160);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.27 0.07 262);
+    /* The yellow. Buttons are yellow with ink text: #FFC72C-ish, 8:1 against
+       the ink, which is what makes a filled button readable in sunlight. */
+    --primary: oklch(0.86 0.17 90);
+    --primary-foreground: oklch(0.27 0.07 262);
+    /* Ink as a surface, for the one action per screen that must stand out
+       from the yellow ones (the mobile nav's active pill, inverted chips). */
+    --secondary: oklch(0.32 0.09 262);
+    --secondary-foreground: oklch(0.985 0.012 90);
+    --muted: oklch(0.95 0.02 90);
+    --muted-foreground: oklch(0.5 0.05 262);
+    --accent: oklch(0.95 0.07 95);
+    --accent-foreground: oklch(0.27 0.07 262);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    /* #2f9e6a, mirrored in viewport.themeColor in app/layout.tsx. */
-    --brand: oklch(0.62 0.14 160);
+    --border: oklch(0.9 0.025 90);
+    --input: oklch(0.9 0.025 90);
+    --ring: oklch(0.72 0.15 85);
+    /* The brand yellow itself (#FFC72C). Mirrored in viewport.themeColor. */
+    --brand: oklch(0.86 0.17 90);
+    --brand-foreground: oklch(0.27 0.07 262);
+    /* The deep blue (#223074-ish). Headings, icons, the logo mark. */
+    --ink: oklch(0.32 0.09 262);
+    --ink-foreground: oklch(0.985 0.012 90);
     /* Availability cells. */
-    --free: oklch(0.72 0.17 150);
-    --busy: oklch(0.65 0.2 25);
-    --unknown: oklch(0.8 0.02 260);
-    --radius: 0.625rem;
+    --free: oklch(0.78 0.16 150);
+    --busy: oklch(0.68 0.19 25);
+    --unknown: oklch(0.85 0.02 262);
+    /* Rounder than the shadcn default: the playful half of the brief. */
+    --radius: 1rem;
 }
 
+/*
+ * Dark: the ink becomes the paper. Yellow stays the action colour, now on a
+ * deep blue, and text goes to the warm off-white.
+ */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    /* On a near-black page the filled button and `text-primary` pull in
-       opposite directions, so the foreground is inverted instead: near-black
-       text on the brand green clears AA, and the button reads as a cut-out. */
-    --primary: oklch(0.7 0.15 160);
-    --primary-foreground: oklch(0.145 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --background: oklch(0.21 0.045 262);
+    --foreground: oklch(0.96 0.012 90);
+    --card: oklch(0.26 0.05 262);
+    --card-foreground: oklch(0.96 0.012 90);
+    --popover: oklch(0.26 0.05 262);
+    --popover-foreground: oklch(0.96 0.012 90);
+    --primary: oklch(0.84 0.16 90);
+    --primary-foreground: oklch(0.22 0.06 262);
+    --secondary: oklch(0.96 0.012 90);
+    --secondary-foreground: oklch(0.22 0.06 262);
+    --muted: oklch(0.3 0.045 262);
+    --muted-foreground: oklch(0.75 0.03 262);
+    --accent: oklch(0.34 0.06 262);
+    --accent-foreground: oklch(0.96 0.012 90);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
+    --border: oklch(1 0 0 / 12%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --brand: oklch(0.7 0.15 160);
-    --free: oklch(0.75 0.16 150);
-    --busy: oklch(0.7 0.19 25);
-    --unknown: oklch(0.45 0.02 260);
+    --ring: oklch(0.84 0.16 90);
+    --brand: oklch(0.84 0.16 90);
+    --brand-foreground: oklch(0.22 0.06 262);
+    --ink: oklch(0.96 0.012 90);
+    --ink-foreground: oklch(0.22 0.06 262);
+    --free: oklch(0.75 0.15 150);
+    --busy: oklch(0.7 0.18 25);
+    --unknown: oklch(0.4 0.03 262);
 }
 
 /*
@@ -108,8 +131,8 @@
  *   top-(--h-topbar)   z-(--z-toast)
  */
 :root {
-    --h-topbar: 3.5625rem; /* 57px: mobile header */
-    --h-bottomnav: 4.375rem; /* 70px: clearance reserved for the mobile nav */
+    --h-topbar: 3.5rem; /* 56px: the top bar on every width */
+    --h-bottomnav: 4.5rem; /* 72px: clearance reserved for the mobile nav */
 
     /* Stacking order, low to high. */
     --z-sticky: 20;
@@ -118,11 +141,10 @@
     --z-toast: 100; /* must beat the dialog/sheet overlay at 50 */
 }
 
-/* On md+ the mobile header does not exist, so everything parked under it
-   slides up by itself; no md: variant needed at any call site. */
+/* On md+ the bottom nav does not exist, so nothing needs to clear it. */
 @media (width >= 48rem) {
     :root {
-        --h-topbar: 0rem;
+        --h-bottomnav: 0rem;
     }
 }
 
@@ -146,6 +168,13 @@
     }
     html {
         @apply font-sans;
+    }
+    /* Headings are the ink, a touch heavier, and tight: the friendly half of
+       Nunito does the playfulness, the weight keeps it from going soft. */
+    h1,
+    h2,
+    h3 {
+        @apply font-bold tracking-tight text-ink;
     }
 }
 

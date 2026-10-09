@@ -23,6 +23,12 @@ if (!i18n.isInitialized) {
         interpolation: { escapeValue: false },
         returnNull: false,
     });
+} else {
+    // Hot reload. The instance survives a re-evaluation of this module, so
+    // the dictionaries edited a moment ago would otherwise never reach it and
+    // every new key would render as its own name until a full restart.
+    i18n.addResourceBundle(Locale.EN, 'translation', en, true, true);
+    i18n.addResourceBundle(Locale.NL, 'translation', nl, true, true);
 }
 
 /** Best-effort browser locale detection, restricted to supported locales. */

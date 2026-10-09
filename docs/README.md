@@ -14,4 +14,5 @@ Written during the planning phase (2026-10-09) from [planning-prompt.md](../plan
 | [08-risks.md](08-risks.md) | Open risks and questions |
 | [09-frontend-conventions.md](09-frontend-conventions.md) | Clean frontend rules (from marathon_schema) |
 | [10-backend-conventions.md](10-backend-conventions.md) | Express API rules (from dynamic_alarm) |
+| [11-design.md](11-design.md) | Visual direction, tokens, themes (scheme + palette), shell and UI patterns |
 | [PROGRESS.md](PROGRESS.md) | Task checklist, current task, review log |

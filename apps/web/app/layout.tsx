@@ -1,12 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist_Mono, Nunito } from 'next/font/google';
 import './globals.css';
+import { PaletteApplier } from '@/components/layout/palette-applier';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { APP_NAME, APP_TAGLINE, APP_URL } from '@/lib/site';
 
-const geistSans = Geist({
+/**
+ * Nunito for everything: its rounded terminals are where the "playful" in the
+ * brief comes from, and at weight 700 it still reads as a heading rather than a
+ * toy. One family keeps the bundle small on a phone.
+ */
+const nunito = Nunito({
     variable: '--font-sans',
     subsets: ['latin'],
+    weight: ['400', '600', '700', '800'],
 });
 
 const geistMono = Geist_Mono({
@@ -34,7 +41,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
     // The literal value of --brand in globals.css. Keep the two in step: this is
     // the browser/OS chrome colour and a mismatch shows as a seam above the app.
-    themeColor: '#2f9e6a',
+    themeColor: '#ffc72c',
 };
 
 /**
@@ -50,7 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <html
             lang="nl"
             suppressHydrationWarning
-            className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+            className={`${nunito.variable} ${geistMono.variable} h-full antialiased`}
         >
             <body className="min-h-dvh">
                 <ThemeProvider
@@ -59,6 +66,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     enableSystem
                     disableTransitionOnChange
                 >
+                    <PaletteApplier />
                     {children}
                 </ThemeProvider>
             </body>

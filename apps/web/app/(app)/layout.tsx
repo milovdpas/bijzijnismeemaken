@@ -1,16 +1,16 @@
 import { AppRuntime } from '@/components/layout/app-runtime';
+import { AppShell } from '@/components/layout/app-shell';
 
 /**
  * Everything under `(app)` is the signed-in application. The providers it
  * needs (i18n, TanStack Query, later auth) are mounted here and nowhere else,
- * so the login page does not pay for them.
+ * so the login page does not pay for them, and the shell gives every page the
+ * same top bar and bottom nav.
  */
 export default function AppLayout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
         <AppRuntime>
-            <main className="mx-auto w-full max-w-5xl px-4 pb-(--h-bottomnav) pt-4 md:px-6">
-                {children}
-            </main>
+            <AppShell>{children}</AppShell>
         </AppRuntime>
     );
 }

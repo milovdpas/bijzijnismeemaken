@@ -3,33 +3,44 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchHealth } from '@/lib/api/health';
 import { queryKeys } from '@/lib/query-keys';
+import { cn } from '@/lib/utils';
 
 /**
- * Shows whether the API answers. A skeleton-phase component: it proves the
- * query provider, the API client and i18n work together, and it goes away once
- * the groups list replaces it in task 15.
+ * Shows whether the API answers. Lives in settings as a small diagnostic, and
+ * doubles as the first consumer of the query provider and the API client.
  */
 export function ApiStatusCard() {
     const { t } = useTranslation();
     const health = useQuery({ queryKey: queryKeys.health, queryFn: fetchHealth });
 
-    const status = health.isPending
-        ? t('status.checking')
+    const state = health.isPending
+        ? 'checking'
         : health.isError
-          ? t('status.unreachable')
+          ? 'unreachable'
           : health.data.database
-            ? t('status.ok')
-            : t('status.degraded');
+            ? 'ok'
+            : 'degraded';
+
+    const dot = {
+        checking: 'bg-unknown',
+        ok: 'bg-free',
+        degraded: 'bg-brand',
+        unreachable: 'bg-busy',
+    }[state];
 
     return (
-        <Card className="gap-0 p-4">
-            <CardHeader className="p-0">
-                <CardTitle className="text-sm font-semibold">{t('status.title')}</CardTitle>
+        <Card>
+            <CardHeader>
+                <CardTitle>{t('status.title')}</CardTitle>
+                <CardDescription>{t('status.description')}</CardDescription>
             </CardHeader>
-            <CardContent className="p-0 pt-2 text-sm text-muted-foreground">{status}</CardContent>
+            <CardContent className="flex items-center gap-2 text-sm">
+                <span className={cn('size-2.5 shrink-0 rounded-full', dot)} aria-hidden />
+                {t(`status.${state}`)}
+            </CardContent>
         </Card>
     );
 }
