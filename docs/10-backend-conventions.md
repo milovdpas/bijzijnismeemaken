@@ -25,6 +25,7 @@ Carried over from `C:\Users\milov\PersonalProjects\dynamic_alarm\apps\api` (its 
 - TypeORM active-record entities (`BaseEntity`), `@Entity('snake_table')` with snake_case `name:` on columns, UUID primary keys generated in the app, `datetime(3)` timestamps, `timezone: 'Z'` plus `SET time_zone='+00:00'` on every pooled connection, `decimalTransformer` for DECIMAL columns, `synchronize: false`, entities listed explicitly, and a `toDto()` on each entity.
 - Knex is used only for migrations (`database/migrations/YYYYMMDDHHMMSS_name.ts` with `up` and `down`), run via `tools/migrate.ts` (`latest`, `rollback`, `status`). Migrations are the source of truth for indexes, uniques and ON DELETE rules. New columns use `.after('col')`.
 - Time logic (dayparts, "today", current month) uses Luxon in `Europe/Amsterdam` through `utils/Dates.ts`. The database stores UTC.
+- Never use the JavaScript `Date` API directly. Wall-clock time is Luxon `DateTime`; elapsed time for timing a job is `process.hrtime.bigint()` (monotonic, unaffected by clock adjustments).
 
 ## Auth and security
 - `UserAuth` reads the `access_token` cookie (or `Authorization: Bearer` for tools and tests), verifies the JWT, rejects `type !== 'access'`, and loads the user onto `req.user`. `RequireGroupRole(minRole)` loads the membership onto `req.membership`.

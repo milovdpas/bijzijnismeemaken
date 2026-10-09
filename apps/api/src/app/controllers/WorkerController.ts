@@ -38,12 +38,14 @@ export default class WorkerController {
             return;
         }
 
-        const startedAt = Date.now();
+        // hrtime is the monotonic clock: a wall-clock difference can go
+        // negative when NTP adjusts the time mid-run.
+        const startedAt = process.hrtime.bigint();
         WorkerController.cleanupRunning = true;
         try {
             sendSuccess<WorkerJobResponse>(res, {
                 job: 'cleanup',
-                durationMs: Date.now() - startedAt,
+                durationMs: Number((process.hrtime.bigint() - startedAt) / 1_000_000n),
                 stats: {},
             });
         } finally {
