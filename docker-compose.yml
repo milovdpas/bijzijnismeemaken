@@ -1,0 +1,46 @@
+# Local development only. Production runs against an external MySQL and sends
+# real email; see docker-compose.prod.yml.
+services:
+    mysql:
+        # MySQL because the production hosting only offers MySQL.
+        image: mysql:8.0
+        container_name: bzim-mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: bzim
+            MYSQL_DATABASE: bzim
+            MYSQL_USER: bzim
+            MYSQL_PASSWORD: bzim
+        command:
+            # utf8mb4 throughout: display names and activity titles contain
+            # characters (and emoji) that latin1 silently mangles.
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+            # The server runs in UTC and every timestamp is stored in UTC. All
+            # Europe/Amsterdam logic (dayparts, "today") happens in the app.
+            - --default-time-zone=+00:00
+        ports:
+            # Non-default host port so this cannot collide with another local
+            # MySQL (dynamic_alarm already uses 3307).
+            - '3308:3306'
+        volumes:
+            - mysql-data:/var/lib/mysql
+        healthcheck:
+            test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-ubzim', '-pbzim']
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+    mailpit:
+        # Catches every email the API sends in development so templates can be
+        # checked in a browser (http://localhost:8025) instead of a real inbox.
+        # The API's dev mailer talks SMTP to port 1025; production uses Brevo.
+        image: axllent/mailpit:latest
+        container_name: bzim-mailpit
+        restart: unless-stopped
+        ports:
+            - '8025:8025'
+            - '1025:1025'
+
+volumes:
+    mysql-data:

@@ -1,0 +1,38 @@
+{
+    "name": "bijzijnismeemaken",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Bij zijn is meemaken: plan activities with friends, see when everyone is free, keep leaderboards",
+    "license": "MIT",
+    "workspaces": [
+        "packages/*",
+        "apps/*"
+    ],
+    "scripts": {
+        "build:packages": "tsc -b packages/types",
+        "watch:packages": "tsc -b --watch --preserveWatchOutput packages/types",
+        "dev:api": "npm run dev --workspace=@bzim/api",
+        "dev:web": "npm run dev --workspace=@bzim/web",
+        "dev": "npm-run-all --parallel watch:packages dev:api dev:web",
+        "build": "npm run build:packages && npm run build --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "lint": "npm run lint --workspaces --if-present",
+        "lint:fix": "npm run lint:fix --workspaces --if-present",
+        "type-check": "npm run build:packages && npm run type-check --workspaces --if-present",
+        "clean": "npm run clean --workspaces --if-present",
+        "docker:up": "docker compose up -d",
+        "docker:down": "docker compose down"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.5",
+        "eslint": "^9.39.5",
+        "globals": "^17.12.0",
+        "npm-run-all": "^4.1.5",
+        "prettier": "^3.9.8",
+        "typescript": "~6.0.3",
+        "typescript-eslint": "^8.70.1"
+    },
+    "engines": {
+        "node": ">=22"
+    }
+}

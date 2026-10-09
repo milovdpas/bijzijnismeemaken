@@ -1,0 +1,91 @@
+# Deployed to /opt/apps/bzim/docker-compose.yml on the VPS.
+#
+# There is no database service here. Nothing on that VPS runs one: the other
+# APIs use an external MySQL reached through DB_* secrets, and this follows the
+# same pattern. See vps_hosting/03-architecture.md.
+
+services:
+    api:
+        image: ${DOCKERHUB_USERNAME}/bzim-api:latest
+        # The reverse proxy resolves this name on the shared network, so it is
+        # part of the nginx configuration rather than a label.
+        container_name: bzim-api
+        restart: unless-stopped
+        # Node is PID 1 without this, and PID 1 gets no default signal handling,
+        # so a `SIGTERM` the process does not explicitly listen for is discarded.
+        # It also reaps the zombies `job-exec` leaves.
+        init: true
+        # Longer than the API's own 20s drain, so the clean shutdown finishes
+        # before Docker resorts to SIGKILL.
+        stop_grace_period: 30s
+        # expose, never ports: the proxy owns ingress.
+        expose:
+            - '3000'
+        networks:
+            - web
+        env_file:
+            - .env
+        # Scheduled work, declared here rather than as host cron: the VPS runs
+        # an Ofelia container that reads these labels over the Docker socket, so
+        # the schedule deploys with the app. `job-exec` runs inside the container
+        # that is already up, and the script POSTs to the API's own worker
+        # endpoint with the WORKER_TOKEN from the container environment.
+        #
+        # Ofelia schedules are evaluated in the scheduler container's timezone
+        # (UTC on the VPS). 23:05 UTC is 00:05 or 01:05 Amsterdam depending on
+        # DST; the endpoints compute "today" in Europe/Amsterdam themselves.
+        #
+        # Ofelia only reads labels when it starts: after a deploy that adds or
+        # changes a label, `docker restart scheduler` (the workflow does this).
+        labels:
+            ofelia.enabled: 'true'
+            ofelia.job-exec.bzim-cleanup.schedule: '0 30 23 * * *'
+            ofelia.job-exec.bzim-cleanup.command: 'node dist/tools/worker.js cleanup'
+            ofelia.job-exec.bzim-calendar-sync.schedule: '0 5 23 * * *'
+            ofelia.job-exec.bzim-calendar-sync.command: 'node dist/tools/worker.js calendar-sync'
+        healthcheck:
+            # 127.0.0.1 rather than localhost. BusyBox wget tries ::1 first, and
+            # a Node process bound to 0.0.0.0 is IPv4 only.
+            test:
+                [
+                    'CMD',
+                    'wget',
+                    '--no-verbose',
+                    '--tries=1',
+                    '--spider',
+                    'http://127.0.0.1:3000/api/v1/health',
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            # The API connects to MySQL before it listens, and that connection
+            # crosses the internet to an external host.
+            start_period: 30s
+
+    web:
+        image: ${DOCKERHUB_USERNAME}/bzim-web:latest
+        container_name: bzim-web
+        restart: unless-stopped
+        init: true
+        expose:
+            - '3000'
+        networks:
+            - web
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'wget',
+                    '--no-verbose',
+                    '--tries=1',
+                    '--spider',
+                    'http://127.0.0.1:3000/health',
+                ]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 15s
+
+networks:
+    web:
+        external: true
