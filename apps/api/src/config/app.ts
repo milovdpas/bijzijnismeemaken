@@ -97,6 +97,32 @@ export const env = {
      */
     workerToken: optional('WORKER_TOKEN', ''),
 
+    /** The web app's public origin: the CORS allow-list and the OAuth return target. */
+    appUrl: optional('APP_URL', 'http://localhost:3000').replace(/\/$/, ''),
+
+    /** This API's public origin, for the OAuth callback URLs it registers with Google. */
+    apiUrl: optional('API_URL', 'http://localhost:4000').replace(/\/$/, ''),
+
+    /**
+     * The `Domain` attribute of the session cookies. The shared parent of the
+     * app and API hostnames in production; empty locally, where both run on
+     * localhost and a host-only cookie is what works.
+     */
+    cookieDomain: optional('COOKIE_DOMAIN', ''),
+
+    /**
+     * Signs the session tokens. Read lazily so an API without it still boots
+     * and serves health; the first login fails loudly instead.
+     */
+    jwtSecret: () => required('JWT_SECRET'),
+
+    auth: {
+        /** Short, because an access token cannot be revoked once issued. */
+        accessTtlSeconds: 15 * 60,
+        /** Sixty days of not having to sign in again, as in carrefour. */
+        refreshTtlSeconds: 60 * 24 * 60 * 60,
+    },
+
     /**
      * How many reverse proxies sit between a caller and this process.
      *

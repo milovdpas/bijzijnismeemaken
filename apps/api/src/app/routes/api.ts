@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import type { IRoute } from '../../interfaces/IRouter';
+import AuthRoutes from './groups/auth';
 import WorkerRoutes from './groups/worker';
 
 /**
@@ -14,6 +15,7 @@ import WorkerRoutes from './groups/worker';
  */
 export default class Api implements IRoute {
     private readonly groups: IRoute[] = [
+        new AuthRoutes(),
         // Last, and not user authenticated: the scheduler calls it, the web app
         // never does.
         new WorkerRoutes(),

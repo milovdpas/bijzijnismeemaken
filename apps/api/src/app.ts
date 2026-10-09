@@ -1,3 +1,5 @@
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import express from 'express';
 import type { Express, NextFunction, Request, Response } from 'express';
 
@@ -5,14 +7,15 @@ import registerRoutes from './app/routes/index';
 import { env } from './config/app';
 import { errorHandler } from './app/middleware/ErrorHandler';
 import { notFound } from './app/middleware/NotFound';
+import { originCheck } from './app/middleware/OriginCheck';
 
 /**
  * Builds the app without starting it.
  *
  * Separate from `index.ts` so tests can drive the real routing, validation and
  * error handling over an ephemeral port instead of reasoning about controllers
- * in isolation. Most of the bugs this API has produced lived in that seam: a
- * driver returning decimals as strings, a MySQL TIME arriving as `08:30:00`,
+ * in isolation. Most of the bugs an API like this produces live in that seam:
+ * a driver returning decimals as strings, a MySQL TIME arriving as `08:30:00`,
  * Express matching `:id` before a literal path. None are visible from a unit
  * test of a service, and all of them are one request away from obvious.
  */
@@ -37,6 +40,18 @@ export function createApp(): Express {
     app.disable('x-powered-by');
     app.use(securityHeaders);
 
+    /**
+     * Exactly one origin may read responses and send cookies: the web app.
+     *
+     * `credentials: true` is what lets the browser attach the session cookies
+     * to a request from the app's origin, and the allow-list being a single
+     * literal (never a reflection of the request's own `Origin`) is what keeps
+     * every other site out.
+     */
+    app.use(cors({ origin: env.appUrl, credentials: true }));
+    app.use(cookieParser());
+    app.use(originCheck);
+
     app.use(express.json({ limit: '256kb' }));
 
     const router = express.Router();
@@ -55,11 +70,9 @@ export function createApp(): Express {
  * The two headers a JSON-only API actually needs.
  *
  * Not `helmet`. Most of what it sets governs how a browser renders a document,
- * and nothing here serves one: there is no HTML, no cookies, no CORS headers,
- * and therefore no cross-origin caller a browser would let read a response. The
- * two below still earn their place. `nosniff` stops a response being re-read as
- * something executable, and `no-referrer` keeps our paths, which contain
- * occurrence and schedule ids, out of the logs of anywhere a link might lead.
+ * and nothing here serves one. `nosniff` stops a response being re-read as
+ * something executable, and `no-referrer` keeps our paths, which contain group
+ * and activity ids, out of the logs of anywhere a link might lead.
  *
  * HSTS is deliberately absent: TLS terminates at the reverse proxy, and the
  * header belongs with whoever owns the certificate.

@@ -1,0 +1,50 @@
+import type { CookieOptions, Request, Response } from 'express';
+
+import { env } from '../../config/app';
+
+export const ACCESS_COOKIE = 'access_token';
+export const REFRESH_COOKIE = 'refresh_token';
+
+/**
+ * Both tokens travel as httpOnly cookies, so no script in the browser can read
+ * them. `SameSite=Lax` sends them on top-level navigations and same-site
+ * requests, which is what the app on its sibling subdomain needs, and keeps
+ * them off cross-site POSTs. `Domain` is the shared parent domain in
+ * production (`.bijzijn.milovanderpas.nl`) and absent locally, where both
+ * apps are on localhost.
+ */
+function baseOptions(): CookieOptions {
+    return {
+        httpOnly: true,
+        secure: env.isProduction(),
+        sameSite: 'lax',
+        path: '/',
+        domain: env.cookieDomain === '' ? undefined : env.cookieDomain,
+    };
+}
+
+export function setAuthCookies(
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string },
+): void {
+    res.cookie(ACCESS_COOKIE, tokens.accessToken, {
+        ...baseOptions(),
+        maxAge: env.auth.accessTtlSeconds * 1000,
+    });
+    res.cookie(REFRESH_COOKIE, tokens.refreshToken, {
+        ...baseOptions(),
+        maxAge: env.auth.refreshTtlSeconds * 1000,
+    });
+}
+
+/** The same attributes as when they were set, or the browser keeps them. */
+export function clearAuthCookies(res: Response): void {
+    res.clearCookie(ACCESS_COOKIE, baseOptions());
+    res.clearCookie(REFRESH_COOKIE, baseOptions());
+}
+
+/** A cookie value, as cookie-parser left it. */
+export function cookieOf(req: Request, name: string): string | undefined {
+    const cookies = req.cookies as Record<string, string | undefined> | undefined;
+    return cookies?.[name];
+}
