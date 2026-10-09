@@ -64,7 +64,7 @@ src/
   +app/modules/calendar/{CalendarProvider.ts,GoogleCalendarProvider.ts,CalendarProviderFactory.ts}
   +app/modules/mail/{Mailer.ts,BrevoMailer.ts,ConsoleMailer.ts,templates/{nl,en}.ts}
   app/utils/{ApiResponses, ColumnTransformers, Token, +JWT, +Crypto(aes-gcm), +Dates(luxon, Amsterdam), +Pagination, +Logger}.ts
-  tools/{migrate, worker(renamed monitorTick)}.ts
+  tools/migrate.ts, src/tools/worker.ts (renamed monitorTick; under src so it compiles into dist/tools for the Ofelia label)
 tests/ (copied globalSetup/setup/support; flat *.test.ts per feature added with each task)
 ```
 

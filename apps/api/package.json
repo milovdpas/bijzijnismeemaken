@@ -1,0 +1,44 @@
+{
+    "name": "@bzim/api",
+    "version": "0.1.0",
+    "private": true,
+    "description": "API for Bij zijn is meemaken: groups, activities, availability and leaderboards",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc -p tsconfig.build.json",
+        "start": "node dist/index.js",
+        "type-check": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "migrate": "tsx tools/migrate.ts latest",
+        "migrate:rollback": "tsx tools/migrate.ts rollback",
+        "migrate:status": "tsx tools/migrate.ts status",
+        "worker": "tsx src/tools/worker.ts",
+        "clean": "rimraf dist"
+    },
+    "dependencies": {
+        "@bzim/types": "*",
+        "dotenv": "^17.2.3",
+        "express": "^5.1.0",
+        "knex": "^3.1.0",
+        "luxon": "^3.7.2",
+        "mysql2": "^3.24.4",
+        "reflect-metadata": "^0.2.2",
+        "typeorm": "^0.3.27",
+        "zod": "^4.6.5"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.3",
+        "@types/luxon": "^3.7.5",
+        "@types/node": "^24.13.6",
+        "@types/supertest": "^7.2.1",
+        "rimraf": "^6.0.1",
+        "supertest": "^7.2.2",
+        "tsx": "^4.23.15",
+        "typescript": "~6.0.3",
+        "vitest": "^3.2.4"
+    }
+}

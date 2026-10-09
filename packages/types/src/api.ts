@@ -30,14 +30,23 @@ export interface Paginated<T> {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Health                                                                      */
+/* Health and worker                                                           */
 /* -------------------------------------------------------------------------- */
 
 export interface HealthResponse {
     status: 'ok' | 'degraded';
-    database: 'ok' | 'unreachable';
+    /** Whether a `SELECT 1` answered just now. */
+    database: boolean;
     uptime: number;
     timestamp: string;
+}
+
+/** What a `POST /api/v1/worker/<job>` answers once the job has run. */
+export interface WorkerJobResponse {
+    job: string;
+    durationMs: number;
+    /** Counters the job chose to report, e.g. `{ eventsDeleted: 12 }`. */
+    stats: Record<string, number>;
 }
 
 /*

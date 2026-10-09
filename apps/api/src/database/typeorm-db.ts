@@ -1,0 +1,77 @@
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
+
+import { databaseConfig } from '../config/database';
+
+/**
+ * TypeORM owns runtime queries. Knex owns schema.
+ *
+ * `synchronize` is off in every environment, including development. It is the
+ * feature that silently drops a column when an entity changes, and this
+ * database will hold the only record of who scored what and when.
+ *
+ * Entities are listed explicitly rather than globbed. A glob resolves
+ * differently between `tsx` and compiled output, and the failure mode is an
+ * entity that quietly does not exist. Each task that adds an entity adds it
+ * here.
+ */
+export const AppDataSource = new DataSource({
+    type: 'mysql',
+    host: databaseConfig.host,
+    port: databaseConfig.port,
+    username: databaseConfig.user,
+    password: databaseConfig.password,
+    database: databaseConfig.database,
+    synchronize: false,
+    logging: false,
+    // Every timestamp is stored and read as UTC. Leaving this to the server's
+    // local zone silently shifts stored times when the clocks change.
+    timezone: 'Z',
+    entities: [],
+});
+
+export async function connectDatabase(): Promise<void> {
+    if (!AppDataSource.isInitialized) {
+        await AppDataSource.initialize();
+        await pinSessionToUtc();
+    }
+}
+
+/**
+ * Releases the pool, so a stopping process stops rather than lingering.
+ *
+ * Safe to call when nothing was ever opened, which is the case if startup failed
+ * before `connectDatabase`.
+ */
+export async function closeDatabase(): Promise<void> {
+    if (AppDataSource.isInitialized) {
+        await AppDataSource.destroy();
+    }
+}
+
+/**
+ * Makes the server's own clock agree with ours.
+ *
+ * `timezone: 'Z'` above only tells the driver how to read and write values it
+ * carries. It says nothing about the **server's** session zone, which is what
+ * `CURRENT_TIMESTAMP` uses, and every `created_at` in this schema defaults to
+ * that. On a machine set to Amsterdam the result is a row stamped two hours
+ * away from the UTC values beside it.
+ *
+ * Set per connection rather than globally: the production database is shared
+ * hosting, and changing a global would be reaching outside this application.
+ *
+ * The pool hook covers connections opened later; the direct query covers the
+ * ones already open, because a pool starts with at least one.
+ */
+async function pinSessionToUtc(): Promise<void> {
+    const driver = AppDataSource.driver as unknown as {
+        pool?: { on?: (event: string, listener: (connection: unknown) => void) => void };
+    };
+
+    driver.pool?.on?.('connection', (connection) => {
+        (connection as { query: (sql: string) => void }).query("SET time_zone = '+00:00'");
+    });
+
+    await AppDataSource.query("SET time_zone = '+00:00'");
+}

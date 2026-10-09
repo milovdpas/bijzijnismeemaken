@@ -8,6 +8,8 @@ Carried over from `C:\Users\milov\PersonalProjects\dynamic_alarm\apps\api` (its 
 - Folders: `app/routes/groups/<resource>.ts` (route classes), `app/controllers`, `app/services`, `app/models/*.entity.ts`, `app/middleware`, `app/validators/*Schemas.ts`, `app/modules` (external providers), `app/utils`, `config`, `database/{migrations,typeorm-db,knexfile}`, `tools` (migrate, worker), `tests` (flat `*.test.ts` plus `support/`).
 
 ## Routing, controllers, services
+- Class fields (static flags, injected services, constants) go at the top of a controller or service, before any handler or method.
+- Do not extract a private helper that has one caller. Keep the code inside the handler or method that uses it; a helper earns its place only when a second caller appears.
 - Each resource group is a class implementing `IRoute { getRoutes(): Router }`. It owns one controller instance and declares each route on one line: path constant from `API_ENDPOINTS` (absolute paths, mounted at root), auth middleware, rate limit, `validate({ params, query, body })`, controller handler. Literal paths come before `:id` paths; use `router.get<IdParams>(...)` for typed params.
 - Controllers are classes with arrow-property handlers typed `Handler<BodyOf<typeof schema>, Params>`. There is no async wrapper because Express 5 forwards rejected promises to the error middleware.
 - `sendSuccess<T>(res, dto)` requires an explicit DTO type from `@bzim/types`. Lists are bare arrays; paginated lists use `{ items, page, pageSize, total, hasMore }`.
