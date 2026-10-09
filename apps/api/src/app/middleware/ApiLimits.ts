@@ -1,3 +1,5 @@
+import type { Request } from 'express';
+
 import { addressOf, rateLimit } from './RateLimit';
 
 /**
@@ -11,13 +13,11 @@ import { addressOf, rateLimit } from './RateLimit';
 const MINUTE = 60 * 1000;
 
 /**
- * Unauthenticated routes: the login redirect, invite link previews, the handle
- * availability check.
+ * Unauthenticated routes in general: the Google redirect, refresh, logout,
+ * invite link previews, the handle availability check.
  *
  * Keyed by address, generously, because an office behind one NAT might
- * legitimately hit these a few dozen times in an afternoon. Sixty a minute is
- * far above that and far below useful for anyone enumerating handles or invite
- * tokens.
+ * legitimately hit these a few dozen times in an afternoon.
  */
 export const publicLimit = rateLimit({
     name: 'public',
@@ -25,3 +25,39 @@ export const publicLimit = rateLimit({
     windowMs: MINUTE,
     key: addressOf,
 });
+
+/** Registration costs an email (task 8b) and a database row. */
+export const registerLimit = rateLimit({
+    name: 'register',
+    limit: 10,
+    windowMs: 60 * MINUTE,
+    key: addressOf,
+});
+
+/**
+ * Password guessing, from two directions.
+ *
+ * Per address, so one machine cannot try many passwords across many accounts;
+ * and per email, so one account cannot be attacked from many addresses. The
+ * email limit is the tighter one: a real person mistypes a password a few
+ * times, never twenty.
+ */
+export const loginAddressLimit = rateLimit({
+    name: 'login-address',
+    limit: 30,
+    windowMs: 15 * MINUTE,
+    key: addressOf,
+});
+
+export const loginEmailLimit = rateLimit({
+    name: 'login-email',
+    limit: 8,
+    windowMs: 15 * MINUTE,
+    key: emailOf,
+});
+
+/** The validated body's email, which `validate()` has already lowercased. */
+function emailOf(req: Request): string | null {
+    const body = req.body as { email?: unknown } | undefined;
+    return typeof body?.email === 'string' ? body.email : null;
+}

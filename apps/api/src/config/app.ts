@@ -116,6 +116,12 @@ export const env = {
      */
     jwtSecret: () => required('JWT_SECRET'),
 
+    /** The Google OAuth client for sign-in. Lazy, like the JWT secret. */
+    google: {
+        clientId: () => required('GOOGLE_CLIENT_ID'),
+        clientSecret: () => required('GOOGLE_CLIENT_SECRET'),
+    },
+
     auth: {
         /** Short, because an access token cannot be revoked once issued. */
         accessTtlSeconds: 15 * 60,
