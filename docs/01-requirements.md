@@ -34,12 +34,17 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Google free/busy | Respect Google's transparency flag: events marked "Free" never block. Skip cancelled, declined, birthday and working-location events; out-of-office and focus-time count as busy. |
 | Past planned occurrence | Stays `planned` until creator/admin re-dates it or marks it done; no auto-done (a non-recurring activity may be next year's event). |
 | Planned e-mail | Only the selected participants are notified (with add-to-calendar); deselected "in" members are not. Per-participant `notified_at` + the notified values are stored so editing an occurrence only mails new participants (planned) and already-notified ones whose date/daypart/time changed (rescheduled). |
+| Email + password (added 2026-10-10) | Second sign-in method beside Google. Verify email before first use (24 h link), forgot/reset via 1 h single-use link that revokes all sessions, one account per email: Google login on a verified password account attaches `google_sub`; on an unverified one it clears the password. Passwords hashed with Node `scrypt`, min 10 chars. Built alongside Google in tasks 7–10. |
 
 ---
 
 
 ## 1.1 Users & profiles
-- As a visitor I sign in with Google; an account is created on first login (email + google_sub).
+- As a visitor I sign in with Google; an account is created on first login (email + google_sub, email counts as verified).
+- As a visitor I register with email and password; I get a verification email and can only sign in after clicking it (the link also signs me in). I can ask for the email again.
+- As a user I reset a forgotten password through an emailed link (1 h, single use); a successful reset signs out every other session. A Google-only account can use the same flow to add a password.
+- As a user I change my password in settings (current password required when one exists).
+- One account per email: signing in with Google on an address that already has a verified password account links the two; both methods then work.
 - As a new user I complete onboarding: unique handle (3–24 chars, `[a-z0-9_]`), display name, avatar from a fixed set (~16 built-in SVGs), language (nl/en, prefilled from browser).
 - As a user I edit profile, language, notification preferences and "auto add planned activities to my calendar".
 - As a user I can delete my account (blocked while I own a group; otherwise leaves all groups with the leave rules, deletes calendar data, tokens, user).

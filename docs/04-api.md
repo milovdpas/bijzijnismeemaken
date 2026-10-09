@@ -12,6 +12,13 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | GET | `/auth/google/callback` | OAuth callback → cookies → redirect | public |
 | POST | `/auth/refresh` | Rotate token pair | refresh cookie |
 | POST | `/auth/logout` | Revoke + clear cookies | any |
+| POST | `/auth/register` | `{ email, password, locale? }` → 201, sends verification email | public (rate limited) |
+| POST | `/auth/login` | `{ email, password }` → cookies; `EMAIL_NOT_VERIFIED` or `INVALID_CREDENTIALS` | public (rate limited by address + email) |
+| POST | `/auth/verify-email` | `{ token }` → marks verified, cookies | public |
+| POST | `/auth/resend-verification` | `{ email }` → always 204 | public (rate limited) |
+| POST | `/auth/forgot-password` | `{ email }` → always 204, sends reset link if the email exists | public (rate limited) |
+| POST | `/auth/reset-password` | `{ token, password }` → 204, revokes all sessions | public |
+| PATCH | `/me/password` | `{ currentPassword?, newPassword }`; current required when a password exists; revokes other sessions | S |
 | GET | `/me` | Current user + preferences + `onboardingDone` | S |
 | PATCH | `/me` | handle, display_name, avatar_key, locale, notification prefs, auto_add_to_calendar | S |
 | GET | `/users/handle-available?handle=` | Onboarding check | any |

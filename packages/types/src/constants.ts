@@ -54,6 +54,16 @@ export const AVAILABILITY = {
     CALENDAR_SYNC_DAYS: 180,
 } as const;
 
+export const AUTH = {
+    /** No composition rules: length is what matters, and a long passphrase beats a short mixed one. */
+    PASSWORD_MIN_LENGTH: 10,
+    PASSWORD_MAX_LENGTH: 128,
+    /** How long an emailed verification link stays valid. */
+    VERIFY_EMAIL_HOURS: 24,
+    /** How long an emailed password reset link stays valid. */
+    RESET_PASSWORD_MINUTES: 60,
+} as const;
+
 export const PROFILE = {
     HANDLE_MIN_LENGTH: 3,
     HANDLE_MAX_LENGTH: 24,
@@ -112,11 +122,18 @@ export const API_ENDPOINTS = {
         GOOGLE_CALLBACK: `${V1}/auth/google/callback`,
         REFRESH: `${V1}/auth/refresh`,
         LOGOUT: `${V1}/auth/logout`,
+        REGISTER: `${V1}/auth/register`,
+        LOGIN: `${V1}/auth/login`,
+        VERIFY_EMAIL: `${V1}/auth/verify-email`,
+        RESEND_VERIFICATION: `${V1}/auth/resend-verification`,
+        FORGOT_PASSWORD: `${V1}/auth/forgot-password`,
+        RESET_PASSWORD: `${V1}/auth/reset-password`,
     },
 
     ME: {
         /** GET profile, PATCH profile, DELETE account. */
         ROOT: `${V1}/me`,
+        PASSWORD: `${V1}/me/password`,
         AVAILABILITY: `${V1}/me/availability`,
         UNAVAILABILITY: `${V1}/me/unavailability`,
         UNAVAILABILITY_RULES: `${V1}/me/unavailability-rules`,
@@ -241,6 +258,12 @@ export const ERROR_CODES = {
     /** The request is well formed but conflicts with current state (duplicate handle, already a member). */
     CONFLICT: 'CONFLICT',
     RATE_LIMITED: 'RATE_LIMITED',
+    /** Wrong email or password. One code for both, so the response never says which. */
+    INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+    /** The account exists but the verification link has not been clicked yet. */
+    EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
+    /** A verification or reset link that is expired, already used or unknown. */
+    TOKEN_INVALID: 'TOKEN_INVALID',
     /** The owner tried to leave or delete their account without transferring first. */
     OWNER_MUST_TRANSFER: 'OWNER_MUST_TRANSFER',
     /** A worker endpoint was called while the same job was still running. */

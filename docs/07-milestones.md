@@ -15,13 +15,14 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 ## M1 — MVP
 6. Migration + entities: users, refresh_tokens, oauth_states.
 7. Auth core: `JWT` util, cookie helpers, `UserAuth` middleware, refresh rotation + family revocation, logout, CORS + `OriginCheck`. Tests mint tokens directly.
-8. Google login: redirect with state table, callback with mocked `id_token` verification, user upsert, onboarding redirect.
-9. Users API: `GET/PATCH /me`, `handle-available`, `users/search`, `DELETE /me` (409 for owners now; full deletion in task 30).
-10. Web: login page, `AuthGate`, `useMe`, onboarding (handle/display name/avatar/locale), settings profile card.
+8. Google login (redirect with state table, callback with mocked `id_token` verification, user upsert or link by email, onboarding redirect) + email/password register and login (`Password` util with scrypt, `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED`, login rate limits).
+8b. Verification and reset: `Mailer` interface + `ConsoleMailer` + `BrevoMailer` (pulled forward from task 14), `email_tokens` service, `verify-email`, `resend-verification`, `forgot-password`, `reset-password` endpoints and their nl/en templates.
+9. Users API: `GET/PATCH /me`, `PATCH /me/password`, `handle-available`, `users/search`, `DELETE /me` (409 for owners now; full deletion in task 30).
+10. Web: login page (Google button + email/password form, register, forgot password), `/verify-email` and `/reset-password` pages, `AuthGate`, `useMe`, onboarding (handle/display name/avatar/locale), settings profile + password cards.
 11. Migration + entities: groups, group_members, group_invites. `GroupService`, `MembershipService`, `requireGroupRole`.
 12. Groups API: create, my groups, public search, detail, update, delete, join (public/link), invite link regenerate.
 13. Members API: list, role change, remove, transfer ownership, leave (membership + invites + editors only; activity/leaderboard decoupling is task 29).
-14. Invites API + `NotificationService` (stateless dispatcher: resolves recipients + preferences, calls channels) + `Mailer` (Console + Brevo) + invite email template.
+14. Invites API + `NotificationService` (stateless dispatcher: resolves recipients + preferences, calls channels) + invite email template (the Mailer itself lands in 8b).
 15. Web: groups list, create group, public search, join link page, group shell with nav (activities / availability / leaderboards / members / settings).
 16. Web: members management, invites UI (send by handle, pending list, my invites page with accept/decline), group settings.
 17. Migration + entities: activities, activity_interests, activity_occurrences, occurrence_participants (no calendar columns yet). `ActivityService`, derived label logic (unit-tested).

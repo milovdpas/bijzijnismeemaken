@@ -4,7 +4,7 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 
 **Working agreement:** one task per session. Pick the first unchecked task below, build only that, run lint / type-check / tests, tick it here with a note, then stop for review. Task definitions live in [07-milestones.md](07-milestones.md). If a task changes a design decision, update the relevant doc in the same session and mention it in the note.
 
-**Current task:** task 6 (users, refresh_tokens, oauth_states migration + entities).
+**Current task:** task 7 (auth core: JWT, cookies, UserAuth, refresh rotation, logout, CORS, OriginCheck).
 
 
 ## M0 — Foundation (repo skeleton)
@@ -24,15 +24,17 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 
 ## M1 — MVP
 
-- [ ] **6.** Migration + entities: users, refresh_tokens, oauth_states.
+- [x] **6.** Migration + entities: users, refresh_tokens, oauth_states.
+  _Done 2026-10-10._ Migration `20261010000000_users_and_sessions.ts` (users with unique google_sub (nullable) / email / handle plus `password_hash` and `email_verified_at`; refresh_tokens with unique token_hash + family_id and CASCADE; email_tokens for verify/reset links with unique token_hash and CASCADE; oauth_states with unique state and CASCADE; `down()` included). Entities `User` (`emailVerified()`, `onboardingDone()`), `RefreshToken` (`isUsable(now: DateTime)`), `OAuthState` (`OAuthPurpose`), `EmailToken` (`EmailTokenPurpose`, `isUsable`), registered in `typeorm-db.ts`. `seedUser()` factory. `tests/schema.test.ts` (13 tests: defaults, uniques incl. case-insensitive handle, password-only accounts, cascades). Types: `AUTH.*` endpoints, `ERROR_CODES` INVALID_CREDENTIALS / EMAIL_NOT_VERIFIED / TOKEN_INVALID, `AUTH` limits; web error translations. Migration applied to dev and test DBs; lint, type-check, prettier and 22 API tests green.
 - [ ] **7.** Auth core: `JWT` util, cookie helpers, `UserAuth` middleware, refresh rotation + family revocation, logout, CORS + `OriginCheck`. Tests mint tokens directly.
-- [ ] **8.** Google login: redirect with state table, callback with mocked `id_token` verification, user upsert, onboarding redirect.
-- [ ] **9.** Users API: `GET/PATCH /me`, `handle-available`, `users/search`, `DELETE /me` (409 for owners now; full deletion in task 30).
-- [ ] **10.** Web: login page, `AuthGate`, `useMe`, onboarding (handle/display name/avatar/locale), settings profile card.
+- [ ] **8.** Google login (redirect with state table, callback with mocked `id_token` verification, user upsert or link by email, onboarding redirect) + email/password register and login (`Password` util with scrypt, `INVALID_CREDENTIALS`, `EMAIL_NOT_VERIFIED`, login rate limits).
+- [ ] **8b.** Verification and reset: `Mailer` interface + `ConsoleMailer` + `BrevoMailer` (pulled forward from task 14), `email_tokens` service, `verify-email`, `resend-verification`, `forgot-password`, `reset-password` endpoints and their nl/en templates.
+- [ ] **9.** Users API: `GET/PATCH /me`, `PATCH /me/password`, `handle-available`, `users/search`, `DELETE /me` (409 for owners now; full deletion in task 30).
+- [ ] **10.** Web: login page (Google button + email/password form, register, forgot password), `/verify-email` and `/reset-password` pages, `AuthGate`, `useMe`, onboarding (handle/display name/avatar/locale), settings profile + password cards.
 - [ ] **11.** Migration + entities: groups, group_members, group_invites. `GroupService`, `MembershipService`, `requireGroupRole`.
 - [ ] **12.** Groups API: create, my groups, public search, detail, update, delete, join (public/link), invite link regenerate.
 - [ ] **13.** Members API: list, role change, remove, transfer ownership, leave (membership + invites + editors only; activity/leaderboard decoupling is task 29).
-- [ ] **14.** Invites API + `NotificationService` (stateless dispatcher: resolves recipients + preferences, calls channels) + `Mailer` (Console + Brevo) + invite email template.
+- [ ] **14.** Invites API + `NotificationService` (stateless dispatcher: resolves recipients + preferences, calls channels) + invite email template (the Mailer itself lands in 8b).
 - [ ] **15.** Web: groups list, create group, public search, join link page, group shell with nav (activities / availability / leaderboards / members / settings).
 - [ ] **16.** Web: members management, invites UI (send by handle, pending list, my invites page with accept/decline), group settings.
 - [ ] **17.** Migration + entities: activities, activity_interests, activity_occurrences, occurrence_participants (no calendar columns yet). `ActivityService`, derived label logic (unit-tested).
@@ -84,3 +86,5 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 | 2026-10-10 | 4 | Web skeleton. Next bumped to 16.4.0 for an advisory on 16.3.x. Remaining audit items are dev-only (vitest/tinypool, `braces` via the shadcn CLI). The API has no CORS yet, so in a browser the status card shows "unreachable" until task 7 adds `cors` + `cookie-parser`. Note: during the smoke run a foreign process on port 3000 was stopped by mistake (EADDRINUSE); it was not ours. |
 | 2026-10-10 | 4b | Design pass after the "plain" review: playful-minimal, yellow + deep blue. Palette system ready for more styles; the style picker only shows once a second palette exists. |
 | 2026-10-10 | 5 | CI and deploy workflows written but deliberately not committed. To go live later: add repo secrets (DOCKERHUB_*, VPS_*, DB_*, JWT_SECRET, WORKER_TOKEN, GOOGLE_*, BREVO_API_KEY, CALENDAR_TOKEN_KEY) and variables (APP_URL, API_URL, COOKIE_DOMAIN, TRUST_PROXY_HOPS), proxy confs + certs for both hostnames, then commit `.github/`. |
+| 2026-10-10 | decision | Email + password sign-in added alongside Google (verify before use, reset flow, one account per email, scrypt). Docs 01–04 and 07 updated; tasks 8/9/10/14 rewritten, 8b added. |
+| 2026-10-10 | 6 | First real schema. Extended in the same task for the email/password decision (password_hash, email_verified_at, email_tokens). `Date` only appears as TypeORM column types; all "now" logic is Luxon per the convention. DTOs and `toDto()` come with the endpoint tasks. |

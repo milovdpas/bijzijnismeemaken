@@ -2,6 +2,10 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 import { databaseConfig } from '../config/database';
+import EmailToken from '../app/models/EmailToken.entity';
+import OAuthState from '../app/models/OAuthState.entity';
+import RefreshToken from '../app/models/RefreshToken.entity';
+import User from '../app/models/User.entity';
 
 /**
  * TypeORM owns runtime queries. Knex owns schema.
@@ -27,7 +31,7 @@ export const AppDataSource = new DataSource({
     // Every timestamp is stored and read as UTC. Leaving this to the server's
     // local zone silently shifts stored times when the clocks change.
     timezone: 'Z',
-    entities: [],
+    entities: [User, RefreshToken, OAuthState, EmailToken],
 });
 
 export async function connectDatabase(): Promise<void> {
