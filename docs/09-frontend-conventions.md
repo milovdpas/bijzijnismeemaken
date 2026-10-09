@@ -1,0 +1,28 @@
+# 09 — Frontend conventions (apps/web)
+
+Distilled from `C:\Users\milov\PersonalProjects\marathon_schema` (RacePilot). These are the rules every frontend task follows. The folder structure of `apps/web` is in [02-architecture.md](02-architecture.md) section 2.4.
+
+## Stack
+- Next.js App Router, TypeScript `strict`, alias `@/*`, `output: "standalone"` for Docker.
+- Tailwind v4 (CSS-first, no config file), shadcn on **Base UI** (`@base-ui/react`, style `base-nova`; compose with the `render` prop, not `asChild`), `class-variance-authority`, `cn()` = `clsx` + `tailwind-merge`, `lucide-react` icons, `next-themes`.
+- Server state: **TanStack Query**. UI preferences only: **Zustand** with `persist`.
+- i18n: i18next + react-i18next with typed dictionaries. Dates: date-fns with a locale holder.
+- No form library and no zod on the frontend. Validation is server-side; forms use controlled state plus a derived `canSave`.
+
+## Rules
+1. **Pages are thin server components**: `metadata` + `<PageHeader>` + the feature `*View` inside the app shell. All interactivity lives in `"use client"` `*-view.tsx` components.
+2. **`components/` is organised by feature** (`groups/`, `activities/`, `availability/`, `leaderboards/`, `settings/`, `onboarding/`). `common/` holds shared app components (`Field`, `PageHeader`, `EmptyState`, `Avatar`, `InstallInstructions`, `Pagination`), `layout/` the shell and providers, `ui/` only generated shadcn primitives (never hand-edited).
+3. **Kebab-case files, one named PascalCase export per file, no default exports outside `app/`.** Aim for 50 to 200 lines per component; small helper sub-components stay unexported in the same file.
+4. **Props are typed inline** in the destructured parameter. Components accept `className?` and merge it with `cn()`, and use `React.ReactNode` for slots. A separate exported `Props` type exists only when another file needs it.
+5. **Pure logic lives in `lib/`** (no React) with a `*.test.ts` beside it when it has logic (daypart grid math, date helpers, score formatting). **Hooks are glue** between `lib/`, the query layer, i18n and the browser; every hook has an explicit return type and a JSDoc line explaining why it exists. **Components only render.**
+6. `hooks/` holds cross-feature hooks only (`use-me`, `use-group-role`, `use-install-app`, `use-mounted`, `queries/*`). Feature-specific hooks sit next to their components.
+7. **API layer**: `lib/api/client.ts` is the single fetch wrapper (`credentials: "include"`, `cache: "no-store"`, typed `ApiError { code, status, details }`, single-flight refresh on 401, redirect to `/login` when the refresh fails). `lib/api/<resource>.ts` has one typed function per endpoint using `API_ENDPOINTS` and the DTOs from `@bzim/types`. `hooks/queries/use-<resource>.ts` wraps `useQuery` / `useMutation` with keys from `lib/query-keys.ts` and explicit invalidation. Error messages are chosen by `code` through i18n, never taken from the server `message`.
+8. **State**: the Zustand store in `store/use-preferences-store.ts` holds only locale, theme and `installPromptSeen` (persist with `partialize`, `version`, additive `migrate`). Server data never goes into Zustand. Non-persisted machinery such as timers stays in module scope.
+9. **Hydration**: use `useMounted` (`useSyncExternalStore`) and `useState` initializers instead of setState inside effects. Values that differ between server and client render behind `HydrationGate`.
+10. **Providers per section**: the root layout mounts only theme and the service worker; `components/layout/app-runtime.tsx` (QueryProvider, I18nProvider, AuthGate, Toaster) is mounted by the `(app)` layout only. Side-effect initializers are components that return `null`.
+11. **Forms**: controlled `useState` with a `FormState` type and a `blank` constant, a derived `canSave` that disables Save, trim and normalise on submit, and the `Field` wrapper for accessible labels (`useId`). Time scores use a dedicated `DurationInput` (hh:mm:ss.SSS) that converts to milliseconds in `lib/score.ts`.
+12. **i18n**: every user-facing string is `t("ns.key")`. `lib/i18n/locales/en.ts` is the typed source (`export type Dict = typeof en`) and `nl.ts: Dict`, so a missing key is a compile error. A vitest scans `t("...")` calls and fails on unknown keys. The locale comes from the user profile after login and from browser detection before it; `I18nProvider` sets `document.documentElement.lang` and the date-fns locale.
+13. **Styling**: oklch tokens in `:root` and `.dark` mapped through `@theme inline`; dark mode via the `next-themes` class strategy; layout values as CSS variables (`--h-topbar`, `--z-toast`); static class maps for variants, never `bg-${x}`; mobile-first with `md:` breakpoints; icons `size-4`; an `aria-label` on every icon-only button; `tabular-nums` for scores and dates.
+14. **PWA**: `app/manifest.ts` with a frozen `id`, PNG icons 192/512/maskable, `display: "standalone"`; `appleWebApp` metadata; a hand-written conservative `public/sw.js` (network-first navigations, cache-first hashed assets, never the API origin) registered in production after `load`; `useInstallApp()` with four modes (`installed | prompt | ios-manual | unavailable`) used by both the settings card and the one-time prompt, which both render the shared `InstallInstructions`.
+15. **Comments explain why, not what.** Keep `AGENTS.md` and these docs in sync when a convention changes.
+16. `npm run lint`, `npm run type-check` and `npm run test` must pass before a task is handed over for review. No component tests for now; `lib/` unit tests only.

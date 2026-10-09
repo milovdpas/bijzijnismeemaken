@@ -1,0 +1,15 @@
+# 08 — Open risks & questions
+
+
+1. **Google OAuth verification**: `calendar.readonly` / `calendar.events` are sensitive scopes. An unverified app shows a scary warning and is limited to 100 test users while in "Testing". Options: keep the Cloud project in Testing and add friends as test users (refresh tokens then expire after 7 days! → requires "In production" status even if unverified, which shows the warning screen but keeps tokens). Needs a decision before M2; plan assumes "In production, unverified" + documented warning for friends.
+2. **Ofelia timezone & registration**: schedules run in the scheduler container's TZ; DST makes "midnight Amsterdam" drift one hour. Plan: run at 23:05 UTC and compute "today" in Amsterdam inside the job. Scheduler must be restarted after first deploy with labels.
+3. **Email deliverability**: Brevo sender on `milovanderpas.nl` needs DKIM/SPF records; confirm the domain is (or can be) authenticated in Brevo.
+4. **Cookie domain**: `Domain=.bijzijn.milovanderpas.nl` scopes cookies to this app only. Verify the proxy forwards `Origin` and that Next.js never needs the cookie server-side (plan: all data fetching is client-side; server components render shells only).
+5. **iOS PWA**: push requires iOS 16.4+ and home-screen install; cookies in standalone mode are fine. ICS "add to calendar" from email opens Calendar on iOS; Google Calendar template link for Android.
+6. **Calendar volume**: 180 days × a few calendars × ~20 users is small, but full-window replace per night is O(events); fine at this scale. Google API quota (10k req/day default) is far above need.
+7. **Decimal scores**: using DECIMAL(16,3) for both number and time(ms). Time input UX (hh:mm:ss.SSS) needs care; confirm that milliseconds precision is wanted or seconds is enough.
+11. **Google "Free" events**: respecting transparency means a user who marks a real appointment as "Free" shows as available; documented in the calendar settings help text.
+12. **Stale planned occurrences**: non-recurring activities keep `planned` after the date passes until someone acts. Consider a gentle in-app nudge ("Did this happen?") in M3 rather than auto-done.
+8. **Account deletion vs. leaderboard history**: snapshots keep display names of deleted users in groups they were in; acceptable under "friends only" assumption, documented in the privacy note in settings.
+9. **Shared zod schemas**: template keeps zod only in the API with hand-written DTOs in `packages/types`. Keeping that for consistency; revisit if duplication hurts.
+10. **Deployment details still to discuss later** (per prompt): external MySQL host/credentials, Docker Hub repo names, GitHub secrets, proxy confs.

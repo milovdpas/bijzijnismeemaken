@@ -1,0 +1,49 @@
+# 10 — Backend conventions (apps/api)
+
+Carried over from `C:\Users\milov\PersonalProjects\dynamic_alarm\apps\api` (its `docs/CONVENTIONS.md` is the longer prose version). The API skeleton is **copied** from that project and trimmed, see [02-architecture.md](02-architecture.md) section 2.3. It is not rewritten.
+
+## Process and structure
+- `src/app.ts` exports `createApp()` without listening so tests can mount it. `src/index.ts` connects the database first, then listens, and handles SIGTERM/SIGINT with a graceful shutdown (close server, then close DB, 20 s unref'd timeout).
+- `GET /api/v1/health` runs a real `SELECT 1` with a timeout and answers 503 when the database is unreachable. The Docker `HEALTHCHECK` probes `127.0.0.1`, not `localhost`.
+- Folders: `app/routes/groups/<resource>.ts` (route classes), `app/controllers`, `app/services`, `app/models/*.entity.ts`, `app/middleware`, `app/validators/*Schemas.ts`, `app/modules` (external providers), `app/utils`, `config`, `database/{migrations,typeorm-db,knexfile}`, `tools` (migrate, worker), `tests` (flat `*.test.ts` plus `support/`).
+
+## Routing, controllers, services
+- Each resource group is a class implementing `IRoute { getRoutes(): Router }`. It owns one controller instance and declares each route on one line: path constant from `API_ENDPOINTS` (absolute paths, mounted at root), auth middleware, rate limit, `validate({ params, query, body })`, controller handler. Literal paths come before `:id` paths; use `router.get<IdParams>(...)` for typed params.
+- Controllers are classes with arrow-property handlers typed `Handler<BodyOf<typeof schema>, Params>`. There is no async wrapper because Express 5 forwards rejected promises to the error middleware.
+- `sendSuccess<T>(res, dto)` requires an explicit DTO type from `@bzim/types`. Lists are bare arrays; paginated lists use `{ items, page, pageSize, total, hasMore }`.
+- Services never touch `res`. They return `Entity | null`, arrays, or result unions `{ ok: true, ... } | { ok: false, problem: 'SOME_PROBLEM' }`. Controllers map problems with an exhaustive `switch` in a private `sendProblem()`.
+- Every lookup is scoped to what the caller may see (group membership). An unknown or foreign resource answers 404, not 403. 403 (`FORBIDDEN`) is reserved for known-but-not-allowed actions inside a group the caller belongs to.
+
+## Errors and validation
+- Helpers in `utils/ApiResponses.ts`: `sendSuccess`, `sendError(res, code, message, status, details)`, `sendNotFound`, `sendUnauthorized`, `sendForbidden`, `sendValidationFailed` (422), `sendConflict` (409). The error body is flat `{ code, message, details? }` and `code` comes from `ERROR_CODES`. The frontend translates by code, so `message` is for developers.
+- Middleware answers directly instead of throwing. `ErrorHandler` is the last resort: known error classes map to their status, everything else becomes a 500 with details only outside production.
+- zod v4 schemas per resource in `app/validators`. `validate()` checks params, query and body at once and reports all issues. The parsed body overwrites `req.body`; parsed query and params are read with `queryOf(req, schema)` and `paramsOf(req, schema)` because Express 5 makes `req.query` read-only.
+
+## Database
+- TypeORM active-record entities (`BaseEntity`), `@Entity('snake_table')` with snake_case `name:` on columns, UUID primary keys generated in the app, `datetime(3)` timestamps, `timezone: 'Z'` plus `SET time_zone='+00:00'` on every pooled connection, `decimalTransformer` for DECIMAL columns, `synchronize: false`, entities listed explicitly, and a `toDto()` on each entity.
+- Knex is used only for migrations (`database/migrations/YYYYMMDDHHMMSS_name.ts` with `up` and `down`), run via `tools/migrate.ts` (`latest`, `rollback`, `status`). Migrations are the source of truth for indexes, uniques and ON DELETE rules. New columns use `.after('col')`.
+- Time logic (dayparts, "today", current month) uses Luxon in `Europe/Amsterdam` through `utils/Dates.ts`. The database stores UTC.
+
+## Auth and security
+- `UserAuth` reads the `access_token` cookie (or `Authorization: Bearer` for tools and tests), verifies the JWT, rejects `type !== 'access'`, and loads the user onto `req.user`. `RequireGroupRole(minRole)` loads the membership onto `req.membership`.
+- `OriginCheck` runs on cookie-authenticated non-GET requests. `WorkerAuth` (`X-Worker-Token`, `timingSafeEqual`, 503 when unset) guards `/worker/*`.
+- A hand-rolled in-memory fixed-window rate limiter with named limits in `ApiLimits.ts` and `resetRateLimits()` for tests.
+- Secrets are read lazily in `config/app.ts` (`required()`, `optional()`, `integer()`, `flag()`), so a missing key fails when first used. Keys the app cannot start without are read eagerly.
+
+## Config and environment
+- dotenv loads `.env`, or `.env.test` when `NODE_ENV=test`, resolved relative to the config file. `.env.example`, `.env.test.example` and `.env.dist` (placeholders for CI `envsubst`) are committed; real env files are ignored.
+- One `env` object is exported from `config/app.ts`, including `isProduction()`.
+
+## Logging and jobs
+- `utils/Logger.ts` is a thin wrapper over `console` with level prefixes. No pino or winston.
+- Scheduled work has no folder of its own. Each cron job is a `POST /api/v1/worker/<job>` endpoint on `WorkerController` (route class `app/routes/groups/worker.ts`) that calls a service method; Ofelia `job-exec` labels run `node dist/tools/worker.js <job>` inside the container, which POSTs to that endpoint. A static in-process flag per endpoint prevents overlapping runs. After a deploy that adds or changes a label: `docker restart scheduler` and check the `job registered` lines.
+
+## Tests
+- vitest plus supertest against a real MySQL database whose name ends in `_test` (`tests/support/database.ts` refuses anything else). `globalSetup` runs the Knex migrations once; `setup.ts` connects in `beforeAll`, truncates every table and resets rate limits in `beforeEach`, and disconnects in `afterAll`. `fileParallelism: false`.
+- `tests/support/client.ts`: `api = supertest(createApp())`, `asUser(token).get/post/patch/put/delete`, `data<T>(res)` (throws on 4xx/5xx), `error(res)`. `tests/support/factories.ts`: `seedUser()` returning `{ user, accessToken }`, `seedGroup()`, `seedMember()`, `seedActivity()`, `seedLeaderboard()`, all written through entities with `DeepPartial` overrides.
+- External providers (Google OAuth, Google Calendar, Brevo) are never called. Tests spy on the factory (`vi.spyOn(CalendarProviderFactory, 'for').mockReturnValue(fixtureProvider)`) or inject `ConsoleMailer`.
+- Every backend task ships with integration tests for its endpoints, including the permission denials (404 for non-members, 403 for members without rights).
+
+## Style
+- Prettier: 4 spaces, single quotes, semicolons, width 100, trailing commas, LF. ESLint flat config with typescript-eslint `recommendedTypeChecked`; `no-floating-promises`, `no-misused-promises` and `no-explicit-any` are errors; unused vars are prefixed `_`.
+- Comments explain why, not what. No em or en dashes in user-facing strings (emails) or code comments.
