@@ -1,0 +1,11 @@
+/**
+ * Every TanStack Query key, in one place.
+ *
+ * Keys are arrays so invalidation can target a prefix: invalidating
+ * `queryKeys.groups.all` drops every group list and detail at once. Each task
+ * that adds a resource adds its keys here rather than inlining strings in
+ * hooks, so a rename cannot leave one hook reading a stale cache.
+ */
+export const queryKeys = {
+    health: ['health'] as const,
+};
