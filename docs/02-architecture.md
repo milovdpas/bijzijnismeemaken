@@ -10,7 +10,7 @@ bijzijnismeemaken/
   .prettierrc                  4 spaces, single quotes, semicolons, width 100, trailing commas
   docker-compose.yml           local MySQL 8 (utf8mb4, time zone +00:00, host port 3308) + mailpit (SMTP 1025, UI 8025)
   docker-compose.prod.yml      api + web services, web network, expose only, healthchecks, ofelia labels
-  .github/workflows/deploy-api.yml, deploy-web.yml
+  .github/workflows/ci.yml (lint, type-check, test, web build on PRs and main), deploy-api.yml, deploy-web.yml
   apps/api/                    Express 5 + TypeORM + Knex migrations (see 2.3)
   apps/web/                    Next.js (App Router) PWA (see 2.4)
   packages/types/              @bzim/types: DTOs, API_ENDPOINTS, ERROR_CODES, enums (Daypart, Role, …), constants (DAYPARTS ranges)
@@ -144,4 +144,6 @@ interface CalendarProvider {
 - Two images: `milovdpas8/bzim-api` (node `dist/index.js`, `/api/v1/health`) and `milovdpas8/bzim-web` (Next `output: 'standalone'`, copy `.next/static` + `public`, `NEXT_PUBLIC_API_URL` build arg, `/health` route).
 - `docker-compose.prod.yml` with both services on the external `web` network, `expose` only, healthchecks, `env_file: .env` for api, Ofelia labels on api.
 - External MySQL (no DB on the VPS); deploy workflow runs `npm run migrate` in the api container after `up -d` (as dynamic_alarm).
+- Deploy order: the API workflow renders `/opt/apps/bzim/.env` from `apps/api/.env.dist` and the compose file reads `DOCKERHUB_USERNAME` from it, so the API must deploy at least once before the web workflow can. Each workflow pulls and restarts only its own service. CI (`ci.yml`) is the only place lint/type-check/tests run; the deploy workflows do not repeat them.
+- The workflow files are kept untracked until the VPS side (secrets, proxy confs, DNS, Google OAuth redirect URIs) is set up, because pushing them to `main` starts deploys.
 - Proxy confs + certs for both hostnames; Google OAuth redirect URIs registered for prod + localhost.
