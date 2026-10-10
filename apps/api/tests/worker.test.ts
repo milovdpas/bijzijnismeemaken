@@ -18,7 +18,7 @@ describe('worker endpoints', () => {
         const body = data<WorkerJobResponse>(response);
         expect(body.job).toBe('cleanup');
         expect(body.durationMs).toBeGreaterThanOrEqual(0);
-        expect(body.stats).toEqual({});
+        expect(body.stats).toEqual({ refreshTokens: 0, oauthStates: 0, manualBlocks: 0 });
     });
 
     it('refuses a missing token', async () => {

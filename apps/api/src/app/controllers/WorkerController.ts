@@ -2,6 +2,7 @@ import { ERROR_CODES } from '@bzim/types';
 import type { WorkerJobResponse } from '@bzim/types';
 
 import type { Handler } from '../../interfaces/IHttp';
+import { CleanupService } from '../services/CleanupService';
 import { sendError, sendSuccess } from '../utils/ApiResponses';
 
 /**
@@ -27,12 +28,10 @@ export default class WorkerController {
      * day is a problem to see in the scheduler's log, not one to hide by running
      * twice. Answering 409 keeps that visible.
      *
-     * Nothing to clean yet: the tables it will sweep (synced calendar events,
-     * expired refresh tokens, stale OAuth states, old manual blocks) arrive with
-     * their own tasks, and each adds its step to `CleanupService`. The endpoint
-     * exists now so the scheduler wiring and the auth guard are in place.
+     * The sweep itself is `CleanupService.run()`; synced calendar events join
+     * it in M2.
      */
-    cleanup: Handler = (_req, res) => {
+    cleanup: Handler = async (_req, res) => {
         if (WorkerController.cleanupRunning) {
             sendError(res, ERROR_CODES.WORKER_BUSY, 'cleanup is still running.', 409);
             return;
@@ -43,10 +42,11 @@ export default class WorkerController {
         const startedAt = process.hrtime.bigint();
         WorkerController.cleanupRunning = true;
         try {
+            const stats = await CleanupService.run();
             sendSuccess<WorkerJobResponse>(res, {
                 job: 'cleanup',
                 durationMs: Number((process.hrtime.bigint() - startedAt) / 1_000_000n),
-                stats: {},
+                stats,
             });
         } finally {
             // In a `finally` because a throw here would leave the flag set
