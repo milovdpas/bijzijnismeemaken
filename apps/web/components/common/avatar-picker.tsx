@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
  * the app pages on a phone, with dots underneath. Scroll snapping does the
  * paging; the dots follow the scroll position and jump to a page on tap.
  * One radio group across all pages, so the selection is still one choice.
+ * Each page has a little padding so the selection ring, which sits outside
+ * the button, is not clipped by the scroller nor seen on the next page.
  */
 export function AvatarPicker({
     value,
@@ -51,7 +53,7 @@ export function AvatarPicker({
                 {pages.map((keys, index) => (
                     <div
                         key={index}
-                        className="grid w-full shrink-0 snap-start grid-cols-4 justify-items-center gap-2"
+                        className="grid w-full shrink-0 snap-start grid-cols-4 justify-items-center gap-2 p-1"
                     >
                         {keys.map((key) => {
                             const selected = value === key;
