@@ -59,6 +59,12 @@ export const ACTIVITY = {
     DEFAULT_DURATION_MINUTES: 120,
 } as const;
 
+export const IMAGES = {
+    QUERY_MIN_LENGTH: 2,
+    QUERY_MAX_LENGTH: 80,
+    PER_PAGE: 24,
+} as const;
+
 export const AVAILABILITY = {
     /** Longest `from..to` range a single availability or occurrences request may ask for. */
     MAX_RANGE_DAYS: 93,
@@ -171,6 +177,13 @@ export const API_ENDPOINTS = {
         NOTIFICATION_SETTINGS: `${V1}/me/notification-settings`,
         NOTIFICATION_SETTING: (type: string) => `${V1}/me/notification-settings/${type}`,
         PUSH_SUBSCRIPTIONS: `${V1}/me/push-subscriptions`,
+    },
+
+    IMAGES: {
+        /** Free stock photos for an activity, proxied so the provider key stays on the server. */
+        SEARCH: `${V1}/images/search`,
+        /** Unsplash asks to be told when a photo is actually used. */
+        USED: `${V1}/images/used`,
     },
 
     USERS: {

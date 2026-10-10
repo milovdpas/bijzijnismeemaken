@@ -174,6 +174,11 @@ export const env = {
         clientSecret: () => required('GOOGLE_CLIENT_SECRET'),
     },
 
+    images: {
+        /** Unsplash access key for the photo search. Empty means the search answers 503 and the form still takes a pasted link. */
+        unsplashAccessKey: () => optional('UNSPLASH_ACCESS_KEY', ''),
+    },
+
     mail: {
         /** `console`, `smtp` (local catcher) or `brevo`. See `modules/mail`. */
         driver: mailDriver(),

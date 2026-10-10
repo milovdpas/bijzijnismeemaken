@@ -23,6 +23,16 @@ export const queryKeys = {
     members: {
         list: (groupId: string) => ['members', groupId] as const,
     },
+    activities: {
+        all: (groupId: string) => ['activities', groupId] as const,
+        list: (groupId: string, label: string | undefined, sort: string) =>
+            ['activities', groupId, 'list', label ?? 'all', sort] as const,
+        detail: (groupId: string, activityId: string) =>
+            ['activities', groupId, 'detail', activityId] as const,
+    },
+    images: {
+        search: (q: string, page: number) => ['images', q, page] as const,
+    },
     invites: {
         all: ['invites'] as const,
         mine: ['invites', 'mine'] as const,

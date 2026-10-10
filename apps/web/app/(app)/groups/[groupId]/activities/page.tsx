@@ -1,9 +1,14 @@
 import type { Metadata } from 'next';
 
-import { GroupPlaceholder } from '@/components/groups/group-placeholder';
+import { ActivitiesView } from '@/components/activities/activities-view';
 
 export const metadata: Metadata = { title: 'Activities' };
 
-export default function GroupActivitiesPage() {
-    return <GroupPlaceholder tab="activities" />;
+export default async function GroupActivitiesPage({
+    params,
+}: {
+    params: Promise<{ groupId: string }>;
+}) {
+    const { groupId } = await params;
+    return <ActivitiesView groupId={groupId} />;
 }

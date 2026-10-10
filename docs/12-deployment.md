@@ -70,6 +70,7 @@ Secrets:
 | `WORKER_TOKEN` | generated above |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | from step 5 |
 | `BREVO_API_KEY` | from step 6 |
+| `UNSPLASH_ACCESS_KEY` | the Access Key of a free Unsplash developer app (unsplash.com/developers, demo tier: 50 searches an hour) for the photo search in the activity form. Optional: without it the search answers "not available" and pasting a link still works |
 | `CALENDAR_TOKEN_KEY` | generated above. Not read until the calendar milestone, but setting it now means no second round later |
 
 Variables (not secrets):
@@ -197,6 +198,8 @@ docker logs scheduler 2>&1 | grep 'job registered'
 Then the real test: sign in with Google on the production app, finish onboarding, create a group, invite a second account by handle and check the invitation email arrives from Brevo.
 
 ## 10. Known gaps before go-live
+
+- **Unsplash production tier.** The photo search runs on a demo key (50 searches an hour, app id 1098263). Apply for production (1,000 an hour) once that limit is felt. Their checklist: hotlinking (done), the download ping (done), no Unsplash branding in the app name (done), an accurate name and description in their form, and the "Photo by Name on Unsplash" credit with both links wherever a photo is shown, with screenshots. The picker credits already; the activity page credit lands with task 21, which stores the photographer beside the image URL.
 
 - **Worker runner.** The compose labels call `node dist/tools/worker.js`, which lands with task 32 together with the cleanup job. Until then the two scheduled jobs are registered but fail at run time, which is harmless: the API itself does not depend on them. Task 32 also double-checks the migration command the workflow uses against the compiled image.
 - **Calendar sync** is M2. `CALENDAR_TOKEN_KEY` can already be set; nothing reads it yet.

@@ -25,6 +25,8 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | PUT | `/me/notification-settings/:type` | `{ email, push }` upsert | S |
 | GET | `/users/handle-available?handle=` | Onboarding check | any |
 | GET | `/users/search?q=` | Handle prefix search (for invites), returns id/handle/display_name/avatar | any (rate limited) |
+| GET | `/images/search?q=&page=` | Stock photos (Unsplash) for an activity image; the key stays server-side. 503 when no key is configured | any (rate limited) |
+| POST | `/images/used` | `{ useToken }`: the download ping Unsplash requires when a photo is picked; best effort | any (rate limited) |
 | DELETE | `/me` | Delete account (409 `OWNER_MUST_TRANSFER` if owning groups) | S |
 | GET | `/avatars` | Static list of avatar keys (could be a constant in `@bzim/types` instead) | any |
 

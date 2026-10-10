@@ -320,3 +320,35 @@ export interface GroupOccurrenceDto extends OccurrenceDto {
     /** Other planned occurrences in the group on the same day whose time window overlaps. */
     conflictsWith: Uuid[];
 }
+
+/* -------------------------------------------------------------------------- */
+/* Images                                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One stock photo. `url` is what gets stored on the activity; `previewUrl` is
+ * for the picker; `useToken` goes back to `POST /images/used` once the photo
+ * is picked, which is how the provider counts a download.
+ */
+export interface ImageResultDto {
+    id: string;
+    useToken: string;
+    url: string;
+    previewUrl: string;
+    width: number;
+    height: number;
+    alt: string;
+    photographer: string;
+    photographerUrl: string;
+}
+
+/** `GET /images/search?q=&page=`. */
+export interface ImageSearchResponse {
+    items: ImageResultDto[];
+    hasMore: boolean;
+}
+
+/** `POST /images/used`. */
+export interface ImageUsedRequest {
+    useToken: string;
+}
