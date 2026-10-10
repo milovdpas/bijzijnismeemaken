@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { EditMode, LEADERBOARD, LeaderboardPeriod, ScoreType, SortOrder } from '@bzim/types';
+import {
+    AVATAR_KEYS,
+    EditMode,
+    LEADERBOARD,
+    LeaderboardPeriod,
+    ScoreType,
+    SortOrder,
+} from '@bzim/types';
 
 import { paginationQuerySchema } from './commonSchemas';
 
@@ -29,6 +36,7 @@ const leaderboardFields = z.object({
     showYearly: z.boolean(),
     showAllTime: z.boolean(),
     showSteppers: z.boolean().optional(),
+    cardPeriod: z.enum(LeaderboardPeriod).optional(),
 });
 
 export const createLeaderboardSchema = leaderboardFields;
@@ -37,9 +45,22 @@ export const updateLeaderboardSchema = leaderboardFields
     .partial()
     .refine((body) => Object.keys(body).length > 0, 'At least one field is required');
 
-export const addLeaderboardMemberSchema = z.object({
-    userId: z.uuid(),
-});
+/** A group member by id, or a guest by name; exactly one of the two. */
+export const addLeaderboardMemberSchema = z
+    .object({
+        userId: z.uuid().optional(),
+        name: z
+            .string()
+            .trim()
+            .min(LEADERBOARD.GUEST_NAME_MIN_LENGTH)
+            .max(LEADERBOARD.GUEST_NAME_MAX_LENGTH)
+            .optional(),
+        avatarKey: z.enum(AVATAR_KEYS).optional(),
+    })
+    .refine(
+        (body) => (body.userId === undefined) !== (body.name === undefined),
+        'Give a userId or a name, not both',
+    );
 
 /** Three decimals at most; the column has no room for more, and a time is whole milliseconds. */
 export const setScoreSchema = z.object({

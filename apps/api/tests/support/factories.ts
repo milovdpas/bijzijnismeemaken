@@ -6,6 +6,7 @@ import {
     DateMode,
     Daypart,
     EditMode,
+    LeaderboardPeriod,
     GroupAccess,
     GroupRole,
     Locale,
@@ -215,6 +216,7 @@ export async function seedLeaderboard(
         showYearly: true,
         showAllTime: true,
         showSteppers: false,
+        cardPeriod: LeaderboardPeriod.TOTAL,
     });
     Object.assign(leaderboard, overrides);
     return leaderboard.save();

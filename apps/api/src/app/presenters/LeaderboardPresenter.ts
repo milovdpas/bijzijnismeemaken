@@ -1,4 +1,9 @@
-import type { LeaderboardDetailDto, LeaderboardListingDto, UserSummary } from '@bzim/types';
+import type {
+    LeaderboardDetailDto,
+    LeaderboardListingDto,
+    ScoreEntryDto,
+    UserSummary,
+} from '@bzim/types';
 
 import type Leaderboard from '../models/Leaderboard.entity';
 
@@ -16,10 +21,12 @@ export default class LeaderboardPresenter {
     static listing(
         leaderboard: Leaderboard,
         permissions: LeaderboardPermissions,
+        top: ScoreEntryDto[],
     ): LeaderboardListingDto {
         return {
             ...leaderboard.toDto(),
             memberCount: leaderboard.members.filter((member) => member.isActive()).length,
+            top,
             ...permissions,
         };
     }
@@ -28,6 +35,7 @@ export default class LeaderboardPresenter {
     static detail(
         leaderboard: Leaderboard,
         permissions: LeaderboardPermissions,
+        top: ScoreEntryDto[],
     ): LeaderboardDetailDto {
         const members = leaderboard.members.map((member) => member.toDto());
         members.sort(
@@ -36,7 +44,7 @@ export default class LeaderboardPresenter {
                 a.displayName.localeCompare(b.displayName),
         );
         return {
-            ...LeaderboardPresenter.listing(leaderboard, permissions),
+            ...LeaderboardPresenter.listing(leaderboard, permissions, top),
             members,
             editors: leaderboard.editors.flatMap((editor) => {
                 const summary: UserSummary | null = editor.user.toSummary();

@@ -59,6 +59,7 @@ export default class LeaderboardController {
             showYearly,
             showAllTime,
             showSteppers,
+            cardPeriod,
         } = req.body;
         const result = await LeaderboardService.create(req.group, req.user, {
             name,
@@ -71,6 +72,7 @@ export default class LeaderboardController {
             showYearly,
             showAllTime,
             showSteppers,
+            cardPeriod,
         });
         if (!result.ok) {
             sendValidationFailed(res, 'The settings do not agree', { problem: result.problem });
@@ -78,7 +80,7 @@ export default class LeaderboardController {
         }
         sendSuccess<LeaderboardDetailDto>(
             res,
-            LeaderboardService.detail(result.leaderboard, req.membership),
+            await LeaderboardService.detail(result.leaderboard, req.membership),
             201,
         );
     };
@@ -92,7 +94,7 @@ export default class LeaderboardController {
         }
         sendSuccess<LeaderboardDetailDto>(
             res,
-            LeaderboardService.detail(leaderboard, req.membership),
+            await LeaderboardService.detail(leaderboard, req.membership),
         );
     };
 
@@ -118,6 +120,7 @@ export default class LeaderboardController {
             showYearly,
             showAllTime,
             showSteppers,
+            cardPeriod,
         } = req.body;
         const result = await LeaderboardService.update(req.group, leaderboard, {
             name,
@@ -130,6 +133,7 @@ export default class LeaderboardController {
             showYearly,
             showAllTime,
             showSteppers,
+            cardPeriod,
         });
         if (!result.ok) {
             sendValidationFailed(res, 'The settings do not agree', { problem: result.problem });
@@ -137,7 +141,7 @@ export default class LeaderboardController {
         }
         sendSuccess<LeaderboardDetailDto>(
             res,
-            LeaderboardService.detail(result.leaderboard, req.membership),
+            await LeaderboardService.detail(result.leaderboard, req.membership),
         );
     };
 
@@ -203,7 +207,7 @@ export default class LeaderboardController {
         );
     };
 
-    /** Any member puts somebody on the board. */
+    /** Any member puts somebody on the board: a group member by id, or a guest by name. */
     addMember: Handler<BodyOf<typeof addLeaderboardMemberSchema>> = async (req, res) => {
         const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
         const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
@@ -211,7 +215,17 @@ export default class LeaderboardController {
             sendNotFound(res, 'Leaderboard');
             return;
         }
-        const { userId } = req.body;
+        const { userId, name, avatarKey } = req.body;
+        if (userId === undefined) {
+            const guest = await LeaderboardService.addGuest(
+                leaderboard,
+                name ?? '',
+                avatarKey,
+                req.user,
+            );
+            sendSuccess<LeaderboardMemberDto>(res, guest.toDto(), 201);
+            return;
+        }
         const result = await LeaderboardService.addMember(req.group, leaderboard, userId, req.user);
         if (!result.ok) {
             switch (result.problem) {

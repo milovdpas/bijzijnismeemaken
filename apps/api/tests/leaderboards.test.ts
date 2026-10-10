@@ -61,7 +61,7 @@ describe('LeaderboardService.create and update', () => {
         });
         expect(result.ok).toBe(true);
         if (!result.ok) return;
-        const dto = LeaderboardService.detail(result.leaderboard, creatorMembership);
+        const dto = await LeaderboardService.detail(result.leaderboard, creatorMembership);
         expect(dto.name).toBe('Klaverjassen');
         expect(dto.creator?.id).toBe(creator.id);
         expect(dto.editors.map((u) => u.id)).toEqual([member.id]);

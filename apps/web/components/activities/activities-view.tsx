@@ -9,11 +9,11 @@ import { useTranslation } from 'react-i18next';
 import { ActivityCard } from '@/components/activities/activity-card';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormMessage } from '@/components/common/form-message';
+import { PillGroup } from '@/components/common/pill-group';
 import { Button } from '@/components/ui/button';
 import { useActivities } from '@/hooks/queries/use-activities';
 import { errorKey } from '@/lib/api/errors';
 import type { ActivityFilters } from '@/lib/api/activities';
-import { cn } from '@/lib/utils';
 
 const LABELS: readonly (ActivityLabel | 'all')[] = [
     'all',
@@ -21,43 +21,6 @@ const LABELS: readonly (ActivityLabel | 'all')[] = [
     ActivityLabel.PLANNED,
     ActivityLabel.DONE,
 ];
-
-/** A row of pills; the chosen one is yellow. Used for both filters so they look the same. */
-function Pills<T extends string>({
-    options,
-    value,
-    labelFor,
-    onChange,
-    ariaLabel,
-}: {
-    options: readonly T[];
-    value: T;
-    labelFor: (option: T) => string;
-    onChange: (option: T) => void;
-    ariaLabel: string;
-}) {
-    return (
-        <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-1.5">
-            {options.map((option) => (
-                <button
-                    key={option}
-                    type="button"
-                    role="radio"
-                    aria-checked={value === option}
-                    onClick={() => onChange(option)}
-                    className={cn(
-                        'rounded-full px-3 py-1 text-xs font-semibold transition-colors',
-                        value === option
-                            ? 'bg-brand text-brand-foreground'
-                            : 'bg-muted text-muted-foreground hover:text-foreground',
-                    )}
-                >
-                    {labelFor(option)}
-                </button>
-            ))}
-        </div>
-    );
-}
 
 /** The group's activities: filter by state, sort by date or by newest, add a new one. */
 export function ActivitiesView({ groupId }: { groupId: string }) {
@@ -73,7 +36,7 @@ export function ActivitiesView({ groupId }: { groupId: string }) {
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <Pills
+                <PillGroup
                     options={LABELS}
                     value={label}
                     labelFor={(option) =>
@@ -83,7 +46,7 @@ export function ActivitiesView({ groupId }: { groupId: string }) {
                     ariaLabel={t('activities.filterLabel')}
                 />
                 <div className="flex items-center gap-3">
-                    <Pills
+                    <PillGroup
                         options={['next', 'newest'] as const}
                         value={sort}
                         labelFor={(option) =>
@@ -131,10 +94,11 @@ export function ActivitiesView({ groupId }: { groupId: string }) {
                     />
                 ) : (
                     <div
-                        className={cn(
-                            'grid gap-3 md:grid-cols-2',
-                            activities.isPlaceholderData && 'opacity-60',
-                        )}
+                        className={
+                            activities.isPlaceholderData
+                                ? 'grid gap-3 opacity-60 md:grid-cols-2'
+                                : 'grid gap-3 md:grid-cols-2'
+                        }
                     >
                         {activities.data.map((activity) => (
                             <ActivityCard

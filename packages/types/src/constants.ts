@@ -49,6 +49,11 @@ export const LEADERBOARD = {
     /** DECIMAL(16,3): thirteen digits before the point. Times are milliseconds, so ~317 years. */
     SCORE_MAX: 9_999_999_999_999,
     SCORE_DECIMALS: 3,
+    /** How many of the card ranking the list shows per board. */
+    CARD_TOP: 3,
+    /** A player without an account: a name on the board. Same bounds as a display name. */
+    GUEST_NAME_MIN_LENGTH: 2,
+    GUEST_NAME_MAX_LENGTH: 40,
 } as const;
 
 export const ACTIVITY = {

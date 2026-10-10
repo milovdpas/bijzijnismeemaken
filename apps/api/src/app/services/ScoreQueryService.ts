@@ -18,6 +18,12 @@ import { ScoreService } from './ScoreService';
 
 type ScoreRow = LeaderboardScoreMonthly | LeaderboardScoreYearly | LeaderboardScoreTotal;
 
+/** The year and month a ranking is about; null where the period does not care. */
+interface ResolvedPeriod {
+    year: number | null;
+    month: number | null;
+}
+
 /**
  * Reading rankings. One period table at a time, ordered by score the way
  * the board wants, then by `updated_at` and id so the first to reach a value
@@ -36,35 +42,15 @@ export class ScoreQueryService {
         pageSize: number,
         viewerUserId: string,
     ): Promise<ScoresResponse> {
-        const current = ScoreService.currentPeriod();
-        const resolved = {
-            year: period === LeaderboardPeriod.TOTAL ? null : (year ?? current.year),
-            month: period === LeaderboardPeriod.MONTHLY ? (month ?? current.month) : null,
-        };
+        const resolved = ScoreQueryService.resolve(period, year, month);
         const size = Math.min(Math.max(pageSize, 1), PAGINATION.MAX_PAGE_SIZE);
         const offset = (Math.max(page, 1) - 1) * size;
-        const direction = leaderboard.sortOrder === SortOrder.ASC ? 'ASC' : 'DESC';
-
-        /** The rows of this board and period, nothing joined yet. */
-        const scoped = (): SelectQueryBuilder<ScoreRow> => {
-            const query = ScoreQueryService.table(period)
-                .createQueryBuilder('s')
-                .where('s.leaderboard_id = :leaderboardId', { leaderboardId: leaderboard.id });
-            if (resolved.year !== null) query.andWhere('s.year = :year', { year: resolved.year });
-            if (resolved.month !== null)
-                query.andWhere('s.month = :month', { month: resolved.month });
-            return query;
-        };
+        const scoped = () => ScoreQueryService.scoped(leaderboard, period, resolved);
 
         const [rows, count, mine] = await Promise.all([
             offset >= LEADERBOARD.RANK_LIMIT
                 ? Promise.resolve([])
-                : scoped()
-                      .innerJoinAndSelect('s.member', 'member')
-                      .leftJoinAndSelect('member.user', 'user')
-                      .orderBy('s.score', direction)
-                      .addOrderBy('s.updatedAt', 'ASC')
-                      .addOrderBy('s.id', 'ASC')
+                : ScoreQueryService.ranked(scoped(), leaderboard)
                       .skip(offset)
                       .take(Math.min(size, LEADERBOARD.RANK_LIMIT - offset))
                       .getMany(),
@@ -88,8 +74,24 @@ export class ScoreQueryService {
             period,
             year: resolved.year,
             month: resolved.month,
-            me: mine === null ? null : await ScoreQueryService.myRank(scoped(), mine, direction),
+            me: mine === null ? null : await ScoreQueryService.myRank(scoped(), mine, leaderboard),
         };
+    }
+
+    /** The head of the board's card ranking (its `cardPeriod`, now), for the list. */
+    static async top(leaderboard: Leaderboard, limit: number): Promise<ScoreEntryDto[]> {
+        const period = leaderboard.cardPeriod;
+        const rows = await ScoreQueryService.ranked(
+            ScoreQueryService.scoped(
+                leaderboard,
+                period,
+                ScoreQueryService.resolve(period, undefined, undefined),
+            ),
+            leaderboard,
+        )
+            .take(limit)
+            .getMany();
+        return rows.map((row, index) => ScorePresenter.entry(index + 1, row));
     }
 
     /** Which months and years hold scores, newest first, for the pickers. */
@@ -134,6 +136,46 @@ export class ScoreQueryService {
         return { items: rows.map((row) => ScorePresenter.history(row)), total };
     }
 
+    /** Absent year and month mean now, in the app's zone. */
+    private static resolve(
+        period: LeaderboardPeriod,
+        year: number | undefined,
+        month: number | undefined,
+    ): ResolvedPeriod {
+        const current = ScoreService.currentPeriod();
+        return {
+            year: period === LeaderboardPeriod.TOTAL ? null : (year ?? current.year),
+            month: period === LeaderboardPeriod.MONTHLY ? (month ?? current.month) : null,
+        };
+    }
+
+    /** The rows of this board and period, nothing joined yet. */
+    private static scoped(
+        leaderboard: Leaderboard,
+        period: LeaderboardPeriod,
+        resolved: ResolvedPeriod,
+    ): SelectQueryBuilder<ScoreRow> {
+        const query = ScoreQueryService.table(period)
+            .createQueryBuilder('s')
+            .where('s.leaderboard_id = :leaderboardId', { leaderboardId: leaderboard.id });
+        if (resolved.year !== null) query.andWhere('s.year = :year', { year: resolved.year });
+        if (resolved.month !== null) query.andWhere('s.month = :month', { month: resolved.month });
+        return query;
+    }
+
+    /** The ranking order, with the people on it loaded for the presenter. */
+    private static ranked(
+        query: SelectQueryBuilder<ScoreRow>,
+        leaderboard: Leaderboard,
+    ): SelectQueryBuilder<ScoreRow> {
+        return query
+            .innerJoinAndSelect('s.member', 'member')
+            .leftJoinAndSelect('member.user', 'user')
+            .orderBy('s.score', leaderboard.sortOrder === SortOrder.ASC ? 'ASC' : 'DESC')
+            .addOrderBy('s.updatedAt', 'ASC')
+            .addOrderBy('s.id', 'ASC');
+    }
+
     /**
      * Rank = rows that order before mine, plus one. The scan stops at
      * `RANK_LIMIT` rows (a LIMIT on the index range), so a long tail costs
@@ -142,9 +184,10 @@ export class ScoreQueryService {
     private static async myRank(
         scoped: SelectQueryBuilder<ScoreRow>,
         mine: ScoreRow,
-        direction: 'ASC' | 'DESC',
+        leaderboard: Leaderboard,
     ): Promise<MyScoreDto> {
-        const better = direction === 'DESC' ? 's.score > :score' : 's.score < :score';
+        const better =
+            leaderboard.sortOrder === SortOrder.ASC ? 's.score < :score' : 's.score > :score';
         const ahead = await scoped
             .select('s.id')
             .andWhere(

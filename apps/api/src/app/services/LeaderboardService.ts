@@ -1,8 +1,21 @@
 import { DateTime } from 'luxon';
 import { In } from 'typeorm';
 import type { FindOptionsRelations } from 'typeorm';
-import { EditMode, GroupRole, ScoreType, TIME_ZONE } from '@bzim/types';
-import type { LeaderboardDetailDto, LeaderboardInput, LeaderboardListingDto } from '@bzim/types';
+import {
+    AVATAR_KEYS,
+    EditMode,
+    GroupRole,
+    LEADERBOARD,
+    LeaderboardPeriod,
+    ScoreType,
+    TIME_ZONE,
+} from '@bzim/types';
+import type {
+    AvatarKey,
+    LeaderboardDetailDto,
+    LeaderboardInput,
+    LeaderboardListingDto,
+} from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
 import type Group from '../models/Group.entity';
@@ -17,6 +30,7 @@ import LeaderboardScoreYearly from '../models/LeaderboardScoreYearly.entity';
 import type User from '../models/User.entity';
 import LeaderboardPresenter from '../presenters/LeaderboardPresenter';
 import type { LeaderboardPermissions } from '../presenters/LeaderboardPresenter';
+import { ScoreQueryService } from './ScoreQueryService';
 
 export type LeaderboardProblem =
     /** None of the three periods switched on; a board must show something. */
@@ -71,6 +85,7 @@ export class LeaderboardService {
                     showYearly: input.showYearly,
                     showAllTime: input.showAllTime,
                     showSteppers: LeaderboardService.steppersFor(input),
+                    cardPeriod: LeaderboardService.cardPeriodFor(input),
                 }),
             );
             await manager.save(
@@ -91,6 +106,23 @@ export class LeaderboardService {
         return settings.scoreType === ScoreType.NUMBER && (settings.showSteppers ?? false);
     }
 
+    /** The card shows one of the periods the board keeps: the chosen one, else the first shown. */
+    private static cardPeriodFor(settings: {
+        showMonthly: boolean;
+        showYearly: boolean;
+        showAllTime: boolean;
+        cardPeriod?: LeaderboardPeriod;
+    }): LeaderboardPeriod {
+        const shown = [
+            ...(settings.showMonthly ? [LeaderboardPeriod.MONTHLY] : []),
+            ...(settings.showYearly ? [LeaderboardPeriod.YEARLY] : []),
+            ...(settings.showAllTime ? [LeaderboardPeriod.TOTAL] : []),
+        ];
+        return settings.cardPeriod !== undefined && shown.includes(settings.cardPeriod)
+            ? settings.cardPeriod
+            : (shown[0] ?? LeaderboardPeriod.TOTAL);
+    }
+
     /** Settings. The editor list is replaced wholesale when given. */
     static async update(
         group: Group,
@@ -109,6 +141,7 @@ export class LeaderboardService {
         }
         Object.assign(leaderboard, stripUndefined({ ...patch, editorIds: undefined }));
         leaderboard.showSteppers = LeaderboardService.steppersFor(leaderboard);
+        leaderboard.cardPeriod = LeaderboardService.cardPeriodFor(leaderboard);
         await AppDataSource.transaction(async (manager) => {
             await manager.save(leaderboard);
             if (patch.editorIds !== undefined) {
@@ -144,15 +177,25 @@ export class LeaderboardService {
             relations: RELATIONS,
             order: { createdAt: 'ASC' },
         });
-        return boards.map((board) =>
-            LeaderboardPresenter.listing(board, LeaderboardService.permissionsFor(board, viewer)),
+        return Promise.all(
+            boards.map(async (board) =>
+                LeaderboardPresenter.listing(
+                    board,
+                    LeaderboardService.permissionsFor(board, viewer),
+                    await ScoreQueryService.top(board, LEADERBOARD.CARD_TOP),
+                ),
+            ),
         );
     }
 
-    static detail(leaderboard: Leaderboard, viewer: GroupMember): LeaderboardDetailDto {
+    static async detail(
+        leaderboard: Leaderboard,
+        viewer: GroupMember,
+    ): Promise<LeaderboardDetailDto> {
         return LeaderboardPresenter.detail(
             leaderboard,
             LeaderboardService.permissionsFor(leaderboard, viewer),
+            await ScoreQueryService.top(leaderboard, LEADERBOARD.CARD_TOP),
         );
     }
 
@@ -228,6 +271,30 @@ export class LeaderboardService {
                 relations: { user: true },
             }),
         };
+    }
+
+    /**
+     * A player without an account: a name and a face on the board, nothing
+     * else. `userId` stays null, so leaving and decoupling never touch it.
+     */
+    static async addGuest(
+        leaderboard: Leaderboard,
+        name: string,
+        avatarKey: AvatarKey | undefined,
+        addedBy: User,
+    ): Promise<LeaderboardMember> {
+        const member = await LeaderboardMember.create({
+            leaderboardId: leaderboard.id,
+            userId: null,
+            displayNameSnapshot: name,
+            avatarKeySnapshot:
+                avatarKey ?? AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)],
+            addedById: addedBy.id,
+        }).save();
+        return LeaderboardMember.findOneOrFail({
+            where: { id: member.id },
+            relations: { user: true },
+        });
     }
 
     /** Removing: whoever may edit scores, plus admins (docs/05: editors + owner/admin). */

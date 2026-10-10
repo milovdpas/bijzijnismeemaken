@@ -98,7 +98,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | DELETE | `…/:leaderboardId` | Delete | C, A |
 | GET | `…/scores?period=monthly|yearly|total&year=&month=&page=&pageSize=` | Ranked page (cap 500), plus `me` entry with rank | M |
 | GET | `…/periods` | Which months/years have data (for pickers) | M |
-| POST | `…/members` | `{ userId }` add leaderboard member | M |
+| POST | `…/members` | `{ userId }` adds a group member; `{ name, avatarKey? }` adds a guest without an account | M |
 | DELETE | `…/members/:memberId` | Remove member (history kept) | E, A |
 | PUT | `…/members/:memberId/score` | `{ score }` set (current period only) → monthly/yearly/total + history | E, A |
 | DELETE | `…/members/:memberId/score` | Clear current score (history row with new NULL) | E, A |

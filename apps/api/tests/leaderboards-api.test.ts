@@ -231,3 +231,53 @@ describe('members and scores', () => {
         expect((await asOwner.get(`${scoresUrl}?period=weekly`)).status).toBe(422);
     });
 });
+
+describe('guests and the card ranking', () => {
+    it('adds a guest by name, shows the top of the card period in the list, and keeps the card period shown', async () => {
+        const { group, owner, anna, asOwner, asAnna } = await setup();
+        const board = await seedLeaderboard(group, owner, { showMonthly: false });
+        const membersUrl = API_ENDPOINTS.LEADERBOARDS.MEMBERS(group.id, board.id);
+
+        const guest = data<LeaderboardMemberDto>(
+            await asAnna.post(membersUrl, { name: ' Opa Jan ', avatarKey: 'cat' }),
+        );
+        expect(guest).toMatchObject({ user: null, displayName: 'Opa Jan', avatarKey: 'cat' });
+        expect((await asAnna.post(membersUrl, { name: 'X' })).status).toBe(422);
+        expect((await asAnna.post(membersUrl, { name: 'Both', userId: anna.id })).status).toBe(422);
+        expect((await asAnna.post(membersUrl, {})).status).toBe(422);
+        const annaOnBoard = data<LeaderboardMemberDto>(
+            await asAnna.post(membersUrl, { userId: anna.id }),
+        );
+
+        const scoreUrl = (memberId: string) =>
+            API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE(group.id, board.id, memberId);
+        expect((await asOwner.put(scoreUrl(guest.id), { score: 7 })).status).toBe(204);
+        expect((await asOwner.put(scoreUrl(annaOnBoard.id), { score: 9 })).status).toBe(204);
+
+        const listing = data<LeaderboardListingDto[]>(
+            await asAnna.get(API_ENDPOINTS.LEADERBOARDS.LIST(group.id)),
+        );
+        expect(listing[0]?.cardPeriod).toBe('total');
+        expect(
+            listing[0]?.top.map((entry) => [entry.rank, entry.member.displayName, entry.score]),
+        ).toEqual([
+            [1, 'Anna', 9],
+            [2, 'Opa Jan', 7],
+        ]);
+
+        // A hidden period cannot be the card's: the first shown one takes over.
+        const url = API_ENDPOINTS.LEADERBOARDS.DETAIL(group.id, board.id);
+        expect(
+            data<LeaderboardDetailDto>(await asOwner.patch(url, { cardPeriod: 'monthly' }))
+                .cardPeriod,
+        ).toBe('yearly');
+        expect(
+            data<LeaderboardDetailDto>(
+                await asOwner.patch(url, { showMonthly: true, cardPeriod: 'monthly' }),
+            ).cardPeriod,
+        ).toBe('monthly');
+        expect(
+            data<LeaderboardDetailDto>(await asOwner.patch(url, { showMonthly: false })).cardPeriod,
+        ).toBe('yearly');
+    });
+});

@@ -9,6 +9,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { LeaderboardPeriod } from '@bzim/types';
 import type { EditMode, LeaderboardDto, ScoreType, SortOrder } from '@bzim/types';
 
 import Group from './Group.entity';
@@ -71,6 +72,10 @@ export default class Leaderboard extends BaseEntity {
     @Column({ name: 'show_steppers', type: 'boolean', default: false })
     showSteppers!: boolean;
 
+    /** Which ranking the list card shows the top of; one of the shown periods. */
+    @Column({ name: 'card_period', type: 'varchar', length: 8, default: LeaderboardPeriod.TOTAL })
+    cardPeriod!: LeaderboardPeriod;
+
     @OneToMany(() => LeaderboardEditor, (editor) => editor.leaderboard)
     editors!: LeaderboardEditor[];
 
@@ -105,6 +110,7 @@ export default class Leaderboard extends BaseEntity {
             showYearly: this.showYearly,
             showAllTime: this.showAllTime,
             showSteppers: this.showSteppers,
+            cardPeriod: this.cardPeriod,
             creator,
             creatorName: creator?.displayName ?? this.creatorNameSnapshot,
             createdAt: this.createdAt.toISOString(),

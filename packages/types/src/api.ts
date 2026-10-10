@@ -471,6 +471,8 @@ export interface LeaderboardDto {
     showAllTime: boolean;
     /** Plus and minus buttons beside each score. Only ever true on a `number` board. */
     showSteppers: boolean;
+    /** The ranking the board's card shows the top of; always one of the shown periods. */
+    cardPeriod: LeaderboardPeriod;
     creator: UserSummary | null;
     creatorName: string | null;
     createdAt: IsoDateTimeString;
@@ -480,6 +482,8 @@ export interface LeaderboardDto {
 /** The list: each board plus what the caller may do with it. */
 export interface LeaderboardListingDto extends LeaderboardDto {
     memberCount: number;
+    /** The head of the `cardPeriod` ranking, now; at most `LEADERBOARD.CARD_TOP` entries. */
+    top: ScoreEntryDto[];
     /** Settings and deletion: creator or group admin. */
     canManage: boolean;
     /** Setting scores: by edit mode, plus group admins. */
@@ -520,6 +524,8 @@ export interface LeaderboardInput {
     showAllTime: boolean;
     /** Default false; forced false on a `time` board. */
     showSteppers?: boolean;
+    /** Default: the first shown period; a hidden one is replaced by that. */
+    cardPeriod?: LeaderboardPeriod;
 }
 
 /** One row of a ranking. */
@@ -573,7 +579,14 @@ export interface SetScoreRequest {
     score: ScoreValue;
 }
 
-/** `POST …/leaderboards/:id/members`. */
+/**
+ * `POST …/leaderboards/:id/members`: a group member by id, or a guest by
+ * name (somebody without an account, kept on the board as name and avatar
+ * only). Exactly one of `userId` and `name`.
+ */
 export interface AddLeaderboardMemberRequest {
-    userId: Uuid;
+    userId?: Uuid;
+    name?: string;
+    /** For a guest; a random one when absent. */
+    avatarKey?: AvatarKey;
 }

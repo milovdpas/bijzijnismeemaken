@@ -32,7 +32,8 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Identity | Unique `@handle` (for invites) + free display name + built-in avatar. |
 | Occurrence | date + optional daypart + optional start time. |
 | Calendar write scope | Incremental consent only when user enables "auto add planned activities to my calendar". |
-| Leaderboard members | Any member can add; remove = whoever may edit that leaderboard + owner/admins. |
+| Leaderboard members | Any member can add; remove = whoever may edit that leaderboard + owner/admins. Guests: a player without an account can be added by name (plus a random or chosen avatar); they are a `leaderboard_members` row with no user and can never log in or enter scores. Decided 2026-10-10. |
+| Leaderboard card | The list card shows the top 3 of one ranking, chosen per board (`card_period`, one of the shown periods; default the first shown), instead of period labels. Decided 2026-10-10. |
 | Google free/busy | Respect Google's transparency flag: events marked "Free" never block. Skip cancelled, declined, birthday and working-location events; out-of-office and focus-time count as busy. |
 | Past planned occurrence | Stays `planned` until creator/admin re-dates it or marks it done; no auto-done (a non-recurring activity may be next year's event). |
 | Planned e-mail | Only the selected participants are notified (with add-to-calendar); deselected "in" members are not. Per-participant `notified_at` + the notified values are stored so editing an occurrence only mails new participants (planned) and already-notified ones whose date/daypart/time changed (rescheduled). |

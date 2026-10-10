@@ -1,3 +1,5 @@
+import { ERROR_CODES } from '@bzim/types';
+
 import { ApiError } from './client';
 
 /**
@@ -17,4 +19,11 @@ export function errorKey(error: unknown): string {
 /** Whether a failed request carried this code. */
 export function isApiError(error: unknown, code: string): boolean {
     return error instanceof ApiError && error.code === code;
+}
+
+/** The rule name a 422 carried in `details.problem`, if any; forms turn it into their own sentence. */
+export function validationProblem(error: unknown): string | null {
+    if (!(error instanceof ApiError) || error.code !== ERROR_CODES.VALIDATION_FAILED) return null;
+    const problem = (error.details as { problem?: unknown } | undefined)?.problem;
+    return typeof problem === 'string' ? problem : null;
 }

@@ -46,6 +46,20 @@ export const queryKeys = {
         group: (groupId: string, from: string, to: string) =>
             ['occurrences', groupId, from, to] as const,
     },
+    leaderboards: {
+        list: (groupId: string) => ['leaderboards', groupId, 'list'] as const,
+        /** Everything about one board: detail, rankings, periods, history. */
+        one: (groupId: string, leaderboardId: string) =>
+            ['leaderboards', groupId, 'one', leaderboardId] as const,
+        detail: (groupId: string, leaderboardId: string) =>
+            ['leaderboards', groupId, 'one', leaderboardId, 'detail'] as const,
+        scores: (groupId: string, leaderboardId: string, query: string) =>
+            ['leaderboards', groupId, 'one', leaderboardId, 'scores', query] as const,
+        periods: (groupId: string, leaderboardId: string) =>
+            ['leaderboards', groupId, 'one', leaderboardId, 'periods'] as const,
+        history: (groupId: string, leaderboardId: string, page: number) =>
+            ['leaderboards', groupId, 'one', leaderboardId, 'history', page] as const,
+    },
     invites: {
         all: ['invites'] as const,
         mine: ['invites', 'mine'] as const,

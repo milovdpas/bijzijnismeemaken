@@ -40,7 +40,11 @@ export function useActivities(
     });
 }
 
-/** One activity with its people and occurrences. A 404 is an answer, not a retry. */
+/**
+ * One activity with its people and occurrences. A 404 is an answer, not a
+ * retry; an empty id (the "new" form) asks nothing, since the bare path
+ * would be the list.
+ */
 export function useActivity(
     groupId: string,
     activityId: string,
@@ -48,6 +52,7 @@ export function useActivity(
     return useQuery({
         queryKey: queryKeys.activities.detail(groupId, activityId),
         queryFn: () => fetchActivity(groupId, activityId),
+        enabled: activityId !== '',
         retry: (count, error) => !(error instanceof ApiError && error.status === 404) && count < 2,
     });
 }

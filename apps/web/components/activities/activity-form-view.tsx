@@ -1,6 +1,5 @@
 'use client';
 
-import { ERROR_CODES } from '@bzim/types';
 import type { ActivityInput } from '@bzim/types';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -11,17 +10,13 @@ import { ActivityForm } from '@/components/activities/activity-form';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';
 import { useActivity, useCreateActivity, useUpdateActivity } from '@/hooks/queries/use-activities';
-import { ApiError } from '@/lib/api/client';
-import { errorKey } from '@/lib/api/errors';
+import { errorKey, validationProblem } from '@/lib/api/errors';
 import { activityToForm, blankActivityForm } from '@/lib/activity-form';
 
 /** The API's rule problem, if that is what a 422 was about, as the sentence the form uses for it. */
 function problemKey(error: unknown): string {
-    if (error instanceof ApiError && error.code === ERROR_CODES.VALIDATION_FAILED) {
-        const problem = (error.details as { problem?: string } | undefined)?.problem;
-        if (problem !== undefined) return `activityForm.problems.${problem}`;
-    }
-    return errorKey(error);
+    const problem = validationProblem(error);
+    return problem === null ? errorKey(error) : `activityForm.problems.${problem}`;
 }
 
 /** New or edit, decided by whether an `activityId` is given. Success opens the activity. */
@@ -82,9 +77,11 @@ export function ActivityFormView({
                 </Button>
             </div>
             <ActivityForm
-                key={existing.data?.updatedAt ?? 'new'}
+                key={editing ? existing.data?.updatedAt : 'new'}
                 initial={
-                    existing.data === undefined ? blankActivityForm : activityToForm(existing.data)
+                    editing && existing.data !== undefined
+                        ? activityToForm(existing.data)
+                        : blankActivityForm
                 }
                 submitLabel={editing ? t('common.save') : t('activityForm.create')}
                 pending={mutation.isPending}
