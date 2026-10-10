@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Field } from '@/components/common/field';
 import { FormMessage } from '@/components/common/form-message';
+import { ImageField } from '@/components/common/image-field';
 import { AccessPicker } from '@/components/groups/access-picker';
 import { InviteByHandle } from '@/components/groups/invite-by-handle';
 import { InviteLinkBox } from '@/components/groups/invite-link-box';
@@ -31,10 +32,20 @@ import { groupHref } from '@/lib/group-navigation';
 interface FormState {
     name: string;
     description: string;
+    imageUrl: string;
+    imageCreditName: string;
+    imageCreditUrl: string;
     access: GroupAccess;
 }
 
-const blank: FormState = { name: '', description: '', access: GroupAccess.INVITE_LINK };
+const blank: FormState = {
+    name: '',
+    description: '',
+    imageUrl: '',
+    imageCreditName: '',
+    imageCreditUrl: '',
+    access: GroupAccess.INVITE_LINK,
+};
 
 /**
  * Two steps in one dialog. First the form; then, once the group exists, the
@@ -60,7 +71,14 @@ export function CreateGroupDialog({ className }: { className?: string }) {
         if (!canSave) return;
         const description = form.description.trim();
         create.mutate(
-            { name, description: description === '' ? null : description, access: form.access },
+            {
+                name,
+                description: description === '' ? null : description,
+                imageUrl: form.imageUrl.trim() === '' ? null : form.imageUrl.trim(),
+                imageCreditName: form.imageCreditName === '' ? null : form.imageCreditName,
+                imageCreditUrl: form.imageCreditUrl === '' ? null : form.imageCreditUrl,
+                access: form.access,
+            },
             { onSuccess: setCreated },
         );
     };
@@ -130,6 +148,23 @@ export function CreateGroupDialog({ className }: { className?: string }) {
                                     }
                                 />
                             </Field>
+                            <ImageField
+                                value={form.imageUrl}
+                                credit={
+                                    form.imageCreditName === ''
+                                        ? null
+                                        : { name: form.imageCreditName, url: form.imageCreditUrl }
+                                }
+                                onChange={(imageUrl, credit) =>
+                                    setForm({
+                                        ...form,
+                                        imageUrl,
+                                        imageCreditName: credit?.name ?? '',
+                                        imageCreditUrl: credit?.url ?? '',
+                                    })
+                                }
+                                suggestedQuery={form.name.trim()}
+                            />
                             <Field label={t('access.label')}>
                                 <AccessPicker
                                     value={form.access}

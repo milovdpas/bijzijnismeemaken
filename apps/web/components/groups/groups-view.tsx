@@ -53,6 +53,7 @@ export function GroupsView() {
                                 key={group.id}
                                 name={group.name}
                                 description={group.description}
+                                imageUrl={group.imageUrl}
                                 memberCount={group.memberCount}
                                 role={group.role}
                                 href={groupHref(group.id)}

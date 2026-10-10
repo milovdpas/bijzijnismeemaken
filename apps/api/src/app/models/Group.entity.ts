@@ -41,6 +41,15 @@ export default class Group extends BaseEntity {
     access!: GroupAccess;
 
     /** Set for public and invite-link groups; null for invite-only. */
+    @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
+    imageUrl!: string | null;
+
+    @Column({ name: 'image_credit_name', type: 'varchar', length: 80, nullable: true })
+    imageCreditName!: string | null;
+
+    @Column({ name: 'image_credit_url', type: 'varchar', length: 500, nullable: true })
+    imageCreditUrl!: string | null;
+
     @Column({ name: 'invite_token', type: 'varchar', length: 43, nullable: true, unique: true })
     inviteToken!: string | null;
 
@@ -78,6 +87,9 @@ export default class Group extends BaseEntity {
             name: this.name,
             slug: this.slug,
             description: this.description,
+            imageUrl: this.imageUrl,
+            imageCreditName: this.imageCreditName,
+            imageCreditUrl: this.imageCreditUrl,
             access: this.access,
             createdAt: this.createdAt.toISOString(),
         };

@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ActivityFacts } from '@/components/activities/activity-facts';
-import { ImageCredit } from '@/components/activities/image-credit';
+import { ImageCredit } from '@/components/common/image-credit';
 import { InterestSection } from '@/components/activities/interest-section';
 import { OccurrencesSection } from '@/components/activities/occurrences-section';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';

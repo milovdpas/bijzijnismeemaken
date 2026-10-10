@@ -7,6 +7,8 @@ import {
     Daypart,
     EditMode,
     LeaderboardPeriod,
+    CalendarConnectionStatus,
+    CalendarProviderKey,
     GroupAccess,
     GroupRole,
     Locale,
@@ -18,6 +20,9 @@ import {
 } from '@bzim/types';
 
 import Activity from '../../src/app/models/Activity.entity';
+import CalendarConnection from '../../src/app/models/CalendarConnection.entity';
+import CalendarSource from '../../src/app/models/CalendarSource.entity';
+import Crypt from '../../src/app/utils/Crypt';
 import ActivityInterest from '../../src/app/models/ActivityInterest.entity';
 import ActivityOccurrence from '../../src/app/models/ActivityOccurrence.entity';
 import Group from '../../src/app/models/Group.entity';
@@ -73,6 +78,9 @@ export async function seedGroup(owner: User, overrides: DeepPartial<Group> = {})
         name,
         slug: slugify(name),
         description: null,
+        imageUrl: null,
+        imageCreditName: null,
+        imageCreditUrl: null,
         access,
         inviteToken: Group.usesInviteLink(access) ? generateToken() : null,
         ownerId: owner.id,
@@ -233,5 +241,49 @@ export async function seedLeaderboardMember(
         avatarKeySnapshot: user.avatarKey ?? 'cat',
         addedById: null,
         removedAt: null,
+    }).save();
+}
+
+export async function seedCalendarConnection(
+    user: User,
+    overrides: Partial<
+        Pick<
+            CalendarConnection,
+            'accountEmail' | 'refreshToken' | 'accessToken' | 'hasWriteScope' | 'status'
+        >
+    > = {},
+): Promise<CalendarConnection> {
+    counter += 1;
+    const accountEmail = overrides.accountEmail ?? `agenda${String(counter)}@example.test`;
+    return CalendarConnection.create({
+        userId: user.id,
+        provider: CalendarProviderKey.GOOGLE,
+        accountEmail,
+        accountEmailHash: Crypt.searchHash(accountEmail),
+        refreshToken: overrides.refreshToken ?? `refresh-${String(counter)}`,
+        accessToken: overrides.accessToken ?? null,
+        accessTokenExpiresAt: null,
+        scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+        hasWriteScope: overrides.hasWriteScope ?? false,
+        status: overrides.status ?? CalendarConnectionStatus.ACTIVE,
+        lastSyncedAt: null,
+        lastError: null,
+    }).save();
+}
+
+export async function seedCalendarSource(
+    connection: CalendarConnection,
+    overrides: Partial<
+        Pick<CalendarSource, 'providerCalendarId' | 'name' | 'isPrimary' | 'enabled'>
+    > = {},
+): Promise<CalendarSource> {
+    counter += 1;
+    return CalendarSource.create({
+        connectionId: connection.id,
+        providerCalendarId: overrides.providerCalendarId ?? `cal-${String(counter)}`,
+        name: overrides.name ?? `Calendar ${String(counter)}`,
+        isPrimary: overrides.isPrimary ?? false,
+        enabled: overrides.enabled ?? true,
+        timeZone: 'Europe/Amsterdam',
     }).save();
 }

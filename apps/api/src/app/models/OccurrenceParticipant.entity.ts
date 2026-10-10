@@ -11,6 +11,7 @@ import type { Daypart } from '@bzim/types';
 
 import { timeTransformer } from '../utils/ColumnTransformers';
 import ActivityOccurrence from './ActivityOccurrence.entity';
+import CalendarConnection from './CalendarConnection.entity';
 import User from './User.entity';
 
 /**
@@ -61,6 +62,14 @@ export default class OccurrenceParticipant extends BaseEntity {
     /** The provider's event id once auto-added to this person's calendar (M2). */
     @Column({ name: 'calendar_event_id', type: 'varchar', length: 255, nullable: true })
     calendarEventId!: string | null;
+
+    /** Which connection that event was written through; null again when the connection goes. */
+    @Column({ name: 'calendar_connection_id', type: 'char', length: 36, nullable: true })
+    calendarConnectionId!: string | null;
+
+    @ManyToOne(() => CalendarConnection, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'calendar_connection_id' })
+    calendarConnection!: CalendarConnection | null;
 
     @CreateDateColumn({ name: 'created_at', type: 'datetime', precision: 3 })
     createdAt!: Date;

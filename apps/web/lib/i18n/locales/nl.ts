@@ -401,8 +401,7 @@ export const nl: Dict = {
         remove: 'Afbeelding weghalen',
         invalid: 'Deze link laat geen afbeelding zien. Controleer hem, of kies een foto.',
         dialogTitle: 'Foto zoeken',
-        dialogDescription:
-            "Gratis foto's van Unsplash. Kies er een en die wordt de afbeelding van deze activiteit.",
+        dialogDescription: "Gratis foto's van Unsplash. Kies er een en die wordt de afbeelding.",
         queryPlaceholder: 'Zoek, bijvoorbeeld bowlen',
         noResults: "Geen foto's gevonden. Probeer een ander woord.",
         unavailable: 'Foto zoeken is nu niet beschikbaar. Een link plakken kan wel.',

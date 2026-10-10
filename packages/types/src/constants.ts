@@ -115,6 +115,8 @@ export const GROUP = {
     NAME_MIN_LENGTH: 2,
     NAME_MAX_LENGTH: 60,
     DESCRIPTION_MAX_LENGTH: 1000,
+    URL_MAX_LENGTH: 500,
+    IMAGE_CREDIT_MAX_LENGTH: 80,
     /** Characters in an invite token (32 random bytes, base64url). The link ends with it. */
     INVITE_TOKEN_LENGTH: 43,
 } as const;

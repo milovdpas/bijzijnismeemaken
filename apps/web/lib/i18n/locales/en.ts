@@ -402,8 +402,7 @@ export const en = {
         remove: 'Remove image',
         invalid: 'This link does not show an image. Check it, or pick a photo instead.',
         dialogTitle: 'Find a photo',
-        dialogDescription:
-            'Free photos from Unsplash. Pick one and it becomes the image of this activity.',
+        dialogDescription: 'Free photos from Unsplash. Pick one and it becomes the image.',
         queryPlaceholder: 'Search, for example bowling',
         noResults: 'No photos found for that. Try another word.',
         unavailable: 'Photo search is not available right now. You can still paste a link.',

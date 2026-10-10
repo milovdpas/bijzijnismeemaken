@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 export function GroupCard({
     name,
     description,
+    imageUrl = null,
     memberCount,
     role,
     href,
@@ -24,6 +25,7 @@ export function GroupCard({
 }: {
     name: string;
     description: string | null;
+    imageUrl?: string | null;
     memberCount: number;
     role?: GroupRole;
     href?: string;
@@ -34,6 +36,15 @@ export function GroupCard({
 
     const body = (
         <>
+            {imageUrl !== null && (
+                /* eslint-disable-next-line @next/next/no-img-element -- arbitrary remote host; next/image needs a fixed allow-list */
+                <img
+                    src={imageUrl}
+                    alt=""
+                    loading="lazy"
+                    className="mb-3 aspect-[3/1] w-full rounded-xl object-cover"
+                />
+            )}
             <div className="flex items-start justify-between gap-3">
                 <h2 className="min-w-0 truncate text-lg">{name}</h2>
                 {role !== undefined && role !== 'member' && (

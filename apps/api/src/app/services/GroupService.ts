@@ -1,6 +1,6 @@
 import { In, Like } from 'typeorm';
 import { GroupAccess, GroupRole, PAGINATION, slugify } from '@bzim/types';
-import type { GroupListingResponse, PublicGroupResponse } from '@bzim/types';
+import type { GroupInput, GroupListingResponse, PublicGroupResponse } from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
 import Group from '../models/Group.entity';
@@ -11,12 +11,6 @@ import { escapeLike } from '../utils/Database';
 
 import { generateToken } from '../utils/Token';
 import { WidgetService } from './WidgetService';
-
-export interface GroupInput {
-    name: string;
-    description: string | null;
-    access: GroupAccess;
-}
 
 export interface PublicPage {
     items: PublicGroupResponse[];
@@ -38,6 +32,9 @@ export class GroupService {
                 name: input.name,
                 slug: slugify(input.name),
                 description: input.description,
+                imageUrl: input.imageUrl ?? null,
+                imageCreditName: input.imageCreditName ?? null,
+                imageCreditUrl: input.imageCreditUrl ?? null,
                 access: input.access,
                 inviteToken: Group.usesInviteLink(input.access) ? generateToken() : null,
                 ownerId: owner.id,
@@ -136,6 +133,9 @@ export class GroupService {
             group.slug = slugify(patch.name);
         }
         if (patch.description !== undefined) group.description = patch.description;
+        if (patch.imageUrl !== undefined) group.imageUrl = patch.imageUrl;
+        if (patch.imageCreditName !== undefined) group.imageCreditName = patch.imageCreditName;
+        if (patch.imageCreditUrl !== undefined) group.imageCreditUrl = patch.imageCreditUrl;
         if (patch.access !== undefined && patch.access !== group.access) {
             group.access = patch.access;
             group.inviteToken = Group.usesInviteLink(patch.access) ? generateToken() : null;

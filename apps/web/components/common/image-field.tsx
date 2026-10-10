@@ -4,8 +4,8 @@ import { ImageOff, Images, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ImageCredit } from '@/components/activities/image-credit';
-import { ImageSearchDialog } from '@/components/activities/image-search-dialog';
+import { ImageCredit } from '@/components/common/image-credit';
+import { ImageSearchDialog } from '@/components/common/image-search-dialog';
 import { Field } from '@/components/common/field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import { CategoryPicker } from '@/components/activities/category-picker';
 import { DaypartPicker } from '@/components/activities/daypart-picker';
-import { ImageField } from '@/components/activities/image-field';
+import { ImageField } from '@/components/common/image-field';
 import { Field } from '@/components/common/field';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';

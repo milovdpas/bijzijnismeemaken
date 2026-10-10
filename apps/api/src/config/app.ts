@@ -86,6 +86,24 @@ function appKey(): Buffer {
     return key;
 }
 
+/**
+ * The key for provider tokens at rest (`utils/TokenCrypto.ts`): 32 bytes in
+ * base64, like APP_KEY. Optional, so an API without calendars still boots;
+ * the first connection fails loudly instead.
+ */
+function calendarTokenKey(): Buffer | null {
+    const raw = optional('CALENDAR_TOKEN_KEY', '').replace(/^base64:/, '');
+    if (raw === '') return null;
+    const key = Buffer.from(raw, 'base64');
+    if (key.length !== 32) {
+        throw new Error(
+            'CALENDAR_TOKEN_KEY must be 32 random bytes in base64. Generate one with: ' +
+                "node -e \"console.log('base64:'+require('crypto').randomBytes(32).toString('base64'))\"",
+        );
+    }
+    return key;
+}
+
 type MailDriver = 'console' | 'smtp' | 'brevo';
 
 /**
@@ -167,6 +185,9 @@ export const env = {
      * without it would only serve errors.
      */
     appKey: appKey(),
+
+    /** Encrypts calendar provider tokens (`utils/TokenCrypto.ts`); null until set. */
+    calendarTokenKey: calendarTokenKey(),
 
     /** The Google OAuth client for sign-in. Lazy, like the JWT secret. */
     google: {

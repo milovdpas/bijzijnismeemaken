@@ -1,6 +1,10 @@
 import type {
     ActivityCategory,
     ActivityLabel,
+    CalendarConnectionStatus,
+    CalendarEventType,
+    CalendarIgnoreRuleKind,
+    CalendarProviderKey,
     DateMode,
     Daypart,
     EditMode,
@@ -147,6 +151,11 @@ export interface GroupResponse {
     name: string;
     slug: string;
     description: string | null;
+    /** A picture for the group, like an activity's; null means none. */
+    imageUrl: string | null;
+    /** The photographer, when the picture came from the stock photo search. */
+    imageCreditName: string | null;
+    imageCreditUrl: string | null;
     access: GroupAccess;
     createdAt: IsoDateTimeString;
 }
@@ -174,6 +183,9 @@ export interface GroupDetailResponse extends GroupListingResponse {
 export interface GroupInput {
     name: string;
     description?: string | null;
+    imageUrl?: string | null;
+    imageCreditName?: string | null;
+    imageCreditUrl?: string | null;
     access: GroupAccess;
 }
 
@@ -649,4 +661,52 @@ export interface UpdateWidgetRequest {
 /** `PUT /groups/:id/widgets/order`: every widget id of the group, in the wanted order. */
 export interface ReorderWidgetsRequest {
     widgetIds: Uuid[];
+}
+
+/* -------------------------------------------------------------------------- */
+/* Calendar (M2)                                                               */
+/* -------------------------------------------------------------------------- */
+
+/** One calendar inside a connection; only enabled ones are synced. */
+export interface CalendarSourceDto {
+    id: Uuid;
+    name: string;
+    isPrimary: boolean;
+    enabled: boolean;
+    timeZone: string;
+}
+
+/** `GET /me/calendar`: the connection as its owner sees it; tokens never leave the server. */
+export interface CalendarConnectionDto {
+    id: Uuid;
+    provider: CalendarProviderKey;
+    accountEmail: string;
+    hasWriteScope: boolean;
+    status: CalendarConnectionStatus;
+    lastSyncedAt: IsoDateTimeString | null;
+    lastError: string | null;
+    sources: CalendarSourceDto[];
+    createdAt: IsoDateTimeString;
+}
+
+/** `GET /me/calendar/events`: the owner's own synced events, titles included, for the ignore rules. */
+export interface CalendarEventDto {
+    id: Uuid;
+    sourceId: Uuid;
+    recurringEventId: string | null;
+    title: string;
+    startAt: IsoDateTimeString;
+    endAt: IsoDateTimeString;
+    allDay: boolean;
+    transparent: boolean;
+    eventType: CalendarEventType;
+}
+
+export interface CalendarIgnoreRuleDto {
+    id: Uuid;
+    kind: CalendarIgnoreRuleKind;
+    /** The lowercased title, or the series id. */
+    value: string;
+    label: string;
+    createdAt: IsoDateTimeString;
 }

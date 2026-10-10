@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormMessage } from '@/components/common/form-message';
 import { AccessBadge } from '@/components/groups/access-badge';
+import { ImageCredit } from '@/components/common/image-credit';
 import { InviteLinkBadge } from '@/components/groups/invite-link-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,24 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
                     <ArrowLeft className="size-3.5" />
                     {t('groups.title')}
                 </Link>
+                {group.data.imageUrl !== null && (
+                    <div className="mb-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary remote host; next/image needs a fixed allow-list */}
+                        <img
+                            src={group.data.imageUrl}
+                            alt=""
+                            className="aspect-[3/1] w-full rounded-2xl object-cover"
+                        />
+                        {group.data.imageCreditName !== null && (
+                            <ImageCredit
+                                credit={{
+                                    name: group.data.imageCreditName,
+                                    url: group.data.imageCreditUrl ?? '',
+                                }}
+                            />
+                        )}
+                    </div>
+                )}
                 <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-2xl md:text-3xl">{group.data.name}</h1>
                     {group.data.role !== 'member' && (

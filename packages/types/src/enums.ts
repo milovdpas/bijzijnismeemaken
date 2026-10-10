@@ -158,3 +158,20 @@ export enum WidgetType {
     /** An external link with a label. */
     LINK = 'link',
 }
+
+/** How an ignore rule matches synced events (docs/06). */
+export enum CalendarIgnoreRuleKind {
+    /** Every event with this title, case-insensitively. */
+    TITLE = 'title',
+    /** Every instance of this recurring series. */
+    SERIES = 'series',
+}
+
+/** Google's event types, as synced. Birthdays and working locations are skipped at sync. */
+export enum CalendarEventType {
+    DEFAULT = 'default',
+    OUT_OF_OFFICE = 'outOfOffice',
+    FOCUS_TIME = 'focusTime',
+    WORKING_LOCATION = 'workingLocation',
+    BIRTHDAY = 'birthday',
+}

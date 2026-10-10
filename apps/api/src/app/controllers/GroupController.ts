@@ -31,8 +31,15 @@ export default class GroupController {
     };
 
     create: Handler<BodyOf<typeof createGroupSchema>> = async (req, res) => {
-        const { name, description, access } = req.body;
-        const group = await GroupService.create(req.user, { name, description, access });
+        const { name, description, imageUrl, imageCreditName, imageCreditUrl, access } = req.body;
+        const group = await GroupService.create(req.user, {
+            name,
+            description,
+            imageUrl,
+            imageCreditName,
+            imageCreditUrl,
+            access,
+        });
         sendSuccess<GroupDetailResponse>(
             res,
             GroupPresenter.detail(group, GroupRole.OWNER, await group.memberCount()),
@@ -58,8 +65,15 @@ export default class GroupController {
     };
 
     update: Handler<BodyOf<typeof updateGroupSchema>> = async (req, res) => {
-        const { name, description, access } = req.body;
-        const group = await GroupService.update(req.group, { name, description, access });
+        const { name, description, imageUrl, imageCreditName, imageCreditUrl, access } = req.body;
+        const group = await GroupService.update(req.group, {
+            name,
+            description,
+            imageUrl,
+            imageCreditName,
+            imageCreditUrl,
+            access,
+        });
         sendSuccess<GroupDetailResponse>(
             res,
             GroupPresenter.detail(group, req.membership.role, await group.memberCount()),

@@ -18,6 +18,10 @@ import LeaderboardScoreHistory from '../app/models/LeaderboardScoreHistory.entit
 import LeaderboardScoreMonthly from '../app/models/LeaderboardScoreMonthly.entity';
 import LeaderboardScoreTotal from '../app/models/LeaderboardScoreTotal.entity';
 import LeaderboardScoreYearly from '../app/models/LeaderboardScoreYearly.entity';
+import CalendarConnection from '../app/models/CalendarConnection.entity';
+import CalendarEvent from '../app/models/CalendarEvent.entity';
+import CalendarIgnoreRule from '../app/models/CalendarIgnoreRule.entity';
+import CalendarSource from '../app/models/CalendarSource.entity';
 import ManualUnavailability from '../app/models/ManualUnavailability.entity';
 import OAuthState from '../app/models/OAuthState.entity';
 import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
@@ -67,6 +71,10 @@ export const AppDataSource = new DataSource({
         ActivityInterest,
         ActivityOccurrence,
         OccurrenceParticipant,
+        CalendarConnection,
+        CalendarSource,
+        CalendarEvent,
+        CalendarIgnoreRule,
         ManualUnavailability,
         WeeklyUnavailabilityRule,
         Leaderboard,
