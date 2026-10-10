@@ -78,7 +78,8 @@ export function rateLimit(options: RateLimitOptions): RequestHandler {
             return;
         }
 
-        const now = Date.now();
+        // Monotonic milliseconds: a clock adjustment must not open or close a window.
+        const now = Number(process.hrtime.bigint() / 1_000_000n);
         if (windows.size > sweepAbove) {
             prune(windows, now);
             sweepAbove = Math.max(SWEEP_THRESHOLD, windows.size * 2);

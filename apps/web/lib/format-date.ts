@@ -1,8 +1,13 @@
-import { format } from 'date-fns';
+import { DateTime } from 'luxon';
+import { TIME_ZONE } from '@bzim/types';
 
-import { dateLocaleFor } from './date-locale';
-
-/** A calendar date for people, in the app's language: "3 okt 2026" or "Oct 3, 2026". */
+/**
+ * A calendar date for people, in the app's language and time zone:
+ * "3 okt 2026" or "Oct 3, 2026". Everything in the app happens in
+ * Europe/Amsterdam, so a member abroad sees the same day as everyone else.
+ */
 export function formatDate(iso: string, lang: string | undefined): string {
-    return format(new Date(iso), 'PP', { locale: dateLocaleFor(lang) });
+    return DateTime.fromISO(iso, { zone: TIME_ZONE })
+        .setLocale(lang ?? 'nl')
+        .toLocaleString(DateTime.DATE_MED);
 }

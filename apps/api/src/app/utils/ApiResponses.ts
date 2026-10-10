@@ -43,6 +43,14 @@ export function sendSuccess<T = never>(res: Response, data: NoInfer<T>, status =
     res.status(status).json(data);
 }
 
+/** A calendar file for the person's calendar app to open, never JSON. */
+export function sendCalendar(res: Response, filename: string, ics: string): void {
+    res.status(200)
+        .type('text/calendar; charset=utf-8')
+        .set('Content-Disposition', `attachment; filename="${filename}"`)
+        .send(ics);
+}
+
 /**
  * Done, nothing to say. 204 for an action on something that exists (logout,
  * a role change, a delete); 201 for a creation whose result the caller is

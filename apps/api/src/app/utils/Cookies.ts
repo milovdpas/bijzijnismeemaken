@@ -8,10 +8,10 @@ export const REFRESH_COOKIE = 'refresh_token';
 /**
  * Both tokens travel as httpOnly cookies, so no script in the browser can read
  * them. `SameSite=Lax` sends them on top-level navigations and same-site
- * requests, which is what the app on its sibling subdomain needs, and keeps
- * them off cross-site POSTs. `Domain` is the shared parent domain in
- * production (`.bijzijn.milovanderpas.nl`) and absent locally, where both
- * apps are on localhost.
+ * requests, which is what the app on its sibling hostname needs, and keeps
+ * them off cross-site POSTs. `Domain` is normally absent (host-only on the API
+ * hostname, locally and in production); `COOKIE_DOMAIN` exists for a setup
+ * where the two hostnames share a parent that belongs to this app alone.
  */
 function baseOptions(): CookieOptions {
     return {

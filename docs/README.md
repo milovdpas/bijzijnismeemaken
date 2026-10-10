@@ -15,4 +15,5 @@ Written during the planning phase (2026-10-09) from [planning-prompt.md](../plan
 | [09-frontend-conventions.md](09-frontend-conventions.md) | Clean frontend rules (from marathon_schema) |
 | [10-backend-conventions.md](10-backend-conventions.md) | Express API rules (from dynamic_alarm) |
 | [11-design.md](11-design.md) | Visual direction, tokens, themes (scheme + palette), shell and UI patterns |
+| [12-deployment.md](12-deployment.md) | What the VPS, DNS, GitHub, Google and Brevo need before the first deploy, and the first-deploy order |
 | [PROGRESS.md](PROGRESS.md) | Task checklist, current task, review log |

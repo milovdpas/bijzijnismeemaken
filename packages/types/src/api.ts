@@ -294,3 +294,29 @@ export interface ActivityInput {
     externalUrl?: string | null;
     preferredDayparts?: Daypart[] | null;
 }
+
+/** `POST …/activities/:id/occurrences`. Participants must be among the activity's "in" members. */
+export interface OccurrenceInput {
+    date: IsoDateString;
+    daypart?: Daypart | null;
+    startTime?: LocalTimeString | null;
+    notes?: string | null;
+    participantIds: Uuid[];
+}
+
+/** `PATCH …/occurrences/:id`. Re-date, change who counts, or move the status. */
+export interface OccurrenceUpdateInput {
+    date?: IsoDateString;
+    daypart?: Daypart | null;
+    startTime?: LocalTimeString | null;
+    notes?: string | null;
+    participantIds?: Uuid[];
+    status?: OccurrenceStatus;
+}
+
+/** A planned occurrence in the group agenda, with the activity it belongs to and what it clashes with. */
+export interface GroupOccurrenceDto extends OccurrenceDto {
+    activity: { id: Uuid; title: string; category: ActivityCategory };
+    /** Other planned occurrences in the group on the same day whose time window overlaps. */
+    conflictsWith: Uuid[];
+}

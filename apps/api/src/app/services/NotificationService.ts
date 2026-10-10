@@ -3,13 +3,25 @@ import { NotificationChannel, NotificationType } from '@bzim/types';
 import { env } from '../../config/app';
 import { deliver } from '../modules/mail';
 import type { MailMessage } from '../modules/mail';
-import { renderActivityCreated, renderGroupInvite } from '../modules/mail/templates';
+import {
+    describeWhen,
+    renderActivityCancelled,
+    renderActivityCreated,
+    renderActivityPlanned,
+    renderActivityRescheduled,
+    renderGroupInvite,
+} from '../modules/mail/templates';
+import type { OccurrenceMailValues } from '../modules/mail/templates';
 import type Activity from '../models/Activity.entity';
+import type ActivityOccurrence from '../models/ActivityOccurrence.entity';
 import type Group from '../models/Group.entity';
 import type GroupInvite from '../models/GroupInvite.entity';
 import GroupMember from '../models/GroupMember.entity';
+import type OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
 import type User from '../models/User.entity';
+import { googleCalendarUrl } from '../utils/CalendarLinks';
 import { NotificationSettingService } from './NotificationSettingService';
+import { OccurrenceService } from './OccurrenceService';
 
 /**
  * Who gets told about what, and through which channel.
@@ -50,9 +62,104 @@ export class NotificationService {
                 creator: creator.displayName ?? creator.handle ?? group.name,
                 group: group.name,
                 title: activity.title,
-                link: `${env.appUrl}/groups/${group.id}/activities/${activity.id}`,
+                link: OccurrenceService.activityLink(activity),
             }),
         );
+    }
+
+    /** The people just picked for a planned moment. Both calendar links ride along. */
+    static async occurrencePlanned(
+        group: Group,
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        planner: User,
+        rows: OccurrenceParticipant[],
+    ): Promise<void> {
+        await NotificationService.dispatch(
+            NotificationType.ACTIVITY_PLANNED,
+            rows.map((row) => row.user),
+            (user) =>
+                renderActivityPlanned(
+                    user.locale,
+                    user.email,
+                    NotificationService.occurrenceValues(
+                        group,
+                        activity,
+                        occurrence,
+                        planner,
+                        user,
+                    ),
+                ),
+        );
+    }
+
+    /** The people who had been told one date and now get another. */
+    static async occurrenceRescheduled(
+        group: Group,
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        editor: User,
+        rows: OccurrenceParticipant[],
+    ): Promise<void> {
+        await NotificationService.dispatch(
+            NotificationType.ACTIVITY_RESCHEDULED,
+            rows.map((row) => row.user),
+            (user) =>
+                renderActivityRescheduled(
+                    user.locale,
+                    user.email,
+                    NotificationService.occurrenceValues(group, activity, occurrence, editor, user),
+                ),
+        );
+    }
+
+    /** The people who had been told it was on. */
+    static async occurrenceCancelled(
+        group: Group,
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        rows: OccurrenceParticipant[],
+    ): Promise<void> {
+        await NotificationService.dispatch(
+            NotificationType.ACTIVITY_CANCELLED,
+            rows.map((row) => row.user),
+            (user) =>
+                renderActivityCancelled(user.locale, user.email, {
+                    group: group.name,
+                    title: activity.title,
+                    when: describeWhen(
+                        user.locale,
+                        occurrence.date,
+                        occurrence.daypart,
+                        occurrence.startTime,
+                    ),
+                    link: OccurrenceService.activityLink(activity),
+                }),
+        );
+    }
+
+    /** The facts the planned and rescheduled emails share, in the recipient's language. */
+    private static occurrenceValues(
+        group: Group,
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        actor: User,
+        recipient: User,
+    ): OccurrenceMailValues {
+        return {
+            planner: actor.displayName ?? actor.handle ?? group.name,
+            group: group.name,
+            title: activity.title,
+            when: describeWhen(
+                recipient.locale,
+                occurrence.date,
+                occurrence.daypart,
+                occurrence.startTime,
+            ),
+            location: activity.locationText,
+            icsLink: OccurrenceService.icsLink(occurrence),
+            googleLink: googleCalendarUrl(OccurrenceService.calendarEvent(activity, occurrence)),
+        };
     }
 
     /**

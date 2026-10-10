@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import type { Router } from 'express';
 import { API_ENDPOINTS } from '@bzim/types';
 import type { HealthResponse } from '@bzim/types';
@@ -27,7 +28,7 @@ export default (router: Router): void => {
             status: database ? 'ok' : 'degraded',
             database,
             uptime: process.uptime(),
-            timestamp: new Date().toISOString(),
+            timestamp: DateTime.utc().toISO(),
         };
         res.status(database ? 200 : 503).json(body);
     });

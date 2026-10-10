@@ -1,18 +1,22 @@
 'use client';
 
+import { Settings } from 'luxon';
 import { useEffect } from 'react';
 import { I18nextProvider } from 'react-i18next';
+import { TIME_ZONE } from '@bzim/types';
 
-import { dateLocaleFor, setDateLocale } from '@/lib/date-locale';
 import i18n, { detectLocale } from '@/lib/i18n';
 import { usePreferencesStore } from '@/store/use-preferences-store';
 
+// Every date in the app is an Amsterdam date, whatever the device thinks.
+Settings.defaultZone = TIME_ZONE;
+
 /**
- * Applies the chosen locale to i18next, date-fns and the `<html lang>`.
+ * Applies the chosen locale to i18next, Luxon and the `<html lang>`.
  *
  * The locale lives in the persisted preferences store so it survives reloads
- * before login. Once the profile exists (task 10) the server copy wins and is
- * written back into the store on sign-in.
+ * before login. Once the profile exists the server copy wins and is written
+ * back into the store on sign-in.
  */
 export function I18nProvider({ children }: { children: React.ReactNode }) {
     const locale = usePreferencesStore((s) => s.locale);
@@ -27,7 +31,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     const active = locale ?? 'nl';
     useEffect(() => {
         if (i18n.language !== active) void i18n.changeLanguage(active);
-        setDateLocale(dateLocaleFor(active));
+        Settings.defaultLocale = active;
         document.documentElement.lang = active;
     }, [active]);
 

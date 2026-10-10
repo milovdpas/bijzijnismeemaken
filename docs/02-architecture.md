@@ -84,7 +84,7 @@ lib/
   api/client.ts (fetch wrapper: credentials include, ApiError(code,status,details), single-flight refresh on 401)
   api/{auth,users,groups,invites,activities,occurrences,availability,calendar,leaderboards}.ts (typed functions using @bzim/types)
   i18n/{index.ts,locales/{en,nl}.ts}  (nl: Dict typing, key test)
-  date.ts (date-fns + locale holder), dayparts.ts (pure helpers for grid), avatars.ts, utils.ts (cn)
+  format-date.ts (Luxon, Amsterdam zone), dayparts.ts (pure helpers for grid), avatars.ts, utils.ts (cn)
   query-keys.ts
 hooks/
   queries/use-*.ts (useQuery/useMutation wrappers + invalidation), use-install-app.ts, use-mounted.ts, use-me.ts, use-group-role.ts
@@ -95,7 +95,7 @@ public/ sw.js, icons/ (png 192/512/maskable), avatars/*.svg
 ## 2.5 Auth flow (Google OAuth → JWT cookies)
 1. `GET /api/v1/auth/google?returnTo=` → `returnTo` must be a relative path (`/…`, never `//`), stored with a random state in `oauth_states` (10 min) and mirrored in an `oauth_state` cookie; redirects to Google (`openid email profile`, `prompt=select_account`).
 2. `GET /api/v1/auth/google/callback` → verify state, exchange code, verify `id_token` (`google-auth-library`), upsert user by `google_sub` (fallback match by verified email), issue token pair, set cookies, redirect to `APP_URL/onboarding` (if no handle yet) or `returnTo`.
-3. Cookies: `access_token` (JWT `{ sub, type:'access' }`, 15 min) and `refresh_token` (JWT `{ sub, type:'refresh', jti }`, 60 days). Both `HttpOnly; Secure; SameSite=Lax; Domain=.bijzijn.milovanderpas.nl; Path=/`. Refresh token `jti` + sha256 hash stored in `refresh_tokens` for rotation/revocation (carrefour issues stateless refresh tokens; we add the table so logout and account deletion actually revoke).
+3. Cookies: `access_token` (JWT `{ sub, type:'access' }`, 15 min) and `refresh_token` (JWT `{ sub, type:'refresh', jti }`, 60 days). Both `HttpOnly; Secure; SameSite=Lax; Path=/`, host-only on the API hostname (no `Domain`: the app and API are sibling hostnames, and a same-site Lax cookie reaches the API without one). Refresh token `jti` + sha256 hash stored in `refresh_tokens` for rotation/revocation (carrefour issues stateless refresh tokens; we add the table so logout and account deletion actually revoke).
 4. `UserAuth` middleware: read `access_token` cookie (or `Authorization: Bearer` for tests/tools), `JWT.verify`, reject `type !== 'access'`, load user → `req.user`. Missing/expired → 401 `UNAUTHENTICATED`.
 5. `POST /api/v1/auth/refresh`: verify refresh cookie, check row not revoked/expired, rotate (revoke old, insert new), set both cookies. Reuse of a revoked token → revoke whole family, 401.
 6. `POST /api/v1/auth/logout`: revoke, clear cookies.
@@ -134,7 +134,7 @@ interface CalendarProvider {
 ## 2.9 i18n
 - Web: i18next + react-i18next as marathon_schema; `lib/i18n/locales/en.ts` is the typed source (`Dict`), `nl.ts: Dict`; key-existence test; locale = user profile (synced to server) with browser detection fallback and `document.documentElement.lang`.
 - API: error responses carry codes only; FE translates. Emails use `user.locale` with `apps/api/src/app/modules/mail/templates/{nl,en}.ts`.
-- Dates: date-fns with locale holder; dayparts labels translated.
+- Dates: Luxon with `Settings.defaultZone = Europe/Amsterdam` and the active locale, set by `I18nProvider`; daypart labels translated.
 
 ## 2.10 PWA
 - `app/manifest.ts` (frozen `id: '/'`, `start_url: '/groups'`, standalone, PNG icons 192/512/maskable), `appleWebApp` metadata, `viewport.themeColor`.

@@ -1,0 +1,68 @@
+import { Router } from 'express';
+import { API_ENDPOINTS, GroupRole } from '@bzim/types';
+
+import type { IRoute } from '../../../interfaces/IRouter';
+import OccurrenceController from '../../controllers/OccurrenceController';
+import { publicLimit } from '../../middleware/ApiLimits';
+import { requireGroupRole } from '../../middleware/RequireGroupRole';
+import { userAuth } from '../../middleware/UserAuth';
+import { validate } from '../../middleware/ValidateRequest';
+import { activityParamSchema } from '../../validators/activitySchemas';
+import { groupIdParamSchema } from '../../validators/commonSchemas';
+import {
+    icsQuerySchema,
+    occurrenceIdParamSchema,
+    occurrenceParamSchema,
+    planOccurrenceSchema,
+    rangeQuerySchema,
+    updateOccurrenceSchema,
+} from '../../validators/occurrenceSchemas';
+
+/** Planning inside a group, the group agenda, and the public calendar file. */
+export default class OccurrenceRoutes implements IRoute {
+    private readonly controller = new OccurrenceController();
+
+    getRoutes(): Router {
+        const router = Router();
+        const member = requireGroupRole(GroupRole.MEMBER);
+
+        router.post(
+            API_ENDPOINTS.ACTIVITIES.OCCURRENCES(':groupId', ':activityId'),
+            userAuth,
+            validate({ params: activityParamSchema, body: planOccurrenceSchema }),
+            member,
+            this.controller.plan,
+        );
+        router.patch(
+            API_ENDPOINTS.ACTIVITIES.OCCURRENCE(':groupId', ':activityId', ':occurrenceId'),
+            userAuth,
+            validate({ params: occurrenceParamSchema, body: updateOccurrenceSchema }),
+            member,
+            this.controller.update,
+        );
+        router.delete(
+            API_ENDPOINTS.ACTIVITIES.OCCURRENCE(':groupId', ':activityId', ':occurrenceId'),
+            userAuth,
+            validate({ params: occurrenceParamSchema }),
+            member,
+            this.controller.delete,
+        );
+        router.get(
+            API_ENDPOINTS.GROUPS.OCCURRENCES(':groupId'),
+            userAuth,
+            validate({ params: groupIdParamSchema, query: rangeQuerySchema }),
+            member,
+            this.controller.listForGroup,
+        );
+
+        // No session: a calendar app opens this straight from the email.
+        router.get(
+            API_ENDPOINTS.OCCURRENCES.ICS(':occurrenceId'),
+            publicLimit,
+            validate({ params: occurrenceIdParamSchema, query: icsQuerySchema }),
+            this.controller.ics,
+        );
+
+        return router;
+    }
+}
