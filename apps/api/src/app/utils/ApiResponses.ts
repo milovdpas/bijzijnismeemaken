@@ -43,6 +43,15 @@ export function sendSuccess<T = never>(res: Response, data: NoInfer<T>, status =
     res.status(status).json(data);
 }
 
+/**
+ * Done, nothing to say. 204 for an action on something that exists (logout,
+ * a role change, a delete); 201 for a creation whose result the caller is
+ * told to look for elsewhere (register: "check your inbox").
+ */
+export function sendNoContent(res: Response, status: 201 | 204 = 204): void {
+    res.status(status).end();
+}
+
 export function sendError(
     res: Response,
     code: ErrorCode,

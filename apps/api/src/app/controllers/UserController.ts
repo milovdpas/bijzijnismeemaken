@@ -4,9 +4,10 @@ import type { HandleAvailableResponse, MeResponse, UserSummary } from '@bzim/typ
 import type { Handler } from '../../interfaces/IHttp';
 import { queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
+import Group from '../models/Group.entity';
 import { SessionService } from '../services/SessionService';
 import { UserService } from '../services/UserService';
-import { sendConflict, sendError, sendSuccess } from '../utils/ApiResponses';
+import { sendConflict, sendError, sendNoContent, sendSuccess } from '../utils/ApiResponses';
 import { clearAuthCookies, setAuthCookies } from '../utils/Cookies';
 import {
     changePasswordSchema,
@@ -68,7 +69,7 @@ export default class UserController {
 
         const session = await SessionService.issue(req.user, req.header('user-agent') ?? null);
         setAuthCookies(res, session);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     handleAvailable: Handler = async (req, res) => {
@@ -89,9 +90,14 @@ export default class UserController {
         );
     };
 
+    /** Refused while the person still owns a group: somebody has to take it over first. */
     deleteMe: Handler = async (req, res) => {
+        if ((await Group.countOwnedBy(req.user)) > 0) {
+            sendConflict(res, 'Transfer ownership first', ERROR_CODES.OWNER_MUST_TRANSFER);
+            return;
+        }
         await UserService.deleteAccount(req.user);
         clearAuthCookies(res);
-        res.status(204).end();
+        sendNoContent(res);
     };
 }

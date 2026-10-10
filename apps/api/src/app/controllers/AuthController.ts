@@ -8,7 +8,7 @@ import type { BodyOf } from '../middleware/ValidateRequest';
 import type User from '../models/User.entity';
 import { AuthService, safeReturnTo } from '../services/AuthService';
 import { SessionService } from '../services/SessionService';
-import { sendConflict, sendError, sendUnauthenticated } from '../utils/ApiResponses';
+import { sendConflict, sendError, sendNoContent, sendUnauthenticated } from '../utils/ApiResponses';
 import { REFRESH_COOKIE, clearAuthCookies, cookieOf, setAuthCookies } from '../utils/Cookies';
 import {
     emailOnlySchema,
@@ -70,7 +70,7 @@ export default class AuthController {
         }
         // No session yet: the address has to be verified first. 201 with an
         // empty body says "created, now check your mail".
-        res.status(201).end();
+        sendNoContent(res, 201);
     };
 
     login: Handler<BodyOf<typeof loginSchema>> = async (req, res) => {
@@ -86,13 +86,13 @@ export default class AuthController {
         }
 
         await AuthController.signIn(req, res, result.user);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /** Always 204: whether the address exists is not for the caller to learn. */
     resendVerification: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
         await AuthService.resendVerification(req.body.email);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /** The link signs the person in, so onboarding can start right away. */
@@ -103,12 +103,12 @@ export default class AuthController {
             return;
         }
         await AuthController.signIn(req, res, result.user);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     forgotPassword: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
         await AuthService.forgotPassword(req.body.email);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /** No session afterwards, on purpose: every session was just revoked, including any on this device. */
@@ -120,7 +120,7 @@ export default class AuthController {
             return;
         }
         clearAuthCookies(res);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /**
@@ -143,7 +143,7 @@ export default class AuthController {
         }
 
         setAuthCookies(res, result.session);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /** Idempotent: a missing or unknown cookie still answers 204 and clears. */
@@ -153,7 +153,7 @@ export default class AuthController {
             await SessionService.revoke(token);
         }
         clearAuthCookies(res);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /** Shared by every way of signing in: one session, the same two cookies. */

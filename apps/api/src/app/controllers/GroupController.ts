@@ -14,7 +14,7 @@ import type { BodyOf } from '../middleware/ValidateRequest';
 import GroupMember from '../models/GroupMember.entity';
 import GroupPresenter from '../presenters/GroupPresenter';
 import { GroupService } from '../services/GroupService';
-import { sendConflict, sendNotFound, sendSuccess } from '../utils/ApiResponses';
+import { sendConflict, sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
 import { paginate } from '../utils/Pagination';
 import { groupIdParamSchema } from '../validators/commonSchemas';
 import {
@@ -68,7 +68,7 @@ export default class GroupController {
 
     delete: Handler = async (req, res) => {
         await GroupService.delete(req.group);
-        res.status(204).end();
+        sendNoContent(res);
     };
 
     /**

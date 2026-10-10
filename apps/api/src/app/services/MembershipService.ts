@@ -6,10 +6,11 @@ import Group from '../models/Group.entity';
 import GroupInvite from '../models/GroupInvite.entity';
 import GroupMember, { roleRank } from '../models/GroupMember.entity';
 
-export type MembershipProblem =
-    'NOT_A_MEMBER' | 'FORBIDDEN' | 'OWNER_MUST_TRANSFER' | 'CANNOT_TARGET_SELF';
+/** The refusals an action on another member can answer with. */
+export type MemberActionProblem = 'NOT_A_MEMBER' | 'FORBIDDEN' | 'CANNOT_TARGET_SELF';
 
-export type MembershipResult = { ok: true } | { ok: false; problem: MembershipProblem };
+/** Each method names exactly the problems it can produce, so a controller's switch lists only real cases. */
+export type MembershipResult<P extends string> = { ok: true } | { ok: false; problem: P };
 
 /**
  * Who is in a group and what they may do to each other.
@@ -42,7 +43,7 @@ export class MembershipService {
         actor: GroupMember,
         targetUserId: string,
         role: GroupRole.ADMIN | GroupRole.MEMBER,
-    ): Promise<MembershipResult> {
+    ): Promise<MembershipResult<MemberActionProblem>> {
         if (actor.role !== GroupRole.OWNER) {
             return { ok: false, problem: 'FORBIDDEN' };
         }
@@ -67,7 +68,7 @@ export class MembershipService {
         group: Group,
         actor: GroupMember,
         targetUserId: string,
-    ): Promise<MembershipResult> {
+    ): Promise<MembershipResult<MemberActionProblem>> {
         if (targetUserId === actor.userId) {
             return { ok: false, problem: 'CANNOT_TARGET_SELF' };
         }
@@ -87,7 +88,7 @@ export class MembershipService {
         group: Group,
         actor: GroupMember,
         targetUserId: string,
-    ): Promise<MembershipResult> {
+    ): Promise<MembershipResult<MemberActionProblem>> {
         if (actor.role !== GroupRole.OWNER) {
             return { ok: false, problem: 'FORBIDDEN' };
         }
@@ -113,7 +114,10 @@ export class MembershipService {
      * the leaver's activities and leaderboard rows is added in task 29; for
      * now the membership and any pending invites are what go.
      */
-    static async leave(group: Group, actor: GroupMember): Promise<MembershipResult> {
+    static async leave(
+        group: Group,
+        actor: GroupMember,
+    ): Promise<MembershipResult<'OWNER_MUST_TRANSFER'>> {
         if (actor.role === GroupRole.OWNER) {
             return { ok: false, problem: 'OWNER_MUST_TRANSFER' };
         }
