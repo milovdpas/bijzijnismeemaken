@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, Daypart, OccurrenceStatus } from '@bzim/types';
 import type { MeResponse, OccurrenceDto } from '@bzim/types';
 
+import { IsNull } from 'typeorm';
+
 import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
 import { mailer } from '../src/app/modules/mail';
 import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
@@ -149,5 +151,41 @@ describe('auto-add to the calendar', () => {
             participantIds: [w.anna.id],
         });
         expect(w.fixture.written).toHaveLength(0);
+    });
+});
+
+describe('switching auto-add on and off', () => {
+    it('writes the plans that already exist when the switch goes on, and takes them out when it goes off', async () => {
+        const w = await world();
+        const occurrencesUrl = API_ENDPOINTS.ACTIVITIES.OCCURRENCES(w.group.id, w.activity.id);
+        await w.asOwner.post(occurrencesUrl, {
+            date: '2026-12-05',
+            daypart: Daypart.EVENING,
+            participantIds: [w.anna.id],
+        });
+        // A second activity: the first is a one-off and allows one open plan.
+        const other = await seedActivity(w.group, w.owner, { title: 'Darts' });
+        await w.asOwner.post(API_ENDPOINTS.ACTIVITIES.OCCURRENCES(w.group.id, other.id), {
+            date: '2026-12-12',
+            daypart: Daypart.EVENING,
+            participantIds: [w.anna.id, w.bob.id],
+        });
+        expect(w.fixture.written).toHaveLength(0);
+
+        // Granting the write scope switches it on and backfills both plans.
+        await connectForWriting(w);
+        expect(w.fixture.written).toHaveLength(2);
+        expect(
+            await OccurrenceParticipant.countBy({ userId: w.anna.id, calendarEventId: IsNull() }),
+        ).toBe(0);
+
+        // Off: both events go. On again: both come back.
+        await w.asAnna.patch(API_ENDPOINTS.ME.ROOT, { autoAddToCalendar: false });
+        expect(w.fixture.deleted).toHaveLength(2);
+        expect(
+            await OccurrenceParticipant.countBy({ userId: w.anna.id, calendarEventId: IsNull() }),
+        ).toBe(2);
+        await w.asAnna.patch(API_ENDPOINTS.ME.ROOT, { autoAddToCalendar: true });
+        expect(w.fixture.written).toHaveLength(4);
     });
 });

@@ -20,6 +20,7 @@ export default class AvailabilityPresenter {
         to: IsoDateString,
         days: IsoDateString[],
         matrix: UserMatrix,
+        titles: Map<IsoDateString, Map<Daypart, string[]>>,
     ): MyAvailabilityResponse {
         return {
             from,
@@ -32,6 +33,9 @@ export default class AvailabilityPresenter {
                         matrix.get(date)?.get(daypart) ?? null,
                     ]),
                 ) as Record<Daypart, AvailabilityReason | null>,
+                calendarTitles: Object.fromEntries(
+                    DAYPART_ORDER.map((daypart) => [daypart, titles.get(date)?.get(daypart) ?? []]),
+                ) as Record<Daypart, string[]>,
             })),
         };
     }

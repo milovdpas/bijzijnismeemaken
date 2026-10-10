@@ -114,12 +114,11 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
                         </a>
                     </FormMessage>
                 )}
-                {connection.status === CalendarConnectionStatus.ERROR &&
-                    connection.lastError !== null && (
-                        <FormMessage tone="error">
-                            {t('calendarSettings.lastError', { error: connection.lastError })}
-                        </FormMessage>
-                    )}
+                {connection.lastError !== null && (
+                    <FormMessage tone="error">
+                        {t('calendarSettings.lastError', { error: connection.lastError })}
+                    </FormMessage>
+                )}
                 {sync.isError && <FormMessage tone="error">{t(errorKey(sync.error))}</FormMessage>}
             </CardContent>
             <CardFooter className="flex flex-wrap justify-end gap-2">

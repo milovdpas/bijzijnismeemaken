@@ -20,6 +20,8 @@ export interface GridRow {
     /** Past: shown, never tapped. */
     locked?: boolean;
     cells: Record<Daypart, CellState>;
+    /** What a calendar cell is busy with; the owner's own view only. */
+    titles?: Partial<Record<Daypart, string[]>>;
 }
 
 /**
@@ -88,6 +90,7 @@ export function DaypartGrid({
                         </span>
                         {DAYPART_ORDER.map((daypart) => {
                             const state = row.cells[daypart];
+                            const titles = row.titles?.[daypart] ?? [];
                             const tappable =
                                 state === 'free' ||
                                 state === 'manual' ||
@@ -100,9 +103,11 @@ export function DaypartGrid({
                                     aria-pressed={state !== 'free'}
                                     aria-label={`${row.label} ${t(`dayparts.${daypart}`)}`}
                                     title={
-                                        state === 'rule' && !rulesEditable
-                                            ? t('availability.ruleHint')
-                                            : undefined
+                                        state === 'calendar' && titles.length > 0
+                                            ? titles.join('\n')
+                                            : state === 'rule' && !rulesEditable
+                                              ? t('availability.ruleHint')
+                                              : undefined
                                     }
                                     onClick={() => onToggle(row.key, daypart, state === 'free')}
                                     className={cellClass(state, row.locked === true)}
@@ -110,6 +115,12 @@ export function DaypartGrid({
                                     {state === 'rule' && <Repeat className="size-3.5" />}
                                     {(state === 'manual' || (state === 'rule' && rulesEditable)) &&
                                         t('availability.busy')}
+                                    {state === 'calendar' && titles.length > 0 && (
+                                        <span className="min-w-0 truncate px-1 text-[10px] leading-tight font-semibold">
+                                            {titles[0]}
+                                            {titles.length > 1 && ` +${String(titles.length - 1)}`}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}

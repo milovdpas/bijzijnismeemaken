@@ -12,6 +12,7 @@ import type { BodyOf } from '../middleware/ValidateRequest';
 import { CalendarEventService } from '../services/CalendarEventService';
 import { CalendarService } from '../services/CalendarService';
 import { CalendarSyncService } from '../services/CalendarSyncService';
+import { CalendarWriteService } from '../services/CalendarWriteService';
 import { IgnoreRuleService } from '../services/IgnoreRuleService';
 import { sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
 import {
@@ -57,6 +58,9 @@ export default class CalendarController {
                 `${SETTINGS_PAGE}?error=${result.problem === 'STATE_INVALID' ? 'state' : 'provider'}`,
             );
             return;
+        }
+        if (result.autoAddEnabled) {
+            await CalendarWriteService.backfill(req.user);
         }
         res.redirect(302, `${SETTINGS_PAGE}?connected=1`);
     };

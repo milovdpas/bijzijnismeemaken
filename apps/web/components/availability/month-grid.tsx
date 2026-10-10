@@ -10,8 +10,9 @@ import { dayLabel, isWeekend } from '@/lib/month';
 
 /**
  * A month as rows of the daypart grid. Rule cells are marks here, not
- * buttons: the week schedule is where rules change. Past days are left out;
- * blocking them serves nobody.
+ * buttons: the week schedule is where rules change. Calendar cells carry
+ * the event's title, since this is the owner's own view. Past days are left
+ * out; blocking them serves nobody.
  */
 export function MonthGrid({
     days,
@@ -39,6 +40,7 @@ export function MonthGrid({
             cells: Object.fromEntries(
                 DAYPART_ORDER.map((daypart) => [daypart, day.dayparts[daypart] ?? 'free']),
             ) as GridRow['cells'],
+            titles: day.calendarTitles,
         }));
 
     return (

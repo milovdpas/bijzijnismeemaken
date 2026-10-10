@@ -9,6 +9,7 @@ import User from '../models/User.entity';
 import { escapeLike } from '../utils/Database';
 import { normalizeHandle } from '../utils/Normalize';
 import { hashPassword, verifyPassword } from '../utils/Password';
+import { CalendarWriteService } from './CalendarWriteService';
 import { DepartureService } from './DepartureService';
 import type { Departure } from './DepartureService';
 import { SessionService } from './SessionService';
@@ -38,9 +39,16 @@ export class UserService {
         if (patch.displayName !== undefined) user.displayName = patch.displayName;
         if (patch.avatarKey !== undefined) user.avatarKey = patch.avatarKey;
         if (patch.locale !== undefined) user.locale = patch.locale;
+        const autoAddBefore = user.autoAddToCalendar;
         if (patch.autoAddToCalendar !== undefined) user.autoAddToCalendar = patch.autoAddToCalendar;
 
         await user.save();
+        // The auto-add switch acts at once: on writes every current plan, off takes them out.
+        if (user.autoAddToCalendar && !autoAddBefore) {
+            await CalendarWriteService.backfill(user);
+        } else if (!user.autoAddToCalendar && autoAddBefore) {
+            await CalendarWriteService.removeAllFor(user);
+        }
         return { ok: true, user };
     }
 

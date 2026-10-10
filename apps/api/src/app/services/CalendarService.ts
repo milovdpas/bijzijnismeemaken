@@ -20,7 +20,7 @@ const REFRESH_MARGIN_SECONDS = 60;
 const WRITE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 export type ConnectResult =
-    | { ok: true; connection: CalendarConnection }
+    | { ok: true; connection: CalendarConnection; autoAddEnabled: boolean }
     | { ok: false; problem: 'STATE_INVALID' | 'PROVIDER_FAILED' };
 
 /**
@@ -126,11 +126,17 @@ export class CalendarService {
             return created;
         });
         // Asking for the write scope is asking for auto-add: the setting follows the grant.
-        if (row.purpose === OAuthPurpose.CALENDAR_WRITE && connection.hasWriteScope) {
+        const autoAddEnabled =
+            row.purpose === OAuthPurpose.CALENDAR_WRITE && connection.hasWriteScope;
+        if (autoAddEnabled) {
             user.autoAddToCalendar = true;
             await user.save();
         }
-        return { ok: true, connection: await CalendarService.reload(connection.id) };
+        return {
+            ok: true,
+            connection: await CalendarService.reload(connection.id),
+            autoAddEnabled,
+        };
     }
 
     /** Gone at the provider too, so a reconnect starts with a fresh grant; the events go with the rows. */

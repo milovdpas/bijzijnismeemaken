@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { In } from 'typeorm';
+import { In, IsNull, MoreThanOrEqual, Not } from 'typeorm';
 import { CalendarConnectionStatus, OccurrenceStatus, TIME_ZONE } from '@bzim/types';
 
 import { env } from '../../config/app';
@@ -7,10 +7,12 @@ import type Activity from '../models/Activity.entity';
 import type ActivityOccurrence from '../models/ActivityOccurrence.entity';
 import CalendarConnection from '../models/CalendarConnection.entity';
 import type Group from '../models/Group.entity';
+import type User from '../models/User.entity';
 import OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
 import { ProviderError } from '../modules/calendar/CalendarProvider';
 import type { EventInput } from '../modules/calendar/CalendarProvider';
 import { calendarSpan } from '../utils/CalendarLinks';
+import { today } from '../utils/Dates';
 import { CalendarService } from './CalendarService';
 
 /**
@@ -39,31 +41,68 @@ export class CalendarWriteService {
         }
         const input = CalendarWriteService.eventInput(group, activity, occurrence);
         for (const row of occurrence.participants) {
-            if (!row.user.autoAddToCalendar) {
-                if (row.calendarEventId !== null) await CalendarWriteService.remove([row]);
-                continue;
+            await CalendarWriteService.writeRow(row, input);
+        }
+    }
+
+    /**
+     * The switch just went on: every planned occurrence from today on that
+     * the person is part of gets its event now, not at the next edit.
+     */
+    static async backfill(user: User): Promise<void> {
+        const rows = await OccurrenceParticipant.find({
+            where: {
+                userId: user.id,
+                occurrence: { status: OccurrenceStatus.PLANNED, date: MoreThanOrEqual(today()) },
+            },
+            relations: { user: true, occurrence: { activity: { group: true } } },
+        });
+        for (const row of rows) {
+            const { occurrence } = row;
+            const input = CalendarWriteService.eventInput(
+                occurrence.activity.group,
+                occurrence.activity,
+                occurrence,
+            );
+            await CalendarWriteService.writeRow(row, input);
+        }
+    }
+
+    /** The switch went off: whatever was written for this person comes out of their calendar. */
+    static async removeAllFor(user: User): Promise<void> {
+        await CalendarWriteService.remove(
+            await OccurrenceParticipant.findBy({ userId: user.id, calendarEventId: Not(IsNull()) }),
+        );
+    }
+
+    /** One participant: create or update their event, or take it out when they opted out. Needs `row.user`. */
+    private static async writeRow(row: OccurrenceParticipant, input: EventInput): Promise<void> {
+        if (!row.user.autoAddToCalendar) {
+            if (row.calendarEventId !== null) await CalendarWriteService.remove([row]);
+            return;
+        }
+        const connection = await CalendarWriteService.writableConnection(row);
+        if (connection === null) return;
+        const calendarId = CalendarWriteService.targetCalendar(connection);
+        if (calendarId === null) return;
+        try {
+            const provider = CalendarService.provider();
+            const accessToken = await CalendarService.accessToken(connection);
+            if (row.calendarEventId === null || row.calendarConnectionId !== connection.id) {
+                row.calendarEventId = await provider.createEvent(accessToken, calendarId, input);
+                row.calendarConnectionId = connection.id;
+            } else {
+                await provider.updateEvent(accessToken, calendarId, row.calendarEventId, input);
             }
-            const connection = await CalendarWriteService.writableConnection(row);
-            if (connection === null) continue;
-            const calendarId = CalendarWriteService.targetCalendar(connection);
-            if (calendarId === null) continue;
-            try {
-                const provider = CalendarService.provider();
-                const accessToken = await CalendarService.accessToken(connection);
-                if (row.calendarEventId === null || row.calendarConnectionId !== connection.id) {
-                    row.calendarEventId = await provider.createEvent(
-                        accessToken,
-                        calendarId,
-                        input,
-                    );
-                    row.calendarConnectionId = connection.id;
-                } else {
-                    await provider.updateEvent(accessToken, calendarId, row.calendarEventId, input);
-                }
-                await row.save();
-            } catch (error) {
-                await CalendarWriteService.failed(connection, error);
-            }
+            await OccurrenceParticipant.update(
+                { id: row.id },
+                {
+                    calendarEventId: row.calendarEventId,
+                    calendarConnectionId: row.calendarConnectionId,
+                },
+            );
+        } catch (error) {
+            await CalendarWriteService.failed(connection, error);
         }
     }
 
@@ -173,12 +212,14 @@ export class CalendarWriteService {
         return primary?.providerCalendarId ?? connection.sources[0]?.providerCalendarId ?? null;
     }
 
+    /** Logged, and written on the connection so the settings page can show it; a dead grant also flips the status. */
     private static async failed(connection: CalendarConnection, error: unknown): Promise<void> {
         console.warn(`Calendar write failed for connection ${connection.id}:`, error);
         if (error instanceof ProviderError && error.reauthRequired) {
             connection.status = CalendarConnectionStatus.REAUTH_REQUIRED;
-            connection.lastError = error.message;
-            await connection.save();
         }
+        connection.lastError =
+            `write: ${error instanceof Error ? error.message : String(error)}`.slice(0, 500);
+        await connection.save();
     }
 }

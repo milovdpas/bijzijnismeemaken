@@ -206,6 +206,10 @@ describe('calendar connection', () => {
         expect(day('2026-11-03')?.[Daypart.MORNING]).toBe('calendar');
         expect(day('2026-11-03')?.[Daypart.AFTERNOON]).toBeNull();
         expect(day('2026-11-04')?.[Daypart.EVENING]).toBe('calendar');
+        // The owner sees what is behind a calendar cell; the group never does.
+        expect(
+            mine.days.find((entry) => entry.date === '2026-11-03')?.calendarTitles[Daypart.MORNING],
+        ).toEqual(['Tandarts']);
         // The work calendar is off: its event is not even stored.
         expect(day('2026-11-05')?.[Daypart.MORNING]).toBeNull();
 

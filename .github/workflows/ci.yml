@@ -69,6 +69,7 @@ jobs:
                   GOOGLE_CLIENT_SECRET=test-client-secret
                   MAIL_DRIVER=console
                   APP_KEY=base64:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
+                  CALENDAR_TOKEN_KEY=base64:Q0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0M=
                   EOF
 
             - name: Lint

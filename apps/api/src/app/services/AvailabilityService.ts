@@ -120,25 +120,8 @@ export class AvailabilityService {
                 }
             }
         }
-        const ignoredTitles = new Set(
-            ignores
-                .filter((rule) => rule.kind === CalendarIgnoreRuleKind.TITLE)
-                .map((rule) => `${rule.userId}:${rule.value}`),
-        );
-        const ignoredSeries = new Set(
-            ignores
-                .filter((rule) => rule.kind === CalendarIgnoreRuleKind.SERIES)
-                .map((rule) => `${rule.userId}:${rule.value}`),
-        );
         const inWindow = new Set(days);
-        for (const event of events) {
-            if (
-                ignoredTitles.has(`${event.userId}:${event.title.trim().toLowerCase()}`) ||
-                (event.recurringEventId !== null &&
-                    ignoredSeries.has(`${event.userId}:${event.recurringEventId}`))
-            ) {
-                continue;
-            }
+        for (const event of AvailabilityService.counted(events, ignores)) {
             for (const [date, daypart] of eventCells(
                 event.startAt,
                 event.endAt,
@@ -152,18 +135,90 @@ export class AvailabilityService {
         return matrix;
     }
 
+    /** The events that block, minus the ones their owner told the app to ignore. */
+    private static counted(
+        events: CalendarEvent[],
+        ignores: CalendarIgnoreRule[],
+    ): CalendarEvent[] {
+        const ignoredTitles = new Set(
+            ignores
+                .filter((rule) => rule.kind === CalendarIgnoreRuleKind.TITLE)
+                .map((rule) => `${rule.userId}:${rule.value}`),
+        );
+        const ignoredSeries = new Set(
+            ignores
+                .filter((rule) => rule.kind === CalendarIgnoreRuleKind.SERIES)
+                .map((rule) => `${rule.userId}:${rule.value}`),
+        );
+        return events.filter(
+            (event) =>
+                !ignoredTitles.has(`${event.userId}:${event.title.trim().toLowerCase()}`) &&
+                (event.recurringEventId === null ||
+                    !ignoredSeries.has(`${event.userId}:${event.recurringEventId}`)),
+        );
+    }
+
+    /**
+     * What is behind the owner's calendar cells: the titles of the counted
+     * events per day and daypart. Only ever for the person themselves.
+     */
+    static async calendarTitles(
+        userId: string,
+        from: IsoDateString,
+        to: IsoDateString,
+    ): Promise<Map<IsoDateString, Map<Daypart, string[]>>> {
+        const windowStart = DateTime.fromISO(from, { zone: TIME_ZONE })
+            .startOf('day')
+            .toUTC()
+            .toJSDate();
+        const windowEnd = DateTime.fromISO(to, { zone: TIME_ZONE }).endOf('day').toUTC().toJSDate();
+        const [events, ignores] = await Promise.all([
+            CalendarEvent.find({
+                where: {
+                    userId,
+                    transparent: false,
+                    startAt: LessThan(windowEnd),
+                    endAt: MoreThan(windowStart),
+                },
+                order: { startAt: 'ASC' },
+            }),
+            CalendarIgnoreRule.findBy({ userId }),
+        ]);
+        const inWindow = new Set(eachDay(from, to));
+        const titles = new Map<IsoDateString, Map<Daypart, string[]>>();
+        for (const event of AvailabilityService.counted(events, ignores)) {
+            for (const [date, daypart] of eventCells(
+                event.startAt,
+                event.endAt,
+                event.allDay,
+                event.startDate,
+                event.endDate,
+            )) {
+                if (!inWindow.has(date)) continue;
+                const byDaypart = titles.get(date) ?? new Map<Daypart, string[]>();
+                byDaypart.set(daypart, [...(byDaypart.get(daypart) ?? []), event.title]);
+                titles.set(date, byDaypart);
+            }
+        }
+        return titles;
+    }
+
     /** The caller's own days with reasons, for the editor. */
     static async forUser(
         user: User,
         from: IsoDateString,
         to: IsoDateString,
     ): Promise<MyAvailabilityResponse> {
-        const matrix = await AvailabilityService.matrix([user.id], from, to);
+        const [matrix, titles] = await Promise.all([
+            AvailabilityService.matrix([user.id], from, to),
+            AvailabilityService.calendarTitles(user.id, from, to),
+        ]);
         return AvailabilityPresenter.mine(
             from,
             to,
             eachDay(from, to),
             matrix.get(user.id) ?? new Map<IsoDateString, Map<Daypart, AvailabilityReason>>(),
+            titles,
         );
     }
 

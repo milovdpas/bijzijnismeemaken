@@ -392,6 +392,8 @@ export type AvailabilityReason = 'manual' | 'rule' | 'calendar';
 export interface MyAvailabilityDay {
     date: IsoDateString;
     dayparts: Record<Daypart, AvailabilityReason | null>;
+    /** For the owner's eyes only: the titles of the calendar events that make each daypart busy. */
+    calendarTitles: Record<Daypart, string[]>;
 }
 
 /** `GET /me/availability?from=&to=`. */
