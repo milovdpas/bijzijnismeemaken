@@ -10,6 +10,7 @@ import GroupPresenter from '../presenters/GroupPresenter';
 import { escapeLike } from '../utils/Database';
 
 import { generateToken } from '../utils/Token';
+import { WidgetService } from './WidgetService';
 
 export interface GroupInput {
     name: string;
@@ -49,6 +50,7 @@ export class GroupService {
                     role: GroupRole.OWNER,
                 }),
             );
+            await WidgetService.seedDefaults(manager, group);
             return group;
         });
     }

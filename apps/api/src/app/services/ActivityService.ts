@@ -1,4 +1,4 @@
-import { ActivityLabel, GroupRole, Weekday, activityRuleProblem } from '@bzim/types';
+import { ActivityLabel, GroupRole, Weekday, activityRuleProblem, WidgetType } from '@bzim/types';
 import type {
     ActivityDetailDto,
     ActivityInput,
@@ -13,6 +13,7 @@ import type Group from '../models/Group.entity';
 import type GroupMember from '../models/GroupMember.entity';
 import type User from '../models/User.entity';
 import ActivityPresenter from '../presenters/ActivityPresenter';
+import { WidgetService } from './WidgetService';
 
 export type ActivityResult =
     { ok: true; activity: Activity } | { ok: false; problem: ActivityRuleProblem };
@@ -111,7 +112,9 @@ export class ActivityService {
     }
 
     /** Interests and occurrences cascade in the database. */
+    /** Interests, occurrences and participants cascade; a dashboard widget showing it goes too. */
     static async delete(activity: Activity): Promise<void> {
+        await WidgetService.removeForTarget(WidgetType.ACTIVITY, activity.id);
         await activity.remove();
     }
 

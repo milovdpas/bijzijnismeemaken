@@ -9,6 +9,7 @@ import {
     LeaderboardPeriod,
     ScoreType,
     TIME_ZONE,
+    WidgetType,
 } from '@bzim/types';
 import type {
     AvatarKey,
@@ -31,6 +32,7 @@ import type User from '../models/User.entity';
 import LeaderboardPresenter from '../presenters/LeaderboardPresenter';
 import type { LeaderboardPermissions } from '../presenters/LeaderboardPresenter';
 import { ScoreQueryService } from './ScoreQueryService';
+import { WidgetService } from './WidgetService';
 
 export type LeaderboardProblem =
     /** None of the three periods switched on; a board must show something. */
@@ -159,8 +161,9 @@ export class LeaderboardService {
         return { ok: true, leaderboard: await LeaderboardService.reload(leaderboard.id) };
     }
 
-    /** Members, editors, scores and history cascade in the database. */
+    /** Members, editors, scores and history cascade in the database; a dashboard widget showing it goes too. */
     static async delete(leaderboard: Leaderboard): Promise<void> {
+        await WidgetService.removeForTarget(WidgetType.LEADERBOARD, leaderboard.id);
         await leaderboard.remove();
     }
 

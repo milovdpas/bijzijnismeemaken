@@ -40,6 +40,20 @@ export const PAGINATION = {
     MAX_PAGE_SIZE: 100,
 } as const;
 
+export const WIDGETS = {
+    MAX_PER_GROUP: 20,
+    UPCOMING_WEEKS_MIN: 1,
+    UPCOMING_WEEKS_MAX: 12,
+    UPCOMING_WEEKS_DEFAULT: 4,
+    LIMIT_MIN: 1,
+    LIMIT_MAX: 10,
+    LIMIT_DEFAULT: 5,
+    NOTE_TITLE_MAX_LENGTH: 60,
+    NOTE_BODY_MAX_LENGTH: 1000,
+    LINK_LABEL_MAX_LENGTH: 60,
+    URL_MAX_LENGTH: 500,
+} as const;
+
 export const LEADERBOARD = {
     /** Ranks below this are never listed; pages past it come back empty. */
     RANK_LIMIT: 500,
@@ -280,6 +294,14 @@ export const API_ENDPOINTS = {
         ICS: (occurrenceId: string) => `${V1}/occurrences/${occurrenceId}/ics`,
     },
 
+    WIDGETS: {
+        LIST: (groupId: string) => `${V1}/groups/${groupId}/widgets`,
+        CREATE: (groupId: string) => `${V1}/groups/${groupId}/widgets`,
+        ORDER: (groupId: string) => `${V1}/groups/${groupId}/widgets/order`,
+        RESTORE_DEFAULTS: (groupId: string) => `${V1}/groups/${groupId}/widgets/restore-defaults`,
+        DETAIL: (groupId: string, widgetId: string) =>
+            `${V1}/groups/${groupId}/widgets/${widgetId}`,
+    },
     LEADERBOARDS: {
         LIST: (groupId: string) => `${V1}/groups/${groupId}/leaderboards`,
         CREATE: (groupId: string) => `${V1}/groups/${groupId}/leaderboards`,

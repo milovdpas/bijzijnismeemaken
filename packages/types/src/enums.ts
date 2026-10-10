@@ -142,3 +142,19 @@ export enum CalendarConnectionStatus {
     /** The last sync failed for another reason; details in the connection. */
     ERROR = 'error',
 }
+
+/** The tiles a group dashboard can show (docs/01 §1.5b). */
+export enum WidgetType {
+    /** Planned occurrences in the next weeks. */
+    UPCOMING = 'upcoming',
+    /** Activities without a date, by interest. */
+    IDEAS = 'ideas',
+    /** The top of one leaderboard period. */
+    LEADERBOARD = 'leaderboard',
+    /** Pinned text. */
+    NOTE = 'note',
+    /** One activity in the spotlight. */
+    ACTIVITY = 'activity',
+    /** An external link with a label. */
+    LINK = 'link',
+}

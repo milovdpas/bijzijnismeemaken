@@ -13,6 +13,7 @@ import type {
     ScoreType,
     SortOrder,
     Weekday,
+    WidgetType,
 } from './enums';
 import type { AvatarKey } from './constants';
 import type { IsoDateString, IsoDateTimeString, LocalTimeString, ScoreValue, Uuid } from './domain';
@@ -589,4 +590,63 @@ export interface AddLeaderboardMemberRequest {
     name?: string;
     /** For a guest; a random one when absent. */
     avatarKey?: AvatarKey;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Dashboard widgets                                                           */
+/* -------------------------------------------------------------------------- */
+
+export interface UpcomingWidgetConfig {
+    weeks: number;
+}
+export interface IdeasWidgetConfig {
+    limit: number;
+}
+export interface LeaderboardWidgetConfig {
+    leaderboardId: Uuid;
+    period: LeaderboardPeriod;
+    limit: number;
+}
+export interface NoteWidgetConfig {
+    title: string;
+    body: string;
+}
+export interface ActivityWidgetConfig {
+    activityId: Uuid;
+}
+export interface LinkWidgetConfig {
+    label: string;
+    url: string;
+}
+
+/** A widget's type with the config that type carries; the pair is validated together. */
+export type WidgetSpec =
+    | { type: WidgetType.UPCOMING; config: UpcomingWidgetConfig }
+    | { type: WidgetType.IDEAS; config: IdeasWidgetConfig }
+    | { type: WidgetType.LEADERBOARD; config: LeaderboardWidgetConfig }
+    | { type: WidgetType.NOTE; config: NoteWidgetConfig }
+    | { type: WidgetType.ACTIVITY; config: ActivityWidgetConfig }
+    | { type: WidgetType.LINK; config: LinkWidgetConfig };
+
+export type WidgetConfig = WidgetSpec['config'];
+
+/** `GET /groups/:id/widgets`: the dashboard in order, config only; each widget fetches its own data. */
+export type GroupWidgetDto = WidgetSpec & {
+    id: Uuid;
+    position: number;
+    createdAt: IsoDateTimeString;
+    updatedAt: IsoDateTimeString;
+};
+
+/** `POST /groups/:id/widgets`: appended at the end. */
+export type AddWidgetRequest = WidgetSpec;
+
+/** `PATCH /groups/:id/widgets/:id`: a new config for the widget's own type. */
+export interface UpdateWidgetRequest {
+    config: WidgetConfig;
+}
+
+/** `PUT /groups/:id/widgets/order`: every widget id of the group, in the wanted order. */
+export interface ReorderWidgetsRequest {
+    widgetIds: Uuid[];
 }

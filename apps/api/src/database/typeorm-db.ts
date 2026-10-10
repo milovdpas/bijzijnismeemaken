@@ -10,6 +10,7 @@ import Group from '../app/models/Group.entity';
 import GroupInvite from '../app/models/GroupInvite.entity';
 import NotificationSetting from '../app/models/NotificationSetting.entity';
 import GroupMember from '../app/models/GroupMember.entity';
+import GroupWidget from '../app/models/GroupWidget.entity';
 import Leaderboard from '../app/models/Leaderboard.entity';
 import LeaderboardEditor from '../app/models/LeaderboardEditor.entity';
 import LeaderboardMember from '../app/models/LeaderboardMember.entity';
@@ -59,6 +60,7 @@ export const AppDataSource = new DataSource({
         EmailToken,
         Group,
         GroupMember,
+        GroupWidget,
         GroupInvite,
         NotificationSetting,
         Activity,
