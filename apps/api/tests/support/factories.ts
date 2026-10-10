@@ -5,10 +5,13 @@ import {
     ActivityCategory,
     DateMode,
     Daypart,
+    EditMode,
     GroupAccess,
     GroupRole,
     Locale,
     OccurrenceStatus,
+    ScoreType,
+    SortOrder,
     Weekday,
     slugify,
 } from '@bzim/types';
@@ -18,6 +21,8 @@ import ActivityInterest from '../../src/app/models/ActivityInterest.entity';
 import ActivityOccurrence from '../../src/app/models/ActivityOccurrence.entity';
 import Group from '../../src/app/models/Group.entity';
 import GroupMember from '../../src/app/models/GroupMember.entity';
+import Leaderboard from '../../src/app/models/Leaderboard.entity';
+import LeaderboardMember from '../../src/app/models/LeaderboardMember.entity';
 import ManualUnavailability from '../../src/app/models/ManualUnavailability.entity';
 import OccurrenceParticipant from '../../src/app/models/OccurrenceParticipant.entity';
 import User from '../../src/app/models/User.entity';
@@ -188,4 +193,42 @@ export async function seedRule(
     });
     Object.assign(rule, overrides);
     return rule.save();
+}
+
+/** A number board, highest first, everyone may edit, all periods shown. */
+export async function seedLeaderboard(
+    group: Group,
+    creator: User,
+    overrides: DeepPartial<Leaderboard> = {},
+): Promise<Leaderboard> {
+    counter += 1;
+    const leaderboard = Leaderboard.create({
+        groupId: group.id,
+        createdById: creator.id,
+        creatorNameSnapshot: null,
+        name: `Leaderboard ${String(counter)}`,
+        description: null,
+        scoreType: ScoreType.NUMBER,
+        sortOrder: SortOrder.DESC,
+        editMode: EditMode.EVERYONE,
+        showMonthly: true,
+        showYearly: true,
+        showAllTime: true,
+    });
+    Object.assign(leaderboard, overrides);
+    return leaderboard.save();
+}
+
+export async function seedLeaderboardMember(
+    leaderboard: Leaderboard,
+    user: User,
+): Promise<LeaderboardMember> {
+    return LeaderboardMember.create({
+        leaderboardId: leaderboard.id,
+        userId: user.id,
+        displayNameSnapshot: user.displayName ?? '',
+        avatarKeySnapshot: user.avatarKey ?? 'cat',
+        addedById: null,
+        removedAt: null,
+    }).save();
 }

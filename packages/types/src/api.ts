@@ -3,11 +3,14 @@ import type {
     ActivityLabel,
     DateMode,
     Daypart,
+    EditMode,
     GroupAccess,
     GroupRole,
     Locale,
     NotificationType,
     OccurrenceStatus,
+    ScoreType,
+    SortOrder,
     Weekday,
 } from './enums';
 import type { AvatarKey } from './constants';
@@ -447,4 +450,69 @@ export interface SuggestionsResponse {
     memberIds: Uuid[];
     from: IsoDateString;
     to: IsoDateString;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Leaderboards                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** A leaderboard's own settings. The creator is null once they left or deleted their account. */
+export interface LeaderboardDto {
+    id: Uuid;
+    groupId: Uuid;
+    name: string;
+    description: string | null;
+    scoreType: ScoreType;
+    sortOrder: SortOrder;
+    editMode: EditMode;
+    showMonthly: boolean;
+    showYearly: boolean;
+    showAllTime: boolean;
+    creator: UserSummary | null;
+    creatorName: string | null;
+    createdAt: IsoDateTimeString;
+    updatedAt: IsoDateTimeString;
+}
+
+/** The list: each board plus what the caller may do with it. */
+export interface LeaderboardListingDto extends LeaderboardDto {
+    memberCount: number;
+    /** Settings and deletion: creator or group admin. */
+    canManage: boolean;
+    /** Setting scores: by edit mode, plus group admins. */
+    canEditScores: boolean;
+}
+
+/**
+ * Somebody on a board. `user` is null once they left the group; the
+ * snapshots keep their name and face on the ranking. Removed members keep
+ * their row (and their history) with `removedAt` set.
+ */
+export interface LeaderboardMemberDto {
+    id: Uuid;
+    user: UserSummary | null;
+    displayName: string;
+    avatarKey: AvatarKey;
+    addedAt: IsoDateTimeString;
+    removedAt: IsoDateTimeString | null;
+}
+
+export interface LeaderboardDetailDto extends LeaderboardListingDto {
+    members: LeaderboardMemberDto[];
+    /** Only meaningful when `editMode` is `selected`. */
+    editors: UserSummary[];
+}
+
+/** `POST` and `PATCH /groups/:id/leaderboards[/:id]`; every field optional on PATCH. */
+export interface LeaderboardInput {
+    name: string;
+    description?: string | null;
+    scoreType: ScoreType;
+    sortOrder: SortOrder;
+    editMode: EditMode;
+    /** Replaces the editor list; only read when `editMode` is `selected`. */
+    editorIds?: Uuid[];
+    showMonthly: boolean;
+    showYearly: boolean;
+    showAllTime: boolean;
 }

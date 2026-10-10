@@ -1,19 +1,18 @@
 'use client';
 
-import { AVATAR_KEYS } from '@bzim/types';
 import type { AvatarKey } from '@bzim/types';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Avatar } from '@/components/common/avatar';
+import { avatarPages } from '@/lib/avatars';
 import { cn } from '@/lib/utils';
 
 /**
- * The sixteen avatars as a radio group.
- *
- * A wrapping row of fixed-size cells rather than a stretched grid, so the gap
- * between tiles is the same on every width. The selection ring sits on a
- * padded cell with the same rounding as the tile, so it reads as a frame
- * around the avatar rather than a box behind it.
+ * The avatars as pages of sixteen, four by four, that swipe sideways like
+ * the app pages on a phone, with dots underneath. Scroll snapping does the
+ * paging; the dots follow the scroll position and jump to a page on tap.
+ * One radio group across all pages, so the selection is still one choice.
  */
 export function AvatarPicker({
     value,
@@ -25,34 +24,75 @@ export function AvatarPicker({
     className?: string;
 }) {
     const { t } = useTranslation();
+    const pages = avatarPages();
+    const scroller = useRef<HTMLDivElement>(null);
+    const [page, setPage] = useState(0);
+
+    const onScroll = () => {
+        const node = scroller.current;
+        if (node === null) return;
+        setPage(Math.round(node.scrollLeft / node.clientWidth));
+    };
+    const goTo = (index: number) => {
+        const node = scroller.current;
+        if (node === null) return;
+        node.scrollTo({ left: index * node.clientWidth, behavior: 'smooth' });
+    };
 
     return (
-        <div
-            role="radiogroup"
-            aria-label={t('profile.avatar')}
-            className={cn('flex flex-wrap gap-3', className)}
-        >
-            {AVATAR_KEYS.map((key) => {
-                const selected = value === key;
-                return (
-                    <button
-                        key={key}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        aria-label={t(`avatars.${key}`)}
-                        onClick={() => onChange(key)}
-                        className={cn(
-                            'rounded-[1.6rem] p-1.5 transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
-                            selected
-                                ? 'bg-brand/15 ring-3 ring-brand'
-                                : 'opacity-75 hover:bg-accent hover:opacity-100',
-                        )}
+        <div className={cn('grid gap-3', className)}>
+            <div
+                ref={scroller}
+                role="radiogroup"
+                aria-label={t('profile.avatar')}
+                onScroll={onScroll}
+                className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
+            >
+                {pages.map((keys, index) => (
+                    <div
+                        key={index}
+                        className="grid w-full shrink-0 snap-start grid-cols-4 justify-items-center gap-2"
                     >
-                        <Avatar avatarKey={key} size="lg" />
-                    </button>
-                );
-            })}
+                        {keys.map((key) => {
+                            const selected = value === key;
+                            return (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={selected}
+                                    aria-label={t(`avatars.${key}`)}
+                                    onClick={() => onChange(key)}
+                                    className={cn(
+                                        'rounded-[1.6rem] p-1.5 transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+                                        selected
+                                            ? 'bg-brand/15 ring-3 ring-brand'
+                                            : 'opacity-75 hover:bg-accent hover:opacity-100',
+                                    )}
+                                >
+                                    <Avatar avatarKey={key} size="lg" />
+                                </button>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
+            {pages.length > 1 && (
+                <div className="flex justify-center gap-1.5" aria-hidden>
+                    {pages.map((_keys, index) => (
+                        <button
+                            key={index}
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => goTo(index)}
+                            className={cn(
+                                'size-2 rounded-full transition-colors',
+                                index === page ? 'bg-ink' : 'bg-muted-foreground/40',
+                            )}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

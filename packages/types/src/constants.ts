@@ -43,6 +43,9 @@ export const PAGINATION = {
 export const LEADERBOARD = {
     /** Ranks below this are never listed; pages past it come back empty. */
     RANK_LIMIT: 500,
+    NAME_MIN_LENGTH: 2,
+    NAME_MAX_LENGTH: 60,
+    DESCRIPTION_MAX_LENGTH: 1000,
 } as const;
 
 export const ACTIVITY = {
@@ -127,6 +130,23 @@ export const AVATAR_KEYS = [
     'squirrel',
     'star',
     'turtle',
+    // Second page.
+    'monkey',
+    'butterfly',
+    'ladybird',
+    'football',
+    'volleyball',
+    'beer',
+    'wine',
+    'pizza',
+    'icecream',
+    'guitar',
+    'gamepad',
+    'crown',
+    'flame',
+    'trophy',
+    'mountain',
+    'origami',
 ] as const;
 
 export type AvatarKey = (typeof AVATAR_KEYS)[number];

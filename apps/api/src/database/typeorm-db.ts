@@ -10,6 +10,13 @@ import Group from '../app/models/Group.entity';
 import GroupInvite from '../app/models/GroupInvite.entity';
 import NotificationSetting from '../app/models/NotificationSetting.entity';
 import GroupMember from '../app/models/GroupMember.entity';
+import Leaderboard from '../app/models/Leaderboard.entity';
+import LeaderboardEditor from '../app/models/LeaderboardEditor.entity';
+import LeaderboardMember from '../app/models/LeaderboardMember.entity';
+import LeaderboardScoreHistory from '../app/models/LeaderboardScoreHistory.entity';
+import LeaderboardScoreMonthly from '../app/models/LeaderboardScoreMonthly.entity';
+import LeaderboardScoreTotal from '../app/models/LeaderboardScoreTotal.entity';
+import LeaderboardScoreYearly from '../app/models/LeaderboardScoreYearly.entity';
 import ManualUnavailability from '../app/models/ManualUnavailability.entity';
 import OAuthState from '../app/models/OAuthState.entity';
 import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
@@ -60,6 +67,13 @@ export const AppDataSource = new DataSource({
         OccurrenceParticipant,
         ManualUnavailability,
         WeeklyUnavailabilityRule,
+        Leaderboard,
+        LeaderboardEditor,
+        LeaderboardMember,
+        LeaderboardScoreMonthly,
+        LeaderboardScoreYearly,
+        LeaderboardScoreTotal,
+        LeaderboardScoreHistory,
     ],
 });
 
