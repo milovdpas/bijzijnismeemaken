@@ -10,4 +10,17 @@ export const queryKeys = {
     health: ['health'] as const,
     me: ['me'] as const,
     handleAvailable: (handle: string) => ['handle-available', handle] as const,
+    users: {
+        search: (q: string) => ['users', 'search', q] as const,
+    },
+    groups: {
+        all: ['groups'] as const,
+        list: ['groups', 'list'] as const,
+        detail: (groupId: string) => ['groups', 'detail', groupId] as const,
+        public: (q: string, page: number) => ['groups', 'public', q, page] as const,
+        joinPreview: (token: string) => ['groups', 'join-preview', token] as const,
+    },
+    invites: {
+        group: (groupId: string) => ['invites', 'group', groupId] as const,
+    },
 };

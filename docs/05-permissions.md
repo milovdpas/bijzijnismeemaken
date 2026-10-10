@@ -21,6 +21,8 @@
 | Remove leaderboard member | ✔ | ✔ | only if edit_mode=everyone | | ✔ | ✔ |
 | Set / clear score | ✔ | ✔ | only if edit_mode=everyone | | ✔ | ✔ |
 | View score history | ✔ | ✔ | ✔ | | | |
+| View the dashboard | ✔ | ✔ | ✔ | | | |
+| Add, configure, reorder, remove dashboard widgets | ✔ | ✔ | ✘ | | | |
 | Edit past months | ✘ | ✘ | ✘ | | ✘ | ✘ |
 
 Implementation: `requireGroupRole(minRole)` middleware loads `group_members` row for `req.user` + `:groupId` → `req.membership`; 404 if not a member (hides existence) except for public groups (403 `NOT_A_MEMBER`). Resource-level checks (creator, editor) live in services returning `{ ok:false, problem:'FORBIDDEN' }`.

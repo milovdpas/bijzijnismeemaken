@@ -102,6 +102,16 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | DELETE | `…/members/:memberId/score` | Clear current score (history row with new NULL) | E, A |
 | GET | `…/history?page=&pageSize=` | Score history | M |
 
+### Dashboard
+| Method | Path | Purpose | Perm |
+|---|---|---|---|
+| GET | `/groups/:groupId/widgets` | Ordered widget list with config (no data; widgets fetch their own) | M |
+| POST | `/groups/:groupId/widgets` | `{ type, config }` appended at the end | A |
+| PATCH | `/groups/:groupId/widgets/:widgetId` | `{ config }` | A |
+| DELETE | `/groups/:groupId/widgets/:widgetId` | Remove | A |
+| PUT | `/groups/:groupId/widgets/order` | `{ widgetIds[] }` full order; 422 unless it is a permutation of the group's widgets | A |
+| POST | `/groups/:groupId/widgets/restore-defaults` | Appends any default widget type that is missing | A |
+
 ## Worker (cron) & internal
 | Method | Path | Purpose | Perm |
 |---|---|---|---|

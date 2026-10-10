@@ -35,6 +35,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Past planned occurrence | Stays `planned` until creator/admin re-dates it or marks it done; no auto-done (a non-recurring activity may be next year's event). |
 | Planned e-mail | Only the selected participants are notified (with add-to-calendar); deselected "in" members are not. Per-participant `notified_at` + the notified values are stored so editing an occurrence only mails new participants (planned) and already-notified ones whose date/daypart/time changed (rescheduled). |
 | Email + password (added 2026-10-10) | Second sign-in method beside Google. Verify email before first use (24 h link), forgot/reset via 1 h single-use link that revokes all sessions, one account per email: Google login on a verified password account attaches `google_sub`; on an unverified one it clears the password. Passwords hashed with Node `scrypt`, min 10 chars. Built alongside Google in tasks 7–10. |
+| Group dashboard (added 2026-10-10) | Every group has a dashboard as its first tab and landing page: an ordered list of widgets. Defaults are seeded rows (upcoming planned activities, ideas waiting for a date). Admins add, configure, reorder and remove widgets (leaderboard top list, pinned note, activity spotlight, external link); members only view. Built as task 28b, after leaderboards. |
 
 ---
 
@@ -84,6 +85,14 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 - Score entry (editors per edit mode, always owner/admin): absolute value for a leaderboard member → writes monthly(current y/m), yearly(current y), total. History row with old/new, who, when.
 - Views: tabs for enabled periods; month picker (past months read-only, no edits), year picker. Rank list with pagination (page size 50, max 100), capped at top 500.
 - History page per leaderboard, paginated, newest first.
+
+## 1.5b Group dashboard
+- The group root (`/groups/:id`) is the dashboard: the first tab, and where opening a group lands.
+- A dashboard is an ordered list of widgets. There is no built-in versus custom distinction: creating a group seeds the default rows, which can be reordered and removed like any other, and a "restore defaults" action puts them back.
+- Widget types (first version): `upcoming` (planned occurrences in the next N weeks with participants), `ideas` (activities without a date, ranked by interest), `leaderboard` (one board, one period, top N), `note` (pinned text: a title and a few lines, e.g. where the next evening is and what to bring), `activity` (spotlight on one activity), `link` (an external URL with a label, e.g. the WhatsApp group or a photo album).
+- Owner and admins add, configure, reorder and remove widgets. Members only view.
+- Each widget component loads its own data through the existing endpoints (occurrences, activities, leaderboard scores); the dashboard endpoint only carries the widget list and config.
+- Later: a "who is free this week" widget once availability exists; group-level pins in the activity list.
 
 ## 1.6 Leaving / decoupling
 - Leaving member: their activities → `created_by = NULL`, `creator_name_snapshot`, `is_active = false` (hidden from lists, visible to admins in an "inactive" filter) and their open occurrences are cancelled with participants notified (M2: auto-added provider events deleted); interests and participations removed; leaderboard membership rows → `user_id = NULL` with `display_name_snapshot`; history `changed_by` decoupled the same way; editor rows and pending invites removed.

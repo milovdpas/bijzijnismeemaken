@@ -61,7 +61,12 @@ export function ResetPasswordView() {
             {done ? (
                 <>
                     <FormMessage tone="success">{t('reset.done')}</FormMessage>
-                    <Button size="lg" className="w-full" render={<Link href="/login" />}>
+                    <Button
+                        size="lg"
+                        className="w-full"
+                        nativeButton={false}
+                        render={<Link href="/login" />}
+                    >
                         {t('login.signIn')}
                     </Button>
                 </>

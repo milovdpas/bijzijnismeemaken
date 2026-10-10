@@ -37,6 +37,7 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 26. Migration + entities: leaderboards, editors, members, 3 score tables, history. `LeaderboardService` (settings, members, editors, permission checks).
 27. `ScoreService` (write-through to current month/year/total, history, no-op on equal) + `ScoreQueryService` (ranked pages, cap 500, consistent tie-break, periods list). Leaderboards API + tests.
 28. Web: leaderboards list, create/edit dialog, members management; board view with period tabs, month/year pickers, pagination, my rank; score entry dialog (number / hh:mm:ss.SSS input); history page. (Split into 2–3 sessions as needed: list+settings, board+entry, history.)
+    28b. Group dashboard: `group_widgets` migration + entity, seeding on group creation, widget endpoints (list, add, update, remove, reorder, restore defaults) with per-type zod configs, cleanup when a leaderboard or activity is deleted, tests. Web: dashboard as the group root and first tab (`upcoming`, `ideas`, `leaderboard`, `note`, `activity`, `link` widgets), admin edit mode (add sheet, config dialogs, reorder with drag on desktop and up/down buttons on phones). Split into API and web sessions.
 29. Leave-group decoupling: activities inactive + open occurrences cancelled, leaderboard member decoupling, tests.
 30. Account deletion (full order from section 3) + settings "danger zone".
 31. PWA: manifest, icons, sw.js, service worker registration, `useInstallApp`, install card + one-time prompt.
