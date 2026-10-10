@@ -1,5 +1,7 @@
 import {
     BaseEntity,
+    BeforeInsert,
+    BeforeUpdate,
     Column,
     CreateDateColumn,
     Entity,
@@ -7,7 +9,9 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Locale } from '@bzim/types';
-import type { AvatarKey } from '@bzim/types';
+import type { AvatarKey, MeResponse, UserSummary } from '@bzim/types';
+
+import Crypt from '../utils/Crypt';
 
 /**
  * An account. Created on first Google login; completed by onboarding.
@@ -26,8 +30,13 @@ export default class User extends BaseEntity {
     @Column({ name: 'google_sub', type: 'varchar', length: 64, nullable: true, unique: true })
     googleSub!: string | null;
 
-    @Column({ type: 'varchar', length: 255, unique: true })
+    /** Encrypted at rest; plain here. Looked up through `emailHash`, never directly. */
+    @Column({ type: 'text', transformer: Crypt.encryptColumn() })
     email!: string;
+
+    /** Keyed blind index of the lowercased email: the unique constraint and the lookup. */
+    @Column({ name: 'email_hash', type: 'char', length: 64, unique: true })
+    emailHash!: string;
 
     /** scrypt hash (see `utils/Password.ts`); null for a Google-only account. */
     @Column({ name: 'password_hash', type: 'varchar', length: 255, nullable: true })
@@ -72,6 +81,21 @@ export default class User extends BaseEntity {
     @UpdateDateColumn({ name: 'updated_at', type: 'datetime', precision: 3 })
     updatedAt!: Date;
 
+    /** The one way to find an account by address; the column itself is ciphertext. */
+    static findByEmail(email: string): Promise<User | null> {
+        return this.findOneBy({ emailHash: Crypt.searchHash(email) });
+    }
+
+    /**
+     * Keeps the blind index in step with the address on every write, so no
+     * caller has to remember to set it.
+     */
+    @BeforeInsert()
+    @BeforeUpdate()
+    protected indexEmail(): void {
+        this.emailHash = Crypt.searchHash(this.email);
+    }
+
     /** A password account may not sign in before its address is confirmed. */
     emailVerified(): boolean {
         return this.emailVerifiedAt !== null;
@@ -80,5 +104,41 @@ export default class User extends BaseEntity {
     /** Whether the profile is complete enough to take part in a group. */
     onboardingDone(): boolean {
         return this.handle !== null && this.displayName !== null && this.avatarKey !== null;
+    }
+
+    /** The account as its owner sees it. The only DTO that carries the email. */
+    toDto(): MeResponse {
+        return {
+            id: this.id,
+            email: this.email,
+            handle: this.handle,
+            displayName: this.displayName,
+            avatarKey: this.avatarKey,
+            locale: this.locale,
+            onboardingDone: this.onboardingDone(),
+            hasPassword: this.passwordHash !== null,
+            hasGoogle: this.googleSub !== null,
+            autoAddToCalendar: this.autoAddToCalendar,
+            notifyEmailInvites: this.notifyEmailInvites,
+            notifyEmailPlanned: this.notifyEmailPlanned,
+            notifyEmailNewActivity: this.notifyEmailNewActivity,
+            createdAt: this.createdAt.toISOString(),
+        };
+    }
+
+    /**
+     * What other members see, or null for an account that has not finished
+     * onboarding and so has nothing to show yet.
+     */
+    toSummary(): UserSummary | null {
+        if (this.handle === null || this.displayName === null || this.avatarKey === null) {
+            return null;
+        }
+        return {
+            id: this.id,
+            handle: this.handle,
+            displayName: this.displayName,
+            avatarKey: this.avatarKey,
+        };
     }
 }

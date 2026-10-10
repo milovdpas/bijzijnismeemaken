@@ -1,3 +1,7 @@
+import type { Locale } from './enums';
+import type { AvatarKey } from './constants';
+import type { IsoDateTimeString, Uuid } from './domain';
+
 /* -------------------------------------------------------------------------- */
 /* Envelopes                                                                   */
 /*                                                                            */
@@ -49,8 +53,67 @@ export interface WorkerJobResponse {
     stats: Record<string, number>;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Users                                                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The signed-in user, as `GET /me` answers. The only place the email is ever
+ * sent to a browser; other members see `UserSummary`.
+ */
+export interface MeResponse {
+    id: Uuid;
+    email: string;
+    /** Null until onboarding; see `onboardingDone`. */
+    handle: string | null;
+    displayName: string | null;
+    avatarKey: AvatarKey | null;
+    locale: Locale;
+    /** Whether the three profile fields are set; the app routes to onboarding when false. */
+    onboardingDone: boolean;
+    /** Which sign-in methods the account has. Both can be true. */
+    hasPassword: boolean;
+    hasGoogle: boolean;
+    autoAddToCalendar: boolean;
+    notifyEmailInvites: boolean;
+    notifyEmailPlanned: boolean;
+    notifyEmailNewActivity: boolean;
+    createdAt: IsoDateTimeString;
+}
+
+/** `PATCH /me`. Every field optional; onboarding sends the first three together. */
+export interface UpdateMeRequest {
+    handle?: string;
+    displayName?: string;
+    avatarKey?: AvatarKey;
+    locale?: Locale;
+    autoAddToCalendar?: boolean;
+    notifyEmailInvites?: boolean;
+    notifyEmailPlanned?: boolean;
+    notifyEmailNewActivity?: boolean;
+}
+
+/** `PATCH /me/password`. `currentPassword` is required when the account already has one. */
+export interface ChangePasswordRequest {
+    currentPassword?: string;
+    newPassword: string;
+}
+
+export interface HandleAvailableResponse {
+    /** False when taken or when the handle itself is not valid. */
+    available: boolean;
+}
+
+/** What other members see of a person. Never the email. */
+export interface UserSummary {
+    id: Uuid;
+    handle: string;
+    displayName: string;
+    avatarKey: AvatarKey;
+}
+
 /*
- * Resource DTOs (users, groups, activities, availability, leaderboards) are
- * added by the task that introduces each endpoint, so that the DTO and the
- * entity's toDto() land in the same change.
+ * Group, activity, availability and leaderboard DTOs are added by the task
+ * that introduces each endpoint, so that the DTO and the entity's toDto()
+ * land in the same change.
  */

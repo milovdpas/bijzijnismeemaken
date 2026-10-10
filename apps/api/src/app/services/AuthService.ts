@@ -9,6 +9,7 @@ import { EmailTokenPurpose } from '../models/EmailToken.entity';
 import OAuthState, { OAuthPurpose } from '../models/OAuthState.entity';
 import User from '../models/User.entity';
 import { DUMMY_HASH_PROMISE, hashPassword, verifyPassword } from '../utils/Password';
+import { normalizeEmail } from '../utils/Normalize';
 import { generateToken } from '../utils/Token';
 import { EmailTokenService } from './EmailTokenService';
 import { SessionService } from './SessionService';
@@ -33,12 +34,8 @@ export type TokenResult = { ok: true; user: User } | { ok: false; problem: 'TOKE
  * establishes the user.
  */
 export class AuthService {
-    private readonly google = new GoogleAuthModule();
-    private readonly emailTokens = new EmailTokenService();
-    private readonly sessions = new SessionService();
-
     /** The URL to send the browser to. `returnTo` is already validated. */
-    async startGoogleLogin(returnTo: string | null): Promise<string> {
+    static async startGoogleLogin(returnTo: string | null): Promise<string> {
         const state = generateToken();
         await OAuthState.create({
             state,
@@ -47,7 +44,7 @@ export class AuthService {
             returnTo,
             expiresAt: DateTime.utc().plus({ minutes: OAUTH_STATE_MINUTES }).toJSDate(),
         }).save();
-        return this.google.authUrl(state);
+        return GoogleAuthModule.authUrl(state);
     }
 
     /**
@@ -60,7 +57,7 @@ export class AuthService {
      * they own the address and the Google user just did: the password is
      * dropped so it cannot be used to get into the account.
      */
-    async completeGoogleLogin(state: string, code: string): Promise<GoogleLoginResult> {
+    static async completeGoogleLogin(state: string, code: string): Promise<GoogleLoginResult> {
         const row = await OAuthState.findOneBy({ state, purpose: OAuthPurpose.LOGIN });
         if (row === null) {
             return { ok: false, problem: 'STATE_INVALID' };
@@ -72,7 +69,7 @@ export class AuthService {
 
         let profile;
         try {
-            profile = await this.google.exchangeCode(code);
+            profile = await GoogleAuthModule.exchangeCode(code);
         } catch (error) {
             console.error('Google code exchange failed:', error);
             return { ok: false, problem: 'GOOGLE_FAILED' };
@@ -81,12 +78,12 @@ export class AuthService {
             return { ok: false, problem: 'EMAIL_UNVERIFIED_AT_GOOGLE' };
         }
 
-        const email = profile.email.toLowerCase();
+        const email = normalizeEmail(profile.email);
         const now = DateTime.utc().toJSDate();
         let user = await User.findOneBy({ googleSub: profile.sub });
 
         if (user === null) {
-            user = await User.findOneBy({ email });
+            user = await User.findByEmail(email);
             if (user !== null) {
                 user.googleSub = profile.sub;
                 if (!user.emailVerified()) {
@@ -113,9 +110,13 @@ export class AuthService {
     }
 
     /** A new password account, unverified until the emailed link is clicked. */
-    async register(email: string, password: string, locale: Locale): Promise<RegisterResult> {
-        const normalised = email.toLowerCase();
-        if ((await User.findOneBy({ email: normalised })) !== null) {
+    static async register(
+        email: string,
+        password: string,
+        locale: Locale,
+    ): Promise<RegisterResult> {
+        const normalised = normalizeEmail(email);
+        if ((await User.findByEmail(normalised)) !== null) {
             return { ok: false, problem: 'EMAIL_TAKEN' };
         }
 
@@ -130,7 +131,7 @@ export class AuthService {
             locale,
         }).save();
 
-        await this.sendVerification(user);
+        await AuthService.sendVerification(user);
         return { ok: true, user };
     }
 
@@ -139,8 +140,8 @@ export class AuthService {
      * and take the same time, so the response says nothing about whether the
      * address is registered.
      */
-    async login(email: string, password: string): Promise<LoginResult> {
-        const user = await User.findOneBy({ email: email.toLowerCase() });
+    static async login(email: string, password: string): Promise<LoginResult> {
+        const user = await User.findByEmail(email);
         const stored = user?.passwordHash ?? (await DUMMY_HASH_PROMISE);
         const matches = await verifyPassword(password, stored);
 
@@ -161,16 +162,16 @@ export class AuthService {
      * waiting on one. Silent otherwise: the caller learns nothing about
      * whether the address exists or is already verified.
      */
-    async resendVerification(email: string): Promise<void> {
-        const user = await User.findOneBy({ email: email.toLowerCase() });
+    static async resendVerification(email: string): Promise<void> {
+        const user = await User.findByEmail(email);
         if (user !== null && user.passwordHash !== null && !user.emailVerified()) {
-            await this.sendVerification(user);
+            await AuthService.sendVerification(user);
         }
     }
 
     /** The link was clicked: the address is confirmed and the person is signed in. */
-    async verifyEmail(token: string): Promise<TokenResult> {
-        const userId = await this.emailTokens.consume(token, EmailTokenPurpose.VERIFY_EMAIL);
+    static async verifyEmail(token: string): Promise<TokenResult> {
+        const userId = await EmailTokenService.consume(token, EmailTokenPurpose.VERIFY_EMAIL);
         const user = userId === null ? null : await User.findOneBy({ id: userId });
         if (user === null) {
             return { ok: false, problem: 'TOKEN_INVALID' };
@@ -188,14 +189,14 @@ export class AuthService {
      * only included: this is also how a Google user adds a password. Silent
      * when the address is unknown.
      */
-    async forgotPassword(email: string): Promise<void> {
-        const user = await User.findOneBy({ email: email.toLowerCase() });
+    static async forgotPassword(email: string): Promise<void> {
+        const user = await User.findByEmail(email);
         if (user === null) {
             return;
         }
-        const token = await this.emailTokens.issue(user, EmailTokenPurpose.RESET_PASSWORD);
+        const token = await EmailTokenService.issue(user, EmailTokenPurpose.RESET_PASSWORD);
         const link = `${env.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
-        await this.deliver(renderResetPassword(user.locale, user.email, link));
+        await AuthService.deliver(renderResetPassword(user.locale, user.email, link));
     }
 
     /**
@@ -203,8 +204,8 @@ export class AuthService {
      * cookie should not keep access past a reset. Clicking the link also proves
      * the address, so an unverified account becomes verified here.
      */
-    async resetPassword(token: string, password: string): Promise<TokenResult> {
-        const userId = await this.emailTokens.consume(token, EmailTokenPurpose.RESET_PASSWORD);
+    static async resetPassword(token: string, password: string): Promise<TokenResult> {
+        const userId = await EmailTokenService.consume(token, EmailTokenPurpose.RESET_PASSWORD);
         const user = userId === null ? null : await User.findOneBy({ id: userId });
         if (user === null) {
             return { ok: false, problem: 'TOKEN_INVALID' };
@@ -213,14 +214,14 @@ export class AuthService {
         user.passwordHash = await hashPassword(password);
         user.emailVerifiedAt ??= DateTime.utc().toJSDate();
         await user.save();
-        await this.sessions.revokeAllForUser(user.id);
+        await SessionService.revokeAllForUser(user.id);
         return { ok: true, user };
     }
 
-    private async sendVerification(user: User): Promise<void> {
-        const token = await this.emailTokens.issue(user, EmailTokenPurpose.VERIFY_EMAIL);
+    private static async sendVerification(user: User): Promise<void> {
+        const token = await EmailTokenService.issue(user, EmailTokenPurpose.VERIFY_EMAIL);
         const link = `${env.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
-        await this.deliver(renderVerifyEmail(user.locale, user.email, link));
+        await AuthService.deliver(renderVerifyEmail(user.locale, user.email, link));
     }
 
     /**
@@ -228,7 +229,7 @@ export class AuthService {
      * exists, and the person can ask for the email again. Failing the request
      * would tell them their registration did not happen when it did.
      */
-    private async deliver(message: Parameters<typeof mailer.send>[0]): Promise<void> {
+    private static async deliver(message: Parameters<typeof mailer.send>[0]): Promise<void> {
         try {
             await mailer.send(message);
         } catch (error) {

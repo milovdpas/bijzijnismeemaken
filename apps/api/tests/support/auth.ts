@@ -14,7 +14,7 @@ export interface TestSession {
  * the tokens and the `refresh_tokens` row are exactly what a login produces.
  */
 export async function sessionFor(user: User): Promise<TestSession> {
-    const session = await new SessionService().issue(user, 'vitest');
+    const session = await SessionService.issue(user, 'vitest');
     return {
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,

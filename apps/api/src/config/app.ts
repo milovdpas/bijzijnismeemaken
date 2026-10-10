@@ -73,6 +73,19 @@ function integer(name: string, fallback: string, min: number, max: number): numb
     return value;
 }
 
+/** The column encryption key, exactly 32 bytes once decoded. */
+function appKey(): Buffer {
+    const raw = required('APP_KEY').replace(/^base64:/, '');
+    const key = Buffer.from(raw, 'base64');
+    if (key.length !== 32) {
+        throw new Error(
+            'APP_KEY must be 32 random bytes in base64. Generate one with: ' +
+                "node -e \"console.log('base64:'+require('crypto').randomBytes(32).toString('base64'))\"",
+        );
+    }
+    return key;
+}
+
 type MailDriver = 'console' | 'smtp' | 'brevo';
 
 /**
@@ -133,6 +146,14 @@ export const env = {
      * and serves health; the first login fails loudly instead.
      */
     jwtSecret: () => required('JWT_SECRET'),
+
+    /**
+     * Encrypts columns at rest (`utils/Crypt.ts`). 32 bytes, base64, with an
+     * optional `base64:` prefix as the other projects write it. Eager, not
+     * lazy: the users table is unreadable without it, so an API that boots
+     * without it would only serve errors.
+     */
+    appKey: appKey(),
 
     /** The Google OAuth client for sign-in. Lazy, like the JWT secret. */
     google: {

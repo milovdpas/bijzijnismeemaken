@@ -13,12 +13,12 @@ export interface GoogleProfile {
 /**
  * The one place that talks to Google's OAuth endpoints for sign-in.
  *
- * A class with instance methods so tests can `vi.spyOn(GoogleAuthModule.prototype, 'exchangeCode')`
+ * Static, like every service and module here; tests `vi.spyOn(GoogleAuthModule, 'exchangeCode')`
  * and never reach the network. Calendar access (task 34) gets its own module
  * behind the calendar provider interface; this one is login only.
  */
 export default class GoogleAuthModule {
-    private client(): OAuth2Client {
+    private static client(): OAuth2Client {
         return new OAuth2Client({
             clientId: env.google.clientId(),
             clientSecret: env.google.clientSecret(),
@@ -27,8 +27,8 @@ export default class GoogleAuthModule {
     }
 
     /** Where to send the browser. `state` is ours and comes back untouched. */
-    authUrl(state: string): string {
-        return this.client().generateAuthUrl({
+    static authUrl(state: string): string {
+        return GoogleAuthModule.client().generateAuthUrl({
             scope: ['openid', 'email', 'profile'],
             state,
             // Let the person pick an account every time: a shared laptop should
@@ -42,8 +42,8 @@ export default class GoogleAuthModule {
      * verified ID token. Throws on any failure; the caller turns that into a
      * redirect back to the login page.
      */
-    async exchangeCode(code: string): Promise<GoogleProfile> {
-        const client = this.client();
+    static async exchangeCode(code: string): Promise<GoogleProfile> {
+        const client = GoogleAuthModule.client();
         const { tokens } = await client.getToken(code);
         if (tokens.id_token === undefined || tokens.id_token === null) {
             throw new Error('Google returned no id_token');

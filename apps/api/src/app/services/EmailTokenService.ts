@@ -18,7 +18,7 @@ const LIFETIME: Record<EmailTokenPurpose, { hours?: number; minutes?: number }> 
  * cannot be caught out by clicking the first.
  */
 export class EmailTokenService {
-    async issue(user: User, purpose: EmailTokenPurpose): Promise<string> {
+    static async issue(user: User, purpose: EmailTokenPurpose): Promise<string> {
         const now = DateTime.utc();
         await EmailToken.createQueryBuilder()
             .update()
@@ -41,7 +41,7 @@ export class EmailTokenService {
     }
 
     /** The owning user id if the token is live, spending it; null otherwise. */
-    async consume(value: string, purpose: EmailTokenPurpose): Promise<string | null> {
+    static async consume(value: string, purpose: EmailTokenPurpose): Promise<string | null> {
         const row = await EmailToken.findOneBy({ tokenHash: hashToken(value), purpose });
         const now = DateTime.utc();
         if (row === null || !row.isUsable(now)) {

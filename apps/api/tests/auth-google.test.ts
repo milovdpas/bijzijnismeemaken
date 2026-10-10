@@ -21,13 +21,11 @@ function googleAnswers(profile: Partial<GoogleProfile> = {}) {
         emailVerified: true,
         ...profile,
     };
-    return vi.spyOn(GoogleAuthModule.prototype, 'exchangeCode').mockResolvedValue(full);
+    return vi.spyOn(GoogleAuthModule, 'exchangeCode').mockResolvedValue(full);
 }
 
 function googleFails() {
-    return vi
-        .spyOn(GoogleAuthModule.prototype, 'exchangeCode')
-        .mockRejectedValue(new Error('invalid_grant'));
+    return vi.spyOn(GoogleAuthModule, 'exchangeCode').mockRejectedValue(new Error('invalid_grant'));
 }
 
 /** Starts a login and returns the state Google would hand back. */

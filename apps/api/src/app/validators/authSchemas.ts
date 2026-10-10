@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { AUTH, Locale } from '@bzim/types';
 
+import { normalizeEmail } from '../utils/Normalize';
+
 export const googleStartQuerySchema = z.object({
     returnTo: z.string().max(255).optional(),
 });
@@ -12,7 +14,7 @@ export const googleCallbackQuerySchema = z.object({
     error: z.string().optional(),
 });
 
-const email = z.string().trim().toLowerCase().email().max(255);
+const email = z.string().transform(normalizeEmail).pipe(z.string().email().max(255));
 
 /** Length only. A composition rule turns a good passphrase into a worse password. */
 const password = z.string().min(AUTH.PASSWORD_MIN_LENGTH).max(AUTH.PASSWORD_MAX_LENGTH);

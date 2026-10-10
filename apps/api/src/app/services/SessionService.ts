@@ -29,11 +29,11 @@ export type RefreshResult =
  */
 export class SessionService {
     /** A fresh family: a login, or a verification link. */
-    async issue(user: User, userAgent: string | null): Promise<IssuedSession> {
-        return this.mint(user, randomUUID(), userAgent);
+    static async issue(user: User, userAgent: string | null): Promise<IssuedSession> {
+        return SessionService.mint(user, randomUUID(), userAgent);
     }
 
-    async refresh(refreshToken: string, userAgent: string | null): Promise<RefreshResult> {
+    static async refresh(refreshToken: string, userAgent: string | null): Promise<RefreshResult> {
         const claims = await JWT.verify(refreshToken, 'refresh');
         if (claims === null) {
             return { ok: false, problem: 'INVALID' };
@@ -48,7 +48,7 @@ export class SessionService {
         if (row.revokedAt !== null) {
             // Already rotated away, and presented again: somebody holds a
             // copy. Nothing issued from this login can be trusted any more.
-            await this.revokeFamily(row.familyId, now);
+            await SessionService.revokeFamily(row.familyId, now);
             return { ok: false, problem: 'REUSED' };
         }
         if (!row.isUsable(now)) {
@@ -60,7 +60,7 @@ export class SessionService {
             return { ok: false, problem: 'INVALID' };
         }
 
-        const session = await this.mint(user, row.familyId, userAgent);
+        const session = await SessionService.mint(user, row.familyId, userAgent);
         const next = await RefreshToken.findOneByOrFail({
             tokenHash: hashToken(session.refreshToken),
         });
@@ -72,7 +72,7 @@ export class SessionService {
     }
 
     /** Logout. A token that is unknown or already revoked is simply ignored. */
-    async revoke(refreshToken: string): Promise<void> {
+    static async revoke(refreshToken: string): Promise<void> {
         const claims = await JWT.verify(refreshToken, 'refresh');
         if (claims === null) {
             return;
@@ -85,7 +85,7 @@ export class SessionService {
     }
 
     /** Sign out everywhere: a password reset, an account deletion. */
-    async revokeAllForUser(userId: string): Promise<void> {
+    static async revokeAllForUser(userId: string): Promise<void> {
         await RefreshToken.createQueryBuilder()
             .update()
             .set({ revokedAt: DateTime.utc().toJSDate() })
@@ -93,7 +93,7 @@ export class SessionService {
             .execute();
     }
 
-    private async revokeFamily(familyId: string, now: DateTime): Promise<void> {
+    private static async revokeFamily(familyId: string, now: DateTime): Promise<void> {
         await RefreshToken.createQueryBuilder()
             .update()
             .set({ revokedAt: now.toJSDate() })
@@ -101,7 +101,7 @@ export class SessionService {
             .execute();
     }
 
-    private async mint(
+    private static async mint(
         user: User,
         familyId: string,
         userAgent: string | null,

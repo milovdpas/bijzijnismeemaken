@@ -29,12 +29,9 @@ import {
  * navigation; everything else answers JSON because the web app called it.
  */
 export default class AuthController {
-    private readonly auth = new AuthService();
-    private readonly sessions = new SessionService();
-
     googleStart: Handler = async (req, res) => {
         const { returnTo } = queryOf(req, googleStartQuerySchema);
-        const url = await this.auth.startGoogleLogin(safeReturnTo(returnTo));
+        const url = await AuthService.startGoogleLogin(safeReturnTo(returnTo));
         res.redirect(302, url);
     };
 
@@ -50,14 +47,14 @@ export default class AuthController {
             return;
         }
 
-        const result = await this.auth.completeGoogleLogin(state, code);
+        const result = await AuthService.completeGoogleLogin(state, code);
         if (!result.ok) {
             const reason = result.problem === 'STATE_INVALID' ? 'google_state' : 'google_failed';
             res.redirect(302, `${env.appUrl}/login?error=${reason}`);
             return;
         }
 
-        await this.signIn(req, res, result.user);
+        await AuthController.signIn(req, res, result.user);
         const target = result.user.onboardingDone()
             ? (result.returnTo ?? '/groups')
             : '/onboarding';
@@ -66,7 +63,7 @@ export default class AuthController {
 
     register: Handler<BodyOf<typeof registerSchema>> = async (req, res) => {
         const { email, password, locale } = req.body;
-        const result = await this.auth.register(email, password, locale ?? Locale.NL);
+        const result = await AuthService.register(email, password, locale ?? Locale.NL);
         if (!result.ok) {
             sendConflict(res, 'That email already has an account');
             return;
@@ -78,7 +75,7 @@ export default class AuthController {
 
     login: Handler<BodyOf<typeof loginSchema>> = async (req, res) => {
         const { email, password } = req.body;
-        const result = await this.auth.login(email, password);
+        const result = await AuthService.login(email, password);
         if (!result.ok) {
             const code =
                 result.problem === 'EMAIL_NOT_VERIFIED'
@@ -88,36 +85,36 @@ export default class AuthController {
             return;
         }
 
-        await this.signIn(req, res, result.user);
+        await AuthController.signIn(req, res, result.user);
         res.status(204).end();
     };
 
     /** Always 204: whether the address exists is not for the caller to learn. */
     resendVerification: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
-        await this.auth.resendVerification(req.body.email);
+        await AuthService.resendVerification(req.body.email);
         res.status(204).end();
     };
 
     /** The link signs the person in, so onboarding can start right away. */
     verifyEmail: Handler<BodyOf<typeof verifyEmailSchema>> = async (req, res) => {
-        const result = await this.auth.verifyEmail(req.body.token);
+        const result = await AuthService.verifyEmail(req.body.token);
         if (!result.ok) {
             sendError(res, ERROR_CODES.TOKEN_INVALID, 'This link is no longer valid', 400);
             return;
         }
-        await this.signIn(req, res, result.user);
+        await AuthController.signIn(req, res, result.user);
         res.status(204).end();
     };
 
     forgotPassword: Handler<BodyOf<typeof emailOnlySchema>> = async (req, res) => {
-        await this.auth.forgotPassword(req.body.email);
+        await AuthService.forgotPassword(req.body.email);
         res.status(204).end();
     };
 
     /** No session afterwards, on purpose: every session was just revoked, including any on this device. */
     resetPassword: Handler<BodyOf<typeof resetPasswordSchema>> = async (req, res) => {
         const { token, password } = req.body;
-        const result = await this.auth.resetPassword(token, password);
+        const result = await AuthService.resetPassword(token, password);
         if (!result.ok) {
             sendError(res, ERROR_CODES.TOKEN_INVALID, 'This link is no longer valid', 400);
             return;
@@ -138,7 +135,7 @@ export default class AuthController {
             return;
         }
 
-        const result = await this.sessions.refresh(token, req.header('user-agent') ?? null);
+        const result = await SessionService.refresh(token, req.header('user-agent') ?? null);
         if (!result.ok) {
             clearAuthCookies(res);
             sendUnauthenticated(res);
@@ -153,15 +150,15 @@ export default class AuthController {
     logout: Handler = async (req, res) => {
         const token = cookieOf(req, REFRESH_COOKIE);
         if (token !== undefined) {
-            await this.sessions.revoke(token);
+            await SessionService.revoke(token);
         }
         clearAuthCookies(res);
         res.status(204).end();
     };
 
     /** Shared by every way of signing in: one session, the same two cookies. */
-    private async signIn(req: Request, res: Response, user: User): Promise<void> {
-        const session = await this.sessions.issue(user, req.header('user-agent') ?? null);
+    private static async signIn(req: Request, res: Response, user: User): Promise<void> {
+        const session = await SessionService.issue(user, req.header('user-agent') ?? null);
         setAuthCookies(res, session);
     }
 }

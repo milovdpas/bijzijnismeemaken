@@ -45,12 +45,13 @@ describe('POST /auth/register', () => {
         expect(response.status).toBe(201);
         expect(setCookies(response.headers)).toEqual({});
 
-        const user = await User.findOneByOrFail({ email: 'new@example.com' });
-        expect(user.emailVerified()).toBe(false);
-        expect(user.googleSub).toBeNull();
-        expect(user.locale).toBe('en');
-        expect(user.passwordHash).not.toBe(PASSWORD);
-        expect(await verifyPassword(PASSWORD, user.passwordHash ?? '')).toBe(true);
+        const user = await User.findByEmail('New@Example.com');
+        expect(user).not.toBeNull();
+        expect(user?.email).toBe('new@example.com');
+        expect(user?.emailVerified()).toBe(false);
+        expect(user?.googleSub).toBeNull();
+        expect(user?.locale).toBe('en');
+        expect(await verifyPassword(PASSWORD, user?.passwordHash ?? '')).toBe(true);
     });
 
     it('refuses an email that already has an account', async () => {

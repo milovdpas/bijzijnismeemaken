@@ -68,7 +68,7 @@ describe('registration email', () => {
             .send({ email: 'unlucky@example.com', password: PASSWORD });
 
         expect(response.status).toBe(201);
-        expect(await User.countBy({ email: 'unlucky@example.com' })).toBe(1);
+        expect(await User.findByEmail('unlucky@example.com')).not.toBeNull();
     });
 });
 
@@ -84,8 +84,8 @@ describe('POST /auth/verify-email', () => {
 
         expect(response.status).toBe(204);
         expect(setCookies(response.headers).access_token).toBeTruthy();
-        const user = await User.findOneByOrFail({ email: 'v@example.com' });
-        expect(user.emailVerified()).toBe(true);
+        const user = await User.findByEmail('v@example.com');
+        expect(user?.emailVerified()).toBe(true);
 
         const again = await api.post(API_ENDPOINTS.AUTH.VERIFY_EMAIL).send({ token });
         expect(again.status).toBe(400);
