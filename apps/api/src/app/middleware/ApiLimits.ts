@@ -73,3 +73,11 @@ function emailOf(req: Request): string | null {
     const body = req.body as { email?: unknown } | undefined;
     return typeof body?.email === 'string' ? body.email : null;
 }
+
+/** A manual calendar sync spends a Google call per calendar: once every five minutes per person. */
+export const calendarSyncLimit = rateLimit({
+    name: 'calendar-sync',
+    limit: 1,
+    windowMs: 5 * MINUTE,
+    key: (req: Request) => req.user.id,
+});

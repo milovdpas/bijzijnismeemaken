@@ -25,6 +25,7 @@ export default class WorkerRoutes implements IRoute {
         const router = Router();
 
         router.post(API_ENDPOINTS.WORKER.CLEANUP, workerAuth, this.controller.cleanup);
+        router.post(API_ENDPOINTS.WORKER.CALENDAR_SYNC, workerAuth, this.controller.calendarSync);
 
         return router;
     }

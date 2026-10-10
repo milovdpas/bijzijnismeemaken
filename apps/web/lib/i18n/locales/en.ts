@@ -654,6 +654,64 @@ export const en = {
         iosAdd: 'Choose "Add to Home Screen"',
         menu: 'Open the browser menu and choose "Install app" or "Add to Home Screen".',
     },
+    calendarSettings: {
+        title: 'Google Calendar',
+        subtitle:
+            'Your appointments make you busy for the group, without anyone seeing what they are.',
+        cardDescription: 'Let your calendar say when you are busy.',
+        notConnected: 'Not connected. You count as free unless you block time yourself.',
+        manage: 'Manage',
+        connectTitle: 'Connect your Google Calendar',
+        connectDescription:
+            'Pick the Google account whose calendar should count. It can be another account than the one you sign in with.',
+        privacy:
+            'Your friends only ever see busy or free, never what an appointment is. The titles stay on your own settings page.',
+        freeHint: 'Appointments marked "Free" in Google never block you.',
+        connectGoogle: 'Connect Google Calendar',
+        connected:
+            'Connected. Your calendars are listed below; the first sync runs tonight, or press "Sync now".',
+        connectErrors: {
+            cancelled: 'The connection was cancelled.',
+            state: 'That link was stale. Try connecting again.',
+            provider: 'Google did not complete the connection. Try again in a moment.',
+        },
+        connectedTitle: 'Connected',
+        status: {
+            active: 'Active',
+            reauth_required: 'Reconnect needed',
+            error: 'Last sync failed',
+        },
+        neverSynced: 'Not synced yet.',
+        lastSynced: 'Last synced {{when}}.',
+        reauthHelp:
+            'Google no longer accepts the connection, usually after a password change or a revoke.',
+        reconnect: 'Reconnect',
+        lastError: 'Last error: {{error}}',
+        syncNow: 'Sync now',
+        disconnect: 'Disconnect',
+        disconnectDescription:
+            'The synced appointments are removed and your availability goes back to what you set by hand.',
+        sourcesTitle: 'Which calendars count',
+        sourcesDescription:
+            'Only the calendars switched on are read. Switching one off drops its appointments at once.',
+        primary: 'Main calendar',
+        eventsTitle: 'Coming four weeks',
+        eventsDescription:
+            'What was synced, for you alone. Keep an appointment or a whole series out of the count.',
+        noEvents: 'Nothing synced for these weeks yet.',
+        untitled: '(no title)',
+        free: 'Free',
+        ignoreTitle: 'Ignore every "{{title}}"',
+        ignoreSeries: 'Ignore this series ({{title}})',
+        rulesTitle: 'Ignored',
+        rulesDescription: 'These never make you busy.',
+        noRules: 'Nothing ignored.',
+        ruleKinds: {
+            title: 'Every appointment with this title',
+            series: 'Every appointment of this series',
+        },
+        removeRule: 'Count {{label}} again',
+    },
     settings: {
         title: 'Settings',
         subtitle: 'How the app looks and talks to you.',

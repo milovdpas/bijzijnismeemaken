@@ -710,3 +710,15 @@ export interface CalendarIgnoreRuleDto {
     label: string;
     createdAt: IsoDateTimeString;
 }
+
+/** `PATCH /me/calendar/sources/:id`. */
+export interface UpdateCalendarSourceRequest {
+    enabled: boolean;
+}
+
+/** `POST /me/calendar/ignore-rules`. The same rule twice answers 200 with the existing one. */
+export interface CalendarIgnoreRuleInput {
+    kind: CalendarIgnoreRuleKind;
+    value: string;
+    label: string;
+}

@@ -81,7 +81,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | GET/POST/PATCH/DELETE | `/me/unavailability-rules` | Weekly rules | S |
 | GET | `/me/calendar` | Connection status, sources, last sync | S |
 | GET | `/me/calendar/connect?scope=read|readwrite` | Start provider OAuth (redirect) | S |
-| GET | `/calendar/google/callback` | Provider callback → store connection, list calendars, redirect to settings | public (state) |
+| GET | `/calendar/google/callback` | Provider callback → store connection, list calendars, redirect to `/settings/calendar?connected=1` or `?error=` | S (session cookie; the state row must be the caller's) |
 | DELETE | `/me/calendar` | Disconnect (revoke, delete events/sources) | S |
 | PATCH | `/me/calendar/sources/:sourceId` | enable/disable | S |
 | POST | `/me/calendar/sync` | Manual sync now (rate limited: 1/5 min) | S |

@@ -2,6 +2,7 @@ import { ERROR_CODES } from '@bzim/types';
 import type { WorkerJobResponse } from '@bzim/types';
 
 import type { Handler } from '../../interfaces/IHttp';
+import { CalendarSyncService } from '../services/CalendarSyncService';
 import { CleanupService } from '../services/CleanupService';
 import { sendError, sendSuccess } from '../utils/ApiResponses';
 
@@ -20,6 +21,7 @@ export default class WorkerController {
      * detail of the wiring and not something this should depend on.
      */
     private static cleanupRunning = false;
+    private static calendarSyncRunning = false;
 
     /**
      * Nightly cleanup.
@@ -53,6 +55,26 @@ export default class WorkerController {
             // forever, and the symptom is a job that silently stops after one
             // bad night rather than one bad run.
             WorkerController.cleanupRunning = false;
+        }
+    };
+
+    /** Nightly calendar sync (docs/02 §2.7): every connection, every enabled calendar. Same overlap rule as cleanup. */
+    calendarSync: Handler = async (_req, res) => {
+        if (WorkerController.calendarSyncRunning) {
+            sendError(res, ERROR_CODES.WORKER_BUSY, 'calendar-sync is still running.', 409);
+            return;
+        }
+        const startedAt = process.hrtime.bigint();
+        WorkerController.calendarSyncRunning = true;
+        try {
+            const stats = await CalendarSyncService.syncAll();
+            sendSuccess<WorkerJobResponse>(res, {
+                job: 'calendar-sync',
+                durationMs: Number((process.hrtime.bigint() - startedAt) / 1_000_000n),
+                stats,
+            });
+        } finally {
+            WorkerController.calendarSyncRunning = false;
         }
     };
 }

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import type { IRoute } from '../../interfaces/IRouter';
 import AuthRoutes from './groups/auth';
 import AvailabilityRoutes from './groups/availability';
+import CalendarRoutes from './groups/calendar';
 import ActivityRoutes from './groups/activities';
 import GroupRoutes from './groups/groups';
 import ImageRoutes from './groups/images';
@@ -34,6 +35,7 @@ export default class Api implements IRoute {
         new OccurrenceRoutes(),
         new ImageRoutes(),
         new AvailabilityRoutes(),
+        new CalendarRoutes(),
         new LeaderboardRoutes(),
         new WidgetRoutes(),
         // Last, and not user authenticated: the scheduler calls it, the web app

@@ -43,10 +43,13 @@ export default class AvailabilityPresenter {
         days: IsoDateString[],
         people: User[],
         matrix: Map<string, UserMatrix>,
+        withCalendar: Set<string>,
     ): GroupAvailabilityResponse {
         const users = people.flatMap((user) => {
             const summary: UserSummary | null = user.toSummary();
-            return summary === null ? [] : [{ user: summary, hasCalendar: false }];
+            return summary === null
+                ? []
+                : [{ user: summary, hasCalendar: withCalendar.has(user.id) }];
         });
         return {
             from,

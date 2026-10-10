@@ -653,6 +653,63 @@ export const nl: Dict = {
         iosAdd: 'Kies "Zet op beginscherm"',
         menu: 'Open het browsermenu en kies "App installeren" of "Toevoegen aan startscherm".',
     },
+    calendarSettings: {
+        title: 'Google Agenda',
+        subtitle: 'Je afspraken maken je bezet voor de groep, zonder dat iemand ziet wat ze zijn.',
+        cardDescription: 'Laat je agenda zeggen wanneer je bezet bent.',
+        notConnected: 'Niet gekoppeld. Je telt als vrij, tenzij je zelf tijd blokkeert.',
+        manage: 'Beheren',
+        connectTitle: 'Koppel je Google Agenda',
+        connectDescription:
+            'Kies het Google-account waarvan de agenda moet meetellen. Dat mag een ander account zijn dan waarmee je inlogt.',
+        privacy:
+            'Je vrienden zien alleen bezet of vrij, nooit wat een afspraak is. De titels blijven op je eigen instellingenpagina.',
+        freeHint: 'Afspraken die in Google op "Beschikbaar" staan, blokkeren je nooit.',
+        connectGoogle: 'Google Agenda koppelen',
+        connected:
+            'Gekoppeld. Je agenda\'s staan hieronder; de eerste synchronisatie loopt vannacht, of druk op "Nu synchroniseren".',
+        connectErrors: {
+            cancelled: 'Het koppelen is afgebroken.',
+            state: 'Die link was verlopen. Probeer opnieuw te koppelen.',
+            provider: 'Google heeft het koppelen niet afgemaakt. Probeer het zo nog eens.',
+        },
+        connectedTitle: 'Gekoppeld',
+        status: {
+            active: 'Actief',
+            reauth_required: 'Opnieuw koppelen nodig',
+            error: 'Laatste synchronisatie mislukt',
+        },
+        neverSynced: 'Nog niet gesynchroniseerd.',
+        lastSynced: 'Laatst gesynchroniseerd {{when}}.',
+        reauthHelp:
+            'Google accepteert de koppeling niet meer, meestal na een wachtwoordwijziging of intrekking.',
+        reconnect: 'Opnieuw koppelen',
+        lastError: 'Laatste fout: {{error}}',
+        syncNow: 'Nu synchroniseren',
+        disconnect: 'Ontkoppelen',
+        disconnectDescription:
+            'De gesynchroniseerde afspraken worden verwijderd en je beschikbaarheid gaat terug naar wat je zelf instelde.',
+        sourcesTitle: "Welke agenda's tellen mee",
+        sourcesDescription:
+            "Alleen de ingeschakelde agenda's worden gelezen. Uitzetten haalt de afspraken meteen weg.",
+        primary: 'Hoofdagenda',
+        eventsTitle: 'Komende vier weken',
+        eventsDescription:
+            'Wat er is gesynchroniseerd, alleen voor jou. Hou een afspraak of een hele reeks buiten de telling.',
+        noEvents: 'Nog niets gesynchroniseerd voor deze weken.',
+        untitled: '(geen titel)',
+        free: 'Beschikbaar',
+        ignoreTitle: 'Negeer elke "{{title}}"',
+        ignoreSeries: 'Negeer deze reeks ({{title}})',
+        rulesTitle: 'Genegeerd',
+        rulesDescription: 'Deze maken je nooit bezet.',
+        noRules: 'Niets genegeerd.',
+        ruleKinds: {
+            title: 'Elke afspraak met deze titel',
+            series: 'Elke afspraak van deze reeks',
+        },
+        removeRule: '{{label}} weer meetellen',
+    },
     settings: {
         title: 'Instellingen',
         subtitle: 'Hoe de app eruitziet en met je praat.',
