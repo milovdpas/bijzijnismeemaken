@@ -307,6 +307,27 @@ export const nl: Dict = {
             ALREADY_OPEN: 'Deze activiteit is al gepland. Wijzig die datum.',
         },
     },
+    availability: {
+        title: 'Mijn beschikbaarheid',
+        subtitle: 'Wanneer je er niet bent. Anders telt iedereen je als vrij.',
+        cardDescription: 'Blokkeer dagdelen waarop je niet kunt, en stel wekelijkse regels in.',
+        open: 'Beschikbaarheid instellen',
+        previousMonth: 'Vorige maand',
+        nextMonth: 'Volgende maand',
+        gridHelp:
+            'Tik op een dagdeel om het te blokkeren, tik nog eens om het vrij te geven. Dagen met een herhaalteken komen uit een regel hieronder.',
+        busy: 'Bezet',
+        ruleHint: 'Komt uit je weekschema; pas het daar aan.',
+        weeklyTitle: 'Elke week',
+        weeklyHelp:
+            'Vaste afspraken, zoals elke dinsdagavond. Tik om in te stellen, tik nog eens om te wissen. Dit geldt voor elke week.',
+        monthTitle: 'Per datum',
+    },
+    daypartsShort: {
+        morning: 'Ochtend',
+        afternoon: 'Middag',
+        evening: 'Avond',
+    },
     labels: {
         idea: 'Idee',
         planned: 'Gepland',

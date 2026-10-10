@@ -33,6 +33,13 @@ export const queryKeys = {
     images: {
         search: (q: string, page: number) => ['images', q, page] as const,
     },
+    availability: {
+        mineAll: ['availability', 'mine'] as const,
+        mine: (from: string, to: string) => ['availability', 'mine', from, to] as const,
+        rules: ['availability', 'rules'] as const,
+        group: (groupId: string, from: string, to: string, activityId: string | undefined) =>
+            ['availability', 'group', groupId, from, to, activityId ?? 'all'] as const,
+    },
     invites: {
         all: ['invites'] as const,
         mine: ['invites', 'mine'] as const,

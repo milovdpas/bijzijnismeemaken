@@ -7,6 +7,7 @@ import { HydrationGate } from '@/components/common/hydration-gate';
 import { PageHeader } from '@/components/common/page-header';
 import { AccountCard } from '@/components/settings/account-card';
 import { AppearanceCard } from '@/components/settings/appearance-card';
+import { AvailabilityCard } from '@/components/settings/availability-card';
 import { LanguageCard } from '@/components/settings/language-card';
 import { PasswordCard } from '@/components/settings/password-card';
 import { ProfileCard } from '@/components/settings/profile-card';
@@ -33,6 +34,7 @@ export function SettingsView() {
                             <PasswordCard me={me.data} />
                         </>
                     )}
+                    <AvailabilityCard />
                     <AppearanceCard />
                     <LanguageCard />
                     <ApiStatusCard />

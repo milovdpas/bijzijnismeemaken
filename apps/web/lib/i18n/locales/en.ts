@@ -309,6 +309,27 @@ export const en = {
             ALREADY_OPEN: 'This activity is already planned. Change that date instead.',
         },
     },
+    availability: {
+        title: 'My availability',
+        subtitle: 'When you are not around. Everyone else counts you as free.',
+        cardDescription: 'Block dayparts you cannot make, and set weekly rules.',
+        open: 'Set my availability',
+        previousMonth: 'Previous month',
+        nextMonth: 'Next month',
+        gridHelp:
+            'Tap a daypart to block it, tap again to free it. Days with a repeat mark come from a rule below.',
+        busy: 'Busy',
+        ruleHint: 'From the week schedule; change it there.',
+        weeklyTitle: 'Every week',
+        weeklyHelp:
+            'Fixed commitments, such as every Tuesday evening. Tap to set, tap again to clear. These apply to every week.',
+        monthTitle: 'Per date',
+    },
+    daypartsShort: {
+        morning: 'Morning',
+        afternoon: 'Afternoon',
+        evening: 'Evening',
+    },
     labels: {
         idea: 'Idea',
         planned: 'Planned',

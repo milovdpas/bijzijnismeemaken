@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+import { AppLogo } from '@/components/layout/app-logo';
 import { useMe } from '@/hooks/queries/use-me';
 import { ApiError, setUnauthenticatedHandler } from '@/lib/api/client';
 import { usePreferencesStore } from '@/store/use-preferences-store';
@@ -45,12 +46,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         if (me.data !== undefined && me.data.locale !== locale) setLocale(me.data.locale);
     }, [me.data, locale, setLocale]);
 
+    // Nothing of the app until the session is known: a signed-out person must
+    // never glimpse the shell on their way to the login page. The logo alone,
+    // on the plain background, looks the same as the first frame of either
+    // destination, so there is no jump whichever way it goes.
     if (me.data === undefined || (needsOnboarding && !onOnboarding)) {
         return (
-            <div className="space-y-4 py-2">
-                <div className="h-8 w-40 animate-pulse rounded-md bg-muted" />
-                <div className="h-24 animate-pulse rounded-xl bg-muted" />
-                <div className="h-48 animate-pulse rounded-xl bg-muted" />
+            <div className="flex min-h-dvh items-center justify-center">
+                <AppLogo size="lg" className="animate-pulse" />
             </div>
         );
     }

@@ -190,7 +190,7 @@ Leave both files as `.conf.disabled` for now. Enabling them before the container
 
 ## 8. First deploy
 
-The workflows are in the repository but **not committed yet** on purpose: a push to `main` with them present deploys. Once steps 1 to 7 are done, say so and they get committed. The order matters:
+The workflows are committed (first deploy done 2026-10-10), so **every push to `main` that touches `apps/api`, `apps/web` or `packages` deploys**. For a fresh environment the order matters:
 
 1. **API first.** `deploy-api.yml` renders `/opt/apps/bzim/.env` from `apps/api/.env.dist`; the web deploy reads the same file for the image name and refuses to run without it. Push, or trigger it under *Actions → Deploy API to VPS → Run workflow*.
 2. **Then web.** Trigger `deploy-web.yml` the same way. The two `NEXT_PUBLIC_` URLs are baked into the image at build time from the variables above, so a hostname change later means a rebuild, not an `.env` edit.
