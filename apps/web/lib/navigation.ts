@@ -1,31 +1,35 @@
-import { CalendarDays, Users } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 
+import { CalendarDaysFillIcon } from '@/components/icons/calendar-days-fill-icon';
+import { CalendarDaysIcon } from '@/components/icons/calendar-days-icon';
 import { GearFillIcon } from '@/components/icons/gear-fill-icon';
 import { GearIcon } from '@/components/icons/gear-icon';
+import { PeopleFillIcon } from '@/components/icons/people-fill-icon';
+import { PeopleIcon } from '@/components/icons/people-icon';
 
 /** What a nav icon must accept: Lucide icons and our own SVG components both do. */
 export type NavIcon = ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: number }>;
 
 /**
  * The top-level sections, shared by the desktop top bar and the mobile bottom
- * availability, leaderboards, members) live inside the group page, not here.
+ * nav so the two can never disagree. Every section brings an outline and a
+ * filled drawing: the phone bar marks the active one by swapping them.
  */
 export interface NavItem {
     href: string;
     labelKey: string;
     icon: NavIcon;
-    /**
-     * A separate drawing for the active state on the phone bar. Lucide icons
-     * only need a fill; a gear drawn with strokes cannot be filled without
-     * turning into a star, so it brings its own filled twin.
-     */
-    activeIcon?: NavIcon;
+    activeIcon: NavIcon;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-    { href: '/groups', labelKey: 'nav.groups', icon: Users },
-    { href: '/availability', labelKey: 'nav.availability', icon: CalendarDays },
+    { href: '/groups', labelKey: 'nav.groups', icon: PeopleIcon, activeIcon: PeopleFillIcon },
+    {
+        href: '/availability',
+        labelKey: 'nav.availability',
+        icon: CalendarDaysIcon,
+        activeIcon: CalendarDaysFillIcon,
+    },
     { href: '/settings', labelKey: 'nav.settings', icon: GearIcon, activeIcon: GearFillIcon },
 ];
 

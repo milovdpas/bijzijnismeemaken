@@ -70,6 +70,8 @@ export const AVAILABILITY = {
     MAX_RANGE_DAYS: 93,
     /** How far ahead date suggestions look. */
     SUGGESTION_WEEKS: 12,
+    /** How many suggestions come back; the UI groups them by date. */
+    SUGGESTION_LIMIT: 30,
     /** How far ahead calendar events are synced. */
     CALENDAR_SYNC_DAYS: 180,
 } as const;

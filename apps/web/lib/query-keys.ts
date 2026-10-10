@@ -29,6 +29,8 @@ export const queryKeys = {
             ['activities', groupId, 'list', label ?? 'all', sort] as const,
         detail: (groupId: string, activityId: string) =>
             ['activities', groupId, 'detail', activityId] as const,
+        suggestions: (groupId: string, activityId: string, memberIds: string) =>
+            ['activities', groupId, 'suggestions', activityId, memberIds] as const,
     },
     images: {
         search: (q: string, page: number) => ['images', q, page] as const,

@@ -1,5 +1,5 @@
 import { GroupRole } from '@bzim/types';
-import type { ActivityDetailDto, ActivityListingDto } from '@bzim/types';
+import type { ActivityDetailDto, ActivityListingDto, SuggestionsResponse } from '@bzim/types';
 
 import type { Handler } from '../../interfaces/IHttp';
 import { paramsOf, queryOf } from '../middleware/ValidateRequest';
@@ -7,6 +7,7 @@ import type { BodyOf } from '../middleware/ValidateRequest';
 import GroupMember from '../models/GroupMember.entity';
 import { ActivityService } from '../services/ActivityService';
 import { NotificationService } from '../services/NotificationService';
+import { SuggestionService } from '../services/SuggestionService';
 import {
     sendForbidden,
     sendNoContent,
@@ -19,8 +20,10 @@ import {
     createActivitySchema,
     interestOfParamSchema,
     listActivitiesQuerySchema,
+    suggestionsQuerySchema,
     updateActivitySchema,
 } from '../validators/activitySchemas';
+import { today } from '../utils/Dates';
 
 /**
  * Activities inside a group. `requireGroupRole` has loaded `req.group` and
@@ -192,6 +195,27 @@ export default class ActivityController {
         }
         await ActivityService.delete(activity);
         sendNoContent(res);
+    };
+
+    /** Ranked dates for the planning dialog. Without `memberIds`, the people who are in. */
+    suggestions: Handler = async (req, res) => {
+        const { activityId } = paramsOf(req, activityParamSchema);
+        const { memberIds, from, weeks } = queryOf(req, suggestionsQuerySchema);
+        const activity = await ActivityService.findForGroup(req.group, activityId, false);
+        if (activity === null) {
+            sendNotFound(res, 'Activity');
+            return;
+        }
+        sendSuccess<SuggestionsResponse>(
+            res,
+            await SuggestionService.rank(
+                req.group,
+                activity,
+                memberIds ?? activity.interests.map((interest) => interest.userId),
+                from ?? today(),
+                weeks,
+            ),
+        );
     };
 
     /** "I'm in." Saying it twice is fine. */

@@ -12,6 +12,7 @@ import { Check } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { SuggestionList } from '@/components/activities/suggestion-list';
 import { Avatar } from '@/components/common/avatar';
 import { Field } from '@/components/common/field';
 import { FormMessage } from '@/components/common/form-message';
@@ -49,8 +50,8 @@ function orderMembers(members: GroupMemberResponse[], inIds: Set<string>): Group
 /**
  * Put the activity on a date: when, and who counts for it. Anyone in the
  * group can be picked; the people who already said they are in come first
- * and start switched on. Serves both planning and re-dating. Date
- * suggestions arrive in task 25.
+ * and start switched on. The ranked suggestions follow the switches. Serves
+ * both planning and re-dating.
  */
 export function PlanOccurrenceDialog({
     groupId,
@@ -119,6 +120,18 @@ export function PlanOccurrenceDialog({
                         });
                     }}
                 >
+                    <Field
+                        label={t('planDialog.suggestions')}
+                        help={t('planDialog.suggestionsHelp')}
+                    >
+                        <SuggestionList
+                            groupId={groupId}
+                            activityId={activity.id}
+                            memberIds={form.participantIds}
+                            selected={{ date: form.date, daypart: form.daypart }}
+                            onPick={(date, daypart) => setForm({ ...form, date, daypart })}
+                        />
+                    </Field>
                     <div className="grid items-start gap-4 sm:grid-cols-2">
                         <Field label={t('planDialog.date')}>
                             <Input

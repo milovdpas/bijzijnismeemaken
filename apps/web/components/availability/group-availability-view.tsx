@@ -70,7 +70,18 @@ export function GroupAvailabilityView({ groupId }: { groupId: string }) {
                         <ChevronRight />
                     </Button>
                 </div>
-                <Select value={scope} onValueChange={(value) => setScope(value ?? WHOLE_GROUP)}>
+                {/* `items` is what the trigger shows for a value; without it the raw id would appear. */}
+                <Select
+                    value={scope}
+                    onValueChange={(value) => setScope(value ?? WHOLE_GROUP)}
+                    items={[
+                        { value: WHOLE_GROUP, label: t('groupAvailability.wholeGroup') },
+                        ...(activities.data ?? []).map((activity) => ({
+                            value: activity.id,
+                            label: t('groupAvailability.inFor', { title: activity.title }),
+                        })),
+                    ]}
+                >
                     <SelectTrigger className="min-w-48" aria-label={t('groupAvailability.scope')}>
                         <SelectValue />
                     </SelectTrigger>

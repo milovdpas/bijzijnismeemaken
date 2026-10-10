@@ -293,6 +293,9 @@ export const nl: Dict = {
         editTitle: 'Datum wijzigen',
         description:
             'Prik een datum en kies wie meetelt. Alleen zij krijgen de mail met de agendalinks.',
+        suggestions: 'Beste momenten',
+        suggestionsHelp:
+            'Voor wie hieronder aan staat. Tik op een moment om de datum in te vullen.',
         date: 'Datum',
         startTime: 'Begintijd',
         daypart: 'Dagdeel',
@@ -341,6 +344,13 @@ export const nl: Dict = {
         morning: 'Ochtend',
         afternoon: 'Middag',
         evening: 'Avond',
+    },
+    suggestions: {
+        none: 'Geen data om voor te stellen in de komende twaalf weken.',
+        freeOf: '{{free}}/{{total}} vrij',
+        conflict: 'Er staat dan al iets anders gepland',
+        showMore: 'Toon er nog {{count}}',
+        showFewer: 'Toon minder',
     },
     labels: {
         idea: 'Idee',

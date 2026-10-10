@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="flex h-16">
                     {NAV_ITEMS.map(({ href, labelKey, icon, activeIcon }) => {
                         const active = isActiveNav(pathname, href);
-                        const Icon = active ? (activeIcon ?? icon) : icon;
+                        const Icon = active ? activeIcon : icon;
                         return (
                             <Link
                                 key={href}
@@ -77,14 +77,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 <Icon
                                     className={cn(
                                         'size-6 transition-colors',
-                                        // A filled drawing of its own (the gear) is all fill, so
-                                        // currentColor paints it yellow. A Lucide icon keeps its
-                                        // ink stroke, which contrasts with the bar in both schemes.
-                                        active
-                                            ? activeIcon !== undefined
-                                                ? 'text-brand'
-                                                : 'fill-brand text-ink'
-                                            : 'text-muted-foreground',
+                                        // The drawings are all fill, so currentColor is the colour.
+                                        active ? 'text-brand' : 'text-muted-foreground',
                                     )}
                                     strokeWidth={active ? 2.5 : 2}
                                 />

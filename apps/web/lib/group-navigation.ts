@@ -1,5 +1,7 @@
-import { CalendarDays, Sparkles, Trophy, Users } from 'lucide-react';
+import { Sparkles, Trophy } from 'lucide-react';
+import { CalendarDaysIcon } from '@/components/icons/calendar-days-icon';
 import { GearIcon } from '@/components/icons/gear-icon';
+import { PeopleIcon } from '@/components/icons/people-icon';
 import type { NavIcon } from '@/lib/navigation';
 import { GroupRole } from '@bzim/types';
 
@@ -22,11 +24,11 @@ export const GROUP_TABS: readonly GroupTabItem[] = [
     {
         tab: 'availability',
         labelKey: 'groupTabs.availability',
-        icon: CalendarDays,
+        icon: CalendarDaysIcon,
         adminOnly: false,
     },
     { tab: 'leaderboards', labelKey: 'groupTabs.leaderboards', icon: Trophy, adminOnly: false },
-    { tab: 'members', labelKey: 'groupTabs.members', icon: Users, adminOnly: false },
+    { tab: 'members', labelKey: 'groupTabs.members', icon: PeopleIcon, adminOnly: false },
     { tab: 'settings', labelKey: 'groupTabs.settings', icon: GearIcon, adminOnly: true },
 ];
 

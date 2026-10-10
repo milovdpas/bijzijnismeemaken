@@ -295,6 +295,8 @@ export const en = {
         title: 'Plan {{title}}',
         editTitle: 'Change the date',
         description: 'Pick a date and who counts. Only they get the email with the calendar links.',
+        suggestions: 'Best moments',
+        suggestionsHelp: 'For the people switched on below. Tap one to fill the date.',
         date: 'Date',
         startTime: 'Start time',
         daypart: 'Daypart',
@@ -343,6 +345,13 @@ export const en = {
         morning: 'Morning',
         afternoon: 'Afternoon',
         evening: 'Evening',
+    },
+    suggestions: {
+        none: 'No dates to suggest in the next twelve weeks.',
+        freeOf: '{{free}}/{{total}} free',
+        conflict: 'Something else is planned then',
+        showMore: 'Show {{count}} more',
+        showFewer: 'Show fewer',
     },
     labels: {
         idea: 'Idea',

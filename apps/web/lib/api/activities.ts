@@ -7,6 +7,7 @@ import type {
     OccurrenceDto,
     OccurrenceInput,
     OccurrenceUpdateInput,
+    SuggestionsResponse,
 } from '@bzim/types';
 
 import { request } from './client';
@@ -102,5 +103,16 @@ export function deleteOccurrence(
 ): Promise<void> {
     return request<void>(API_ENDPOINTS.ACTIVITIES.OCCURRENCE(groupId, activityId, occurrenceId), {
         method: 'DELETE',
+    });
+}
+
+/** Ranked dates for the planning dialog, for the given people. */
+export function fetchSuggestions(
+    groupId: string,
+    activityId: string,
+    memberIds: string[],
+): Promise<SuggestionsResponse> {
+    return request<SuggestionsResponse>(API_ENDPOINTS.ACTIVITIES.SUGGESTIONS(groupId, activityId), {
+        query: { memberIds: memberIds.join(',') },
     });
 }

@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { ACTIVITY, ActivityCategory, ActivityLabel, DateMode, Daypart } from '@bzim/types';
+import {
+    ACTIVITY,
+    AVAILABILITY,
+    ActivityCategory,
+    ActivityLabel,
+    DateMode,
+    Daypart,
+} from '@bzim/types';
 
 export const activityParamSchema = z.object({
     groupId: z.uuid(),
@@ -77,4 +84,23 @@ export const listActivitiesQuerySchema = z.object({
     weekday: z.coerce.number().pipe(weekday).optional(),
     includeInactive: boolWord.optional(),
     sort: z.enum(['next', 'newest']).default('newest'),
+});
+
+/** Query strings carry lists comma-separated. */
+const uuidList = z
+    .string()
+    .transform((value) => value.split(',').filter((part) => part !== ''))
+    .pipe(z.array(z.uuid()).max(ACTIVITY.PEOPLE_MAX));
+
+export const suggestionsQuerySchema = z.object({
+    /** Defaults to the people who are in. */
+    memberIds: uuidList.optional(),
+    /** Defaults to today. */
+    from: z.iso.date().optional(),
+    weeks: z.coerce
+        .number()
+        .int()
+        .min(1)
+        .max(AVAILABILITY.SUGGESTION_WEEKS)
+        .default(AVAILABILITY.SUGGESTION_WEEKS),
 });

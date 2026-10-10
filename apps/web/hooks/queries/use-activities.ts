@@ -8,6 +8,7 @@ import type {
     ActivityListingDto,
     OccurrenceInput,
     OccurrenceUpdateInput,
+    SuggestionsResponse,
 } from '@bzim/types';
 
 import { ApiError } from '@/lib/api/client';
@@ -17,6 +18,7 @@ import {
     deleteOccurrence,
     fetchActivities,
     fetchActivity,
+    fetchSuggestions,
     planOccurrence,
     setMemberInterest,
     setMyInterest,
@@ -150,4 +152,19 @@ export function useDeleteOccurrence(
     return useOccurrenceMutation(groupId, (occurrenceId: string) =>
         deleteOccurrence(groupId, activityId, occurrenceId),
     );
+}
+
+/** Ranked dates for the chosen people. Keeps the last list while a new selection loads. */
+export function useSuggestions(
+    groupId: string,
+    activityId: string,
+    memberIds: string[],
+): UseQueryResult<SuggestionsResponse> {
+    const key = [...memberIds].sort().join(',');
+    return useQuery({
+        queryKey: queryKeys.activities.suggestions(groupId, activityId, key),
+        queryFn: () => fetchSuggestions(groupId, activityId, memberIds),
+        placeholderData: keepPreviousData,
+        staleTime: 60_000,
+    });
 }

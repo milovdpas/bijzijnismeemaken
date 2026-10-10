@@ -11,6 +11,7 @@ import {
     createActivitySchema,
     interestOfParamSchema,
     listActivitiesQuerySchema,
+    suggestionsQuerySchema,
     updateActivitySchema,
 } from '../../validators/activitySchemas';
 import { groupIdParamSchema } from '../../validators/commonSchemas';
@@ -58,6 +59,14 @@ export default class ActivityRoutes implements IRoute {
             validate({ params: activityParamSchema }),
             member,
             this.controller.delete,
+        );
+
+        router.get(
+            API_ENDPOINTS.ACTIVITIES.SUGGESTIONS(':groupId', ':activityId'),
+            userAuth,
+            validate({ params: activityParamSchema, query: suggestionsQuerySchema }),
+            member,
+            this.controller.suggestions,
         );
 
         router.put(

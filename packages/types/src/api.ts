@@ -426,3 +426,25 @@ export interface UnavailabilityRuleInput {
     validFrom?: IsoDateString | null;
     validUntil?: IsoDateString | null;
 }
+
+/** One candidate moment for an activity, ranked by how many of the chosen people are free. */
+export interface SuggestionDto {
+    date: IsoDateString;
+    daypart: Daypart;
+    freeCount: number;
+    freeIds: Uuid[];
+    busyIds: Uuid[];
+    /** Something else in the group is already planned then. Shown, not excluded. */
+    conflict: boolean;
+}
+
+/** `GET …/activities/:id/suggestions?memberIds=&from=&weeks=`. */
+export interface SuggestionsResponse {
+    items: SuggestionDto[];
+    /** How many candidates were ranked; `items` is the top of them. */
+    total: number;
+    /** The people the ranking counted. */
+    memberIds: Uuid[];
+    from: IsoDateString;
+    to: IsoDateString;
+}
