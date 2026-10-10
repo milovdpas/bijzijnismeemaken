@@ -1,4 +1,4 @@
-import type { Locale } from './enums';
+import type { GroupAccess, GroupRole, Locale } from './enums';
 import type { AvatarKey } from './constants';
 import type { IsoDateTimeString, Uuid } from './domain';
 
@@ -112,8 +112,38 @@ export interface UserSummary {
     avatarKey: AvatarKey;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Groups                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface GroupResponse {
+    id: Uuid;
+    name: string;
+    slug: string;
+    description: string | null;
+    access: GroupAccess;
+    createdAt: IsoDateTimeString;
+}
+
+/** A group in the caller's own list: what it is, and what they are in it. */
+export interface GroupListingResponse extends GroupResponse {
+    role: GroupRole;
+    memberCount: number;
+}
+
+/** A group in the public overview, for people who are not in it yet. */
+export interface PublicGroupResponse extends GroupResponse {
+    memberCount: number;
+}
+
+export interface GroupMemberResponse {
+    user: UserSummary;
+    role: GroupRole;
+    joinedAt: IsoDateTimeString;
+}
+
 /*
- * Group, activity, availability and leaderboard DTOs are added by the task
- * that introduces each endpoint, so that the DTO and the entity's toDto()
- * land in the same change.
+ * Activity, availability and leaderboard DTOs are added by the task that
+ * introduces each endpoint, so that the DTO and the entity's toDto() land in
+ * the same change.
  */

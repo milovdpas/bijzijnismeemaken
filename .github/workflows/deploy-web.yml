@@ -1,0 +1,108 @@
+name: Deploy web to VPS
+
+on:
+    push:
+        branches: [main]
+        paths:
+            # packages/** is here because the web app compiles @bzim/types into
+            # its bundle.
+            - 'apps/web/**'
+            - 'packages/**'
+            - 'docker-compose.prod.yml'
+            - '.github/workflows/deploy-web.yml'
+    workflow_dispatch:
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        environment: production
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Login to Docker Hub
+              uses: docker/login-action@v4
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            # The context is the repository root: the image needs the root
+            # lockfile and the shared package. The two NEXT_PUBLIC_ values are
+            # build arguments, not runtime variables: they are inlined into the
+            # bundle, so changing a hostname means a rebuild, not an .env edit.
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  file: ./apps/web/Dockerfile
+                  push: true
+                  build-args: |
+                      NEXT_PUBLIC_API_URL=${{ vars.API_URL }}
+                      NEXT_PUBLIC_APP_URL=${{ vars.APP_URL }}
+                  tags: |
+                      ${{ secrets.DOCKERHUB_USERNAME }}/bzim-web:latest
+                      ${{ secrets.DOCKERHUB_USERNAME }}/bzim-web:${{ github.sha }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Setup SSH agent
+              uses: webfactory/ssh-agent@v0.10.0
+              with:
+                  ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+
+            # Only the compose file. The .env beside it belongs to the API
+            # deploy, which renders it from apps/api/.env.dist; compose reads
+            # DOCKERHUB_USERNAME from that same file, so the API has to have
+            # deployed at least once before this can.
+            - name: Transfer deployment files to VPS
+              run: |
+                  rsync -avz -e "ssh -o StrictHostKeyChecking=accept-new" \
+                    docker-compose.prod.yml \
+                    ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/opt/apps/bzim/docker-compose.yml
+
+            # Only the web service: an API that is serving traffic has no reason
+            # to restart because the frontend changed.
+            - name: Deploy with Docker Compose
+              run: |
+                  ssh -o StrictHostKeyChecking=accept-new \
+                    ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+                    set -e
+                    cd /opt/apps/bzim
+
+                    if [ ! -f .env ]; then
+                      echo "/opt/apps/bzim/.env is missing. Run the API deploy first: it renders the .env this compose file reads."
+                      exit 1
+                    fi
+
+                    docker compose pull web
+                    docker compose up -d web
+
+                    for i in $(seq 1 12); do
+                      if docker compose ps | grep -q "bzim-web.*healthy"; then
+                        echo "Container healthy after $((i * 5))s."
+                        break
+                      fi
+                      sleep 5
+                    done
+
+                    docker compose ps
+
+                    if ! docker compose ps | grep -q "bzim-web.*healthy"; then
+                      echo "Container never became healthy. Last 50 lines:"
+                      docker compose logs --tail=50 web
+                      exit 1
+                    fi
+                  ENDSSH
+
+            - name: Verify
+              run: |
+                  ssh -o StrictHostKeyChecking=accept-new \
+                    ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+                    set -e
+                    cd /opt/apps/bzim
+                    docker compose exec -T web wget -qO- http://127.0.0.1:3000/health
+                  ENDSSH

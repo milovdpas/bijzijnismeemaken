@@ -13,7 +13,7 @@ bijzijnismeemaken/
   .github/workflows/ci.yml (lint, type-check, test, web build on PRs and main), deploy-api.yml, deploy-web.yml
   apps/api/                    Express 5 + TypeORM + Knex migrations (see 2.3)
   apps/web/                    Next.js (App Router) PWA (see 2.4)
-  packages/types/              @bzim/types: DTOs, API_ENDPOINTS, ERROR_CODES, enums (Daypart, Role, …), constants (DAYPARTS ranges)
+  packages/types/              @bzim/types: DTOs, API_ENDPOINTS, ERROR_CODES, enums (Daypart, Role, …), constants (DAYPARTS ranges), tiny pure helpers both apps must agree on (`slugify`)
   docs/                        the planning docs produced by this plan
   AGENTS.md                    conventions summary for AI/human contributors
 ```

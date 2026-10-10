@@ -3,6 +3,7 @@ import { PROFILE } from '@bzim/types';
 import type { UpdateMeRequest } from '@bzim/types';
 
 import User from '../models/User.entity';
+import { escapeLike } from '../utils/Database';
 import { normalizeHandle } from '../utils/Normalize';
 import { hashPassword, verifyPassword } from '../utils/Password';
 import { SessionService } from './SessionService';
@@ -106,9 +107,4 @@ export class UserService {
         await SessionService.revokeAllForUser(user.id);
         await user.remove();
     }
-}
-
-/** `%` and `_` are wildcards inside LIKE; a handle cannot contain them, but the input can. */
-function escapeLike(value: string): string {
-    return value.replace(/[\\%_]/g, '\\$&');
 }

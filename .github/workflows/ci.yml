@@ -1,0 +1,89 @@
+name: CI
+
+# Lint, type-check and test every workspace. Runs on pull requests and on
+# pushes to main; the deploy workflows do not repeat these checks, so this is
+# the gate that keeps a red build visible before anything is published.
+on:
+    pull_request:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+
+        services:
+            # The API suite runs against a real MySQL, migrated once and
+            # truncated before every test (see apps/api/tests/support).
+            mysql:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: root
+                    MYSQL_DATABASE: bzim_test
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+                    --health-interval=5s
+                    --health-timeout=5s
+                    --health-retries=20
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+
+            # Must match the Dockerfiles and package.json engines. When these
+            # drift, `npm ci` can fail on a lock file written by another npm.
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            # The apps resolve @bzim/types through its built dist/, so this has
+            # to come before any type-check.
+            - name: Build shared packages
+              run: npm run build:packages
+
+            # The test bootstrap refuses to run without this file, and refuses
+            # a database whose name does not end in _test. Both on purpose.
+            - name: Write the API test environment
+              working-directory: apps/api
+              run: |
+                  cat > .env.test <<'EOF'
+                  NODE_ENV=test
+                  DB_HOST=127.0.0.1
+                  DB_PORT=3306
+                  DB_USER=root
+                  DB_PASSWORD=root
+                  DB_NAME=bzim_test
+                  WORKER_TOKEN=ci-worker-token
+                  APP_URL=http://localhost:3000
+                  API_URL=http://localhost:4000
+                  COOKIE_DOMAIN=
+                  JWT_SECRET=ci-jwt-secret-that-is-long-enough-for-hs256
+                  GOOGLE_CLIENT_ID=test-client-id.apps.googleusercontent.com
+                  GOOGLE_CLIENT_SECRET=test-client-secret
+                  MAIL_DRIVER=console
+                  APP_KEY=base64:BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=
+                  EOF
+
+            - name: Lint
+              run: npm run lint
+
+            - name: Type-check
+              run: npm run type-check
+
+            - name: Test
+              run: npm run test
+
+            # A build failure in the web app only shows up here: tsc and eslint
+            # do not run Next's own route and metadata checks.
+            - name: Build web
+              working-directory: apps/web
+              env:
+                  NEXT_TELEMETRY_DISABLED: 1
+              run: npm run build

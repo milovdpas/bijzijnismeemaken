@@ -3,6 +3,9 @@ import { DataSource } from 'typeorm';
 
 import { databaseConfig } from '../config/database';
 import EmailToken from '../app/models/EmailToken.entity';
+import Group from '../app/models/Group.entity';
+import GroupInvite from '../app/models/GroupInvite.entity';
+import GroupMember from '../app/models/GroupMember.entity';
 import OAuthState from '../app/models/OAuthState.entity';
 import RefreshToken from '../app/models/RefreshToken.entity';
 import User from '../app/models/User.entity';
@@ -31,7 +34,7 @@ export const AppDataSource = new DataSource({
     // Every timestamp is stored and read as UTC. Leaving this to the server's
     // local zone silently shifts stored times when the clocks change.
     timezone: 'Z',
-    entities: [User, RefreshToken, OAuthState, EmailToken],
+    entities: [User, RefreshToken, OAuthState, EmailToken, Group, GroupMember, GroupInvite],
 });
 
 export async function connectDatabase(): Promise<void> {
