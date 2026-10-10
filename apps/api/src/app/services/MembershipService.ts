@@ -5,6 +5,7 @@ import { AppDataSource } from '../../database/typeorm-db';
 import Group from '../models/Group.entity';
 import GroupInvite from '../models/GroupInvite.entity';
 import GroupMember, { roleRank } from '../models/GroupMember.entity';
+import { DepartureService } from './DepartureService';
 
 /** The refusals an action on another member can answer with. */
 export type MemberActionProblem = 'NOT_A_MEMBER' | 'FORBIDDEN' | 'CANNOT_TARGET_SELF';
@@ -60,9 +61,8 @@ export class MembershipService {
     }
 
     /**
-     * Admins remove members; the owner removes anyone but themselves. Removing
-     * somebody also drops any invite rows they hold for this group, which
-     * cannot exist for a member but costs nothing to be sure about.
+     * Admins remove members; the owner removes anyone but themselves. What
+     * the removed person leaves behind is detached as if they had left.
      */
     static async remove(
         group: Group,
@@ -79,7 +79,12 @@ export class MembershipService {
         if (!actor.hasRole(GroupRole.ADMIN) || roleRank(target.role) >= roleRank(actor.role)) {
             return { ok: false, problem: 'FORBIDDEN' };
         }
-        await target.remove();
+        const cancelled = await AppDataSource.transaction(async (manager) => {
+            await manager.delete(GroupInvite, { groupId: group.id, invitedUserId: targetUserId });
+            await manager.remove(target);
+            return DepartureService.detach(manager, group, targetUserId);
+        });
+        await DepartureService.notify(group, cancelled);
         return { ok: true };
     }
 
@@ -110,9 +115,9 @@ export class MembershipService {
     }
 
     /**
-     * Admins and members leave; the owner must transfer first. Decoupling of
-     * the leaver's activities and leaderboard rows is added in task 29; for
-     * now the membership and any pending invites are what go.
+     * Admins and members leave; the owner must transfer first. The membership
+     * and any pending invites go, and what the leaver owned or was part of is
+     * detached (docs/01 §1.6) in the same transaction.
      */
     static async leave(
         group: Group,
@@ -121,10 +126,12 @@ export class MembershipService {
         if (actor.role === GroupRole.OWNER) {
             return { ok: false, problem: 'OWNER_MUST_TRANSFER' };
         }
-        await AppDataSource.transaction(async (manager) => {
+        const cancelled = await AppDataSource.transaction(async (manager) => {
             await manager.delete(GroupInvite, { groupId: group.id, invitedUserId: actor.userId });
             await manager.remove(actor);
+            return DepartureService.detach(manager, group, actor.userId);
         });
+        await DepartureService.notify(group, cancelled);
         return { ok: true };
     }
 }
