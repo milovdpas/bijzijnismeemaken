@@ -25,6 +25,6 @@ export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:400
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
 
 /** Where questions about the privacy policy and the terms go. */
-export const LEGAL_CONTACT_EMAIL = 'milo@milovanderpas.nl';
+export const LEGAL_CONTACT_EMAIL = 'vanderpasmilo@gmail.com';
 /** The date on the legal pages; bump it when their wording changes in a way that matters. */
 export const LEGAL_UPDATED = '11 October 2026';
