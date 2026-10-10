@@ -13,7 +13,9 @@ export default function manifest(): MetadataRoute.Manifest {
     return {
         id: '/',
         name: APP_NAME,
-        short_name: 'Bij zijn',
+        // The same as the full name: the launcher label is the brand, and a launcher
+        // that has no room for it shortens it itself.
+        short_name: APP_NAME,
         description: APP_TAGLINE,
         start_url: '/groups',
         scope: '/',
