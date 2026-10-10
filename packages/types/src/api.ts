@@ -170,6 +170,24 @@ export interface GroupMemberResponse {
     joinedAt: IsoDateTimeString;
 }
 
+/**
+ * A pending invitation. The same shape serves the admin's pending list (who
+ * was invited) and the invitee's own list (which group, by whom).
+ */
+export interface GroupInviteDto {
+    id: Uuid;
+    group: { id: Uuid; name: string };
+    invitedUser: UserSummary;
+    /** Null once the inviter has left or deleted their account. */
+    invitedBy: UserSummary | null;
+    createdAt: IsoDateTimeString;
+}
+
+/** `POST /groups/:id/invites`. */
+export interface InviteRequest {
+    handle: string;
+}
+
 /*
  * Activity, availability and leaderboard DTOs are added by the task that
  * introduces each endpoint, so that the DTO and the entity's toDto() land in

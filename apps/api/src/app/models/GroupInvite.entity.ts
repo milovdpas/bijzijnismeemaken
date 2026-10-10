@@ -7,6 +7,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { GroupInviteDto } from '@bzim/types';
 
 import Group from './Group.entity';
 import User from './User.entity';
@@ -45,4 +46,30 @@ export default class GroupInvite extends BaseEntity {
 
     @CreateDateColumn({ name: 'created_at', type: 'datetime', precision: 3 })
     createdAt!: Date;
+
+    /**
+     * Needs the `group`, `invitedUser` and `invitedBy` relations loaded; a row
+     * fetched without them is a programming error, not a missing inviter.
+     * Only onboarded people can be invited, so the invitee always has a summary.
+     */
+    toDto(): GroupInviteDto {
+        if (
+            this.group === undefined ||
+            this.invitedUser === undefined ||
+            this.invitedBy === undefined
+        ) {
+            throw new Error(`Invite ${this.id} was loaded without its relations`);
+        }
+        const invitedUser = this.invitedUser.toSummary();
+        if (invitedUser === null) {
+            throw new Error(`Invitee ${this.invitedUserId} has no finished profile`);
+        }
+        return {
+            id: this.id,
+            group: { id: this.group.id, name: this.group.name },
+            invitedUser,
+            invitedBy: this.invitedBy?.toSummary() ?? null,
+            createdAt: this.createdAt.toISOString(),
+        };
+    }
 }

@@ -1,7 +1,7 @@
 import { env } from '../../../config/app';
 import BrevoMailer from './BrevoMailer';
 import ConsoleMailer from './ConsoleMailer';
-import type { Mailer } from './Mailer';
+import type { MailMessage, Mailer } from './Mailer';
 import SmtpMailer from './SmtpMailer';
 
 function createMailer(): Mailer {
@@ -20,5 +20,19 @@ function createMailer(): Mailer {
  * `vi.spyOn(mailer, 'send')` to read what would have gone out.
  */
 export const mailer: Mailer = createMailer();
+
+/**
+ * Sends and swallows. Mail failures are logged, never thrown: the row the
+ * email is about already exists, and failing the request would tell the
+ * person their action did not happen when it did. Everything that emails
+ * goes through here, so the policy exists once.
+ */
+export async function deliver(message: MailMessage): Promise<void> {
+    try {
+        await mailer.send(message);
+    } catch (error) {
+        console.error(`Could not send "${message.subject}" to ${message.to}:`, error);
+    }
+}
 
 export type { MailMessage, Mailer } from './Mailer';

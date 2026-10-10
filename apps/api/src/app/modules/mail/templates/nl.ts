@@ -13,6 +13,12 @@ export const nl: MailDict = {
         button: 'E-mailadres bevestigen',
         expiry: 'De link werkt {{hours}} uur.',
     },
+    groupInvite: {
+        subject: '{{inviter}} nodigt je uit voor {{group}}',
+        intro: '{{inviter}} wil dat je bij de groep "{{group}}" komt. Open de app om de uitnodiging aan te nemen of af te slaan.',
+        button: 'Bekijk de uitnodiging',
+        expiry: 'De uitnodiging blijft staan tot je antwoordt.',
+    },
     resetPassword: {
         subject: 'Nieuw wachtwoord instellen',
         intro: 'Iemand heeft gevraagd het wachtwoord voor dit adres opnieuw in te stellen. Klik op de knop om een nieuw wachtwoord te kiezen.',

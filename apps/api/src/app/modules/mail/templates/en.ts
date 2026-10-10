@@ -15,6 +15,12 @@ export const en = {
         button: 'Confirm email',
         expiry: 'The link works for {{hours}} hours.',
     },
+    groupInvite: {
+        subject: '{{inviter}} invited you to {{group}}',
+        intro: '{{inviter}} would like you to join the group "{{group}}". Open the app to accept or decline.',
+        button: 'See the invitation',
+        expiry: 'The invitation stays open until you answer it.',
+    },
     resetPassword: {
         subject: 'Reset your password',
         intro: 'Somebody asked to reset the password for this address. Click the button to choose a new one.',

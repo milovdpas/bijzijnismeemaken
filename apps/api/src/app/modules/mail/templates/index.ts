@@ -85,3 +85,22 @@ export function renderResetPassword(locale: Locale, to: string, link: string): M
         }),
     };
 }
+
+export function renderGroupInvite(
+    locale: Locale,
+    to: string,
+    values: { inviter: string; group: string; link: string },
+): MailMessage {
+    const dict = DICTS[locale];
+    const names = { inviter: values.inviter, group: values.group };
+    return {
+        to,
+        subject: fill(dict.groupInvite.subject, names),
+        ...layout(dict, {
+            intro: fill(dict.groupInvite.intro, names),
+            button: dict.groupInvite.button,
+            link: values.link,
+            expiry: dict.groupInvite.expiry,
+        }),
+    };
+}

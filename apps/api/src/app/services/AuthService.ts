@@ -3,7 +3,7 @@ import { Locale } from '@bzim/types';
 
 import { env } from '../../config/app';
 import GoogleAuthModule from '../modules/google/GoogleAuthModule';
-import { mailer } from '../modules/mail';
+import { deliver } from '../modules/mail';
 import { renderResetPassword, renderVerifyEmail } from '../modules/mail/templates';
 import { EmailTokenPurpose } from '../models/EmailToken.entity';
 import OAuthState, { OAuthPurpose } from '../models/OAuthState.entity';
@@ -196,7 +196,7 @@ export class AuthService {
         }
         const token = await EmailTokenService.issue(user, EmailTokenPurpose.RESET_PASSWORD);
         const link = `${env.appUrl}/reset-password?token=${encodeURIComponent(token)}`;
-        await AuthService.deliver(renderResetPassword(user.locale, user.email, link));
+        await deliver(renderResetPassword(user.locale, user.email, link));
     }
 
     /**
@@ -221,20 +221,7 @@ export class AuthService {
     private static async sendVerification(user: User): Promise<void> {
         const token = await EmailTokenService.issue(user, EmailTokenPurpose.VERIFY_EMAIL);
         const link = `${env.appUrl}/verify-email?token=${encodeURIComponent(token)}`;
-        await AuthService.deliver(renderVerifyEmail(user.locale, user.email, link));
-    }
-
-    /**
-     * Mail failures are logged, never thrown: the account or token row already
-     * exists, and the person can ask for the email again. Failing the request
-     * would tell them their registration did not happen when it did.
-     */
-    private static async deliver(message: Parameters<typeof mailer.send>[0]): Promise<void> {
-        try {
-            await mailer.send(message);
-        } catch (error) {
-            console.error(`Could not send "${message.subject}" to ${message.to}:`, error);
-        }
+        await deliver(renderVerifyEmail(user.locale, user.email, link));
     }
 }
 
