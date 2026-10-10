@@ -55,6 +55,7 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 ## M3 — Notifications & polish
 40. Web push: `push_subscriptions`, VAPID keys, `web-push`, subscribe UI in settings, sw `push`/`notificationclick`, `PushChannel` in dispatch, per-type preferences UI.
 41. `POST /worker/occurrence-reminders` (day-before reminder to participants), notification preferences for it.
+42b. Generated avatars: DiceBear styles (public-domain ones), style + seed per person, picker with shuffle; replaces or extends the sixteen icon tiles. Parked 2026-10-10.
 42. Offline/UX polish: skeletons, empty states, error toasts by code, `HydrationGate`, optimistic interest toggles.
 43. Operational: backup note for external MySQL, log review, rate-limit tuning, Dependabot config.
 

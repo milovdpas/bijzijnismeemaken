@@ -75,7 +75,7 @@ app/
   layout.tsx (ThemeProvider, ServiceWorker, fonts), manifest.ts, globals.css
   (public)/login/page.tsx, join/[token]/page.tsx
   (app)/layout.tsx → AppRuntime (I18nProvider, QueryProvider, AuthGate, Toaster)
-  (app)/onboarding, (app)/groups, (app)/groups/[groupId] (dashboard), (app)/groups/[groupId]/{activities,activities/[activityId],availability,leaderboards,leaderboards/[leaderboardId],leaderboards/[leaderboardId]/history,members,settings}, (app)/settings, (app)/settings/calendar, (app)/settings/availability, (app)/invites
+  (app)/onboarding, (app)/groups, (app)/groups/[groupId] (dashboard), (app)/groups/[groupId]/{activities,activities/[activityId],availability,leaderboards,leaderboards/[leaderboardId],leaderboards/[leaderboardId]/history,members,settings}, (app)/availability (my availability: week schedule + month), (app)/settings, (app)/settings/calendar, (app)/invites
 components/
   ui/ (shadcn Base UI primitives, generated)   common/ (Field, PageHeader, EmptyState, Avatar, InstallInstructions, Pagination)
   layout/ (AppNav, AppRuntime, I18nProvider, ServiceWorker, ThemeToggle)

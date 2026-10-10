@@ -3,8 +3,7 @@
 import { DateTime } from 'luxon';
 import { TIME_ZONE } from '@bzim/types';
 import type { Daypart, Weekday } from '@bzim/types';
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
-import Link from 'next/link';
+import { CalendarDays, ChevronLeft, ChevronRight, Repeat } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -57,21 +56,7 @@ export function MyAvailabilityView() {
 
     return (
         <>
-            <PageHeader
-                titleKey="availability.title"
-                subtitleKey="availability.subtitle"
-                action={
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        nativeButton={false}
-                        render={<Link href="/settings" />}
-                    >
-                        <ArrowLeft />
-                        {t('nav.settings')}
-                    </Button>
-                }
-            />
+            <PageHeader titleKey="availability.title" subtitleKey="availability.subtitle" />
 
             <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
                 <section className="space-y-3">

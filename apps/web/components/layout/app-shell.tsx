@@ -77,8 +77,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 <Icon
                                     className={cn(
                                         'size-6 transition-colors',
+                                        // A filled drawing of its own (the gear) is all fill, so
+                                        // currentColor paints it yellow. A Lucide icon keeps its
+                                        // ink stroke, which contrasts with the bar in both schemes.
                                         active
-                                            ? 'fill-brand text-brand-foreground'
+                                            ? activeIcon !== undefined
+                                                ? 'text-brand'
+                                                : 'fill-brand text-ink'
                                             : 'text-muted-foreground',
                                     )}
                                     strokeWidth={active ? 2.5 : 2}

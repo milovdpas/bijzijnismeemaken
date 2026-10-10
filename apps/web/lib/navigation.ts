@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react';
+import { CalendarDays, Users } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 
 import { GearFillIcon } from '@/components/icons/gear-fill-icon';
@@ -9,7 +9,6 @@ export type NavIcon = ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?: nu
 
 /**
  * The top-level sections, shared by the desktop top bar and the mobile bottom
- * nav so the two can never disagree. Group-level tabs (activities,
  * availability, leaderboards, members) live inside the group page, not here.
  */
 export interface NavItem {
@@ -26,6 +25,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
     { href: '/groups', labelKey: 'nav.groups', icon: Users },
+    { href: '/availability', labelKey: 'nav.availability', icon: CalendarDays },
     { href: '/settings', labelKey: 'nav.settings', icon: GearIcon, activeIcon: GearFillIcon },
 ];
 

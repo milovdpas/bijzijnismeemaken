@@ -201,6 +201,7 @@ export class OccurrenceService {
                 id: row.activity.id,
                 title: row.activity.title,
                 category: row.activity.category,
+                durationMinutes: row.activity.durationMinutes,
             },
             conflictsWith: rows
                 .filter(

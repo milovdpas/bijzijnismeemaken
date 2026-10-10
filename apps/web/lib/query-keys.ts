@@ -40,6 +40,10 @@ export const queryKeys = {
         group: (groupId: string, from: string, to: string, activityId: string | undefined) =>
             ['availability', 'group', groupId, from, to, activityId ?? 'all'] as const,
     },
+    occurrences: {
+        group: (groupId: string, from: string, to: string) =>
+            ['occurrences', groupId, from, to] as const,
+    },
     invites: {
         all: ['invites'] as const,
         mine: ['invites', 'mine'] as const,

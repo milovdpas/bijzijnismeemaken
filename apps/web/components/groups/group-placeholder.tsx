@@ -5,9 +5,7 @@ import { GROUP_TABS } from '@/lib/group-navigation';
 import type { GroupTab } from '@/lib/group-navigation';
 
 /**
- * Stands in for a group tab until its task lands (activities 20, availability
- * 24, leaderboards 28). Keeps the tab row navigable
- * now, so the shell can be judged as a whole.
+ * Stands in for a group tab until its task lands (leaderboards 28).
  */
 export function GroupPlaceholder({ tab }: { tab: GroupTab }) {
     const item = GROUP_TABS.find((candidate) => candidate.tab === tab);

@@ -3,6 +3,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
+    GroupAvailabilityResponse,
+    GroupOccurrenceDto,
     MyAvailabilityResponse,
     UnavailabilityDto,
     UnavailabilityRuleDto,
@@ -12,10 +14,12 @@ import type {
 import {
     createRule,
     deleteRule,
+    fetchGroupAvailability,
     fetchMyAvailability,
     fetchRules,
     setBlock,
 } from '@/lib/api/availability';
+import { fetchGroupOccurrences } from '@/lib/api/occurrences';
 import { queryKeys } from '@/lib/query-keys';
 
 /** The caller's own days with reasons. The previous month stays while the next loads. */
@@ -109,5 +113,32 @@ export function useDeleteRule(): UseMutationResult<void, Error, string> {
             void client.invalidateQueries({ queryKey: queryKeys.availability.rules });
             void client.invalidateQueries({ queryKey: queryKeys.availability.mineAll });
         },
+    });
+}
+
+/** The group matrix, optionally narrowed to the people in for one activity. */
+export function useGroupAvailability(
+    groupId: string,
+    from: string,
+    to: string,
+    activityId: string | undefined,
+): UseQueryResult<GroupAvailabilityResponse> {
+    return useQuery({
+        queryKey: queryKeys.availability.group(groupId, from, to, activityId),
+        queryFn: () => fetchGroupAvailability(groupId, from, to, activityId),
+        placeholderData: keepPreviousData,
+    });
+}
+
+/** What is already planned in the range, for the overlay on the group grid. */
+export function useGroupOccurrences(
+    groupId: string,
+    from: string,
+    to: string,
+): UseQueryResult<GroupOccurrenceDto[]> {
+    return useQuery({
+        queryKey: queryKeys.occurrences.group(groupId, from, to),
+        queryFn: () => fetchGroupOccurrences(groupId, from, to),
+        placeholderData: keepPreviousData,
     });
 }

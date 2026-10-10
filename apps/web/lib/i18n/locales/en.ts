@@ -19,6 +19,7 @@ export const en = {
     },
     nav: {
         groups: 'Groups',
+        availability: 'Availability',
         settings: 'Settings',
     },
     login: {
@@ -312,8 +313,6 @@ export const en = {
     availability: {
         title: 'My availability',
         subtitle: 'When you are not around. Everyone else counts you as free.',
-        cardDescription: 'Block dayparts you cannot make, and set weekly rules.',
-        open: 'Set my availability',
         previousMonth: 'Previous month',
         nextMonth: 'Next month',
         gridHelp:
@@ -324,6 +323,21 @@ export const en = {
         weeklyHelp:
             'Fixed commitments, such as every Tuesday evening. Tap to set, tap again to clear. These apply to every week.',
         monthTitle: 'Per date',
+    },
+    groupAvailability: {
+        scope: 'Whose availability',
+        wholeGroup: 'Whole group',
+        inFor: 'People in for {{title}}',
+        help: 'How many are free per daypart. Green is everyone, red is nobody. An icon means something is planned then. Tap a cell to see names.',
+        freeOf: '{{free}} of {{total}} free',
+        free: 'Free',
+        busy: 'Busy',
+        noCalendar: 'No calendar connected',
+        noCalendarNote_one:
+            '{{count}} person has no calendar connected and counts as free unless they said otherwise.',
+        noCalendarNote_other:
+            '{{count}} people have no calendar connected and count as free unless they said otherwise.',
+        setMine: 'Set my own availability',
     },
     daypartsShort: {
         morning: 'Morning',

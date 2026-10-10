@@ -321,7 +321,13 @@ export interface OccurrenceUpdateInput {
 
 /** A planned occurrence in the group agenda, with the activity it belongs to and what it clashes with. */
 export interface GroupOccurrenceDto extends OccurrenceDto {
-    activity: { id: Uuid; title: string; category: ActivityCategory };
+    activity: {
+        id: Uuid;
+        title: string;
+        category: ActivityCategory;
+        /** For the availability overlay: how long a timed occurrence blocks. */
+        durationMinutes: number | null;
+    };
     /** Other planned occurrences in the group on the same day whose time window overlaps. */
     conflictsWith: Uuid[];
 }

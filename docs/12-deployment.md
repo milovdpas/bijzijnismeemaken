@@ -228,6 +228,8 @@ Then the real test: sign in with Google on the production app, finish onboarding
 
 ## 10. Known gaps before go-live
 
+- **Generated avatars (parked 2026-10-10).** The sixteen icon tiles stay for now. When wanted: DiceBear inside the app (no API, no key; several public-domain styles, so no attribution), a style plus a seed per person, a picker with shuffle. Not Unsplash: a photo credit cannot sit on a 32-pixel avatar, and a stranger's portrait as a friend's face is odd. About one session; slot it beside the M3 polish tasks.
+
 - **Unsplash production tier.** The photo search runs on a demo key (50 searches an hour, app id 1098263). Apply for production (1,000 an hour) once that limit is felt. Their checklist: hotlinking (done), the download ping (done), no Unsplash branding in the app name (done), an accurate name and description in their form, and the "Photo by Name on Unsplash" credit with both links wherever a photo is shown, with screenshots. The picker credits already; the activity page credit lands with task 21, which stores the photographer beside the image URL.
 
 - **Worker runner.** The compose labels call `node dist/tools/worker.js`, which lands with task 32 together with the cleanup job. Until then the two scheduled jobs are registered but fail at run time, which is harmless: the API itself does not depend on them. Task 32 also double-checks the migration command the workflow uses against the compiled image.

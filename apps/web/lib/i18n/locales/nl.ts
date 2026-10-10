@@ -13,6 +13,7 @@ export const nl: Dict = {
     },
     nav: {
         groups: 'Groepen',
+        availability: 'Beschikbaar',
         settings: 'Instellingen',
     },
     login: {
@@ -310,8 +311,6 @@ export const nl: Dict = {
     availability: {
         title: 'Mijn beschikbaarheid',
         subtitle: 'Wanneer je er niet bent. Anders telt iedereen je als vrij.',
-        cardDescription: 'Blokkeer dagdelen waarop je niet kunt, en stel wekelijkse regels in.',
-        open: 'Beschikbaarheid instellen',
         previousMonth: 'Vorige maand',
         nextMonth: 'Volgende maand',
         gridHelp:
@@ -322,6 +321,21 @@ export const nl: Dict = {
         weeklyHelp:
             'Vaste afspraken, zoals elke dinsdagavond. Tik om in te stellen, tik nog eens om te wissen. Dit geldt voor elke week.',
         monthTitle: 'Per datum',
+    },
+    groupAvailability: {
+        scope: 'Wiens beschikbaarheid',
+        wholeGroup: 'Hele groep',
+        inFor: 'Wie meedoet aan {{title}}',
+        help: 'Hoeveel mensen vrij zijn per dagdeel. Groen is iedereen, rood is niemand. Een icoon betekent dat er al iets gepland staat. Tik op een vak voor namen.',
+        freeOf: '{{free}} van {{total}} vrij',
+        free: 'Vrij',
+        busy: 'Bezet',
+        noCalendar: 'Geen agenda gekoppeld',
+        noCalendarNote_one:
+            '{{count}} persoon heeft geen agenda gekoppeld en telt als vrij, tenzij anders aangegeven.',
+        noCalendarNote_other:
+            '{{count}} mensen hebben geen agenda gekoppeld en tellen als vrij, tenzij anders aangegeven.',
+        setMine: 'Mijn eigen beschikbaarheid instellen',
     },
     daypartsShort: {
         morning: 'Ochtend',
