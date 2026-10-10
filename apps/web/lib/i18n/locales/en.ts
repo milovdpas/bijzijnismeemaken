@@ -646,6 +646,15 @@ export const en = {
             BAD_URL: 'The address must start with http:// or https://.',
         },
     },
+    install: {
+        title: 'Put it on your home screen',
+        description: 'Opens like an app, full screen, one tap away.',
+        alreadyInstalled: 'You are using the installed app.',
+        button: 'Install',
+        iosShare: 'Tap Share in Safari',
+        iosAdd: 'Choose "Add to Home Screen"',
+        menu: 'Open the browser menu and choose "Install app" or "Add to Home Screen".',
+    },
     settings: {
         title: 'Settings',
         subtitle: 'How the app looks and talks to you.',

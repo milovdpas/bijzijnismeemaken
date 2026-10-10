@@ -138,7 +138,7 @@ interface CalendarProvider {
 
 ## 2.10 PWA
 - `app/manifest.ts` (frozen `id: '/'`, `start_url: '/groups'`, standalone, PNG icons 192/512/maskable), `appleWebApp` metadata, `viewport.themeColor`.
-- `public/sw.js` hand-written: network-first for navigations with `/groups` offline fallback, cache-first for `/_next/static` and `/icons`, never touches `api.` origin. Registered in production after `load`.
+- `public/sw.js` hand-written: network-first for navigations with a static `/offline` page as the fallback (cached at install; a cached `/groups` shell would only show an app that cannot load anything), cache-first for `/_next/static` and `/icons`, never touches the `api.` origin. Registered in production after `load`.
 - `useInstallApp()` + `InstallAppCard` in settings + one-time prompt, both using shared `InstallInstructions` (fix the duplication noted in marathon_schema).
 - Phase 3: `push` + `notificationclick` handlers in `sw.js`.
 

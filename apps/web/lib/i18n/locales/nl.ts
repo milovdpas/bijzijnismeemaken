@@ -645,6 +645,15 @@ export const nl: Dict = {
             BAD_URL: 'Het adres moet met http:// of https:// beginnen.',
         },
     },
+    install: {
+        title: 'Zet hem op je beginscherm',
+        description: 'Opent als een app, schermvullend, met één tik.',
+        alreadyInstalled: 'Je gebruikt de geïnstalleerde app.',
+        button: 'Installeren',
+        iosShare: 'Tik op Delen in Safari',
+        iosAdd: 'Kies "Zet op beginscherm"',
+        menu: 'Open het browsermenu en kies "App installeren" of "Toevoegen aan startscherm".',
+    },
     settings: {
         title: 'Instellingen',
         subtitle: 'Hoe de app eruitziet en met je praat.',

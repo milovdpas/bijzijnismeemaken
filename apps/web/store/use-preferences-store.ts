@@ -21,7 +21,7 @@ interface PreferencesState {
     locale: Locale | null;
     /** A `PALETTES` id; see `lib/themes.ts`. */
     palette: string;
-    /** Whether the one-time install prompt has been shown (used from task 31). */
+    /** Whether the one-time install prompt has been shown and closed. */
     installPromptSeen: boolean;
     hydrated: boolean;
     setLocale: (locale: Locale) => void;

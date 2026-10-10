@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist_Mono, Nunito } from 'next/font/google';
 import './globals.css';
 import { PaletteApplier } from '@/components/layout/palette-applier';
+import { ServiceWorker } from '@/components/layout/service-worker';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { APP_NAME, APP_TAGLINE, APP_URL } from '@/lib/site';
 
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     disableTransitionOnChange
                 >
                     <PaletteApplier />
+                    <ServiceWorker />
                     {children}
                 </ThemeProvider>
             </body>

@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { AccountCard } from '@/components/settings/account-card';
 import { AppearanceCard } from '@/components/settings/appearance-card';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
+import { InstallAppCard } from '@/components/settings/install-app-card';
 import { LanguageCard } from '@/components/settings/language-card';
 import { PasswordCard } from '@/components/settings/password-card';
 import { ProfileCard } from '@/components/settings/profile-card';
@@ -36,6 +37,7 @@ export function SettingsView() {
                     )}
                     <AppearanceCard />
                     <LanguageCard />
+                    <InstallAppCard />
                     <ApiStatusCard />
                     <DeleteAccountCard />
                 </div>
