@@ -26,7 +26,9 @@ export function LoginView() {
     const params = useSearchParams();
     const returnTo = safeReturnTo(params.get('returnTo'));
     const googleError = GOOGLE_ERRORS[params.get('error') ?? ''];
-    const [tab, setTab] = useState<'sign-in' | 'register'>('sign-in');
+    const [tab, setTab] = useState<'sign-in' | 'register'>(
+        params.get('register') === '1' ? 'register' : 'sign-in',
+    );
 
     return (
         <div className="space-y-5">

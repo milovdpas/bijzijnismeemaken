@@ -100,6 +100,10 @@ In the Google Cloud project that holds the OAuth client already used locally, un
 
 Keep the localhost entries so local sign-in keeps working: `http://localhost:4000/api/v1/auth/google/callback` and `http://localhost:4000/api/v1/calendar/google/callback`.
 
+Google's app verification (needed once the calendar scopes are on the consent screen) checks four things, all in place from 2026-10-11: the home page `https://bijzijnismeemaken.milovanderpas.nl/` is public and explains the app (`app/page.tsx`; the old redirect to `/groups` is gone, signed-in people still land on `/groups` after login), the privacy policy spells out what Google data is accessed, used, stored, shared and kept, the terms exist, and the domain is proven yours: add the site in Google Search Console with the HTML-tag method and put the tag's `content` value in the GitHub variable `GOOGLE_SITE_VERIFICATION` (the web workflow passes it as `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, the root layout renders the meta tag), redeploy, verify in Search Console, then wait the day Google asks for before re-requesting verification.
+
+The consent screen also wants a privacy policy and terms link: `https://bijzijnismeemaken.milovanderpas.nl/privacy_policy` and `https://bijzijnismeemaken.milovanderpas.nl/terms_of_service` (static pages under `app/(legal)`, no sign-in; the contact address and the date are `LEGAL_CONTACT_EMAIL` and `LEGAL_UPDATED` in `lib/site.ts`).
+
 For the calendar connection, also in that project: enable the **Google Calendar API** (APIs & Services → Library), and add the scopes `.../auth/calendar.readonly` and `.../auth/calendar.events` on the OAuth consent screen (Data access). The connect flow asks for `openid email` plus those; a project without the API enabled answers the calendar list with 403. On the OAuth consent screen, set the publishing status to **In production** once the calendar scopes arrive (M2); for sign-in alone, Testing with your friends as test users is enough, but test users' refresh tokens expire after seven days, which will bite the moment calendar sync lands. Easier to publish now.
 
 ## 6. Brevo

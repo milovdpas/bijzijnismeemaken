@@ -11,6 +11,8 @@ export const nl: Dict = {
         loading: 'Laden',
         toggleTheme: 'Thema wisselen',
         backToLogin: 'Terug naar inloggen',
+        privacyPolicy: 'Privacybeleid',
+        termsOfService: 'Gebruiksvoorwaarden',
     },
     nav: {
         groups: 'Groepen',

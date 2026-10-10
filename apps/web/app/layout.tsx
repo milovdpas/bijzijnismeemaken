@@ -37,6 +37,11 @@ export const metadata: Metadata = {
     appleWebApp: { capable: true, title: APP_NAME, statusBarStyle: 'default' },
     // A friends-only app has nothing to gain from being indexed.
     robots: { index: false, follow: false },
+    // Google Search Console's meta-tag method, for proving the domain is ours
+    // (the OAuth app verification asks for it). Set at build time; absent locally.
+    ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION === undefined
+        ? {}
+        : { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }),
 };
 
 export const viewport: Viewport = {

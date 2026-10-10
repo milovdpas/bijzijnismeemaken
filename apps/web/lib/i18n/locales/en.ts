@@ -17,6 +17,8 @@ export const en = {
         loading: 'Loading',
         toggleTheme: 'Toggle theme',
         backToLogin: 'Back to sign in',
+        privacyPolicy: 'Privacy policy',
+        termsOfService: 'Terms of service',
     },
     nav: {
         groups: 'Groups',

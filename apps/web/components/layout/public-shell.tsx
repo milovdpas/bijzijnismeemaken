@@ -1,11 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 
 import { AppLogo } from '@/components/layout/app-logo';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
-/** One centred card on the paper, the logo above it, nothing else to click. */
+/** One centred card on the paper, the logo above it, and the two legal links below. */
 export function PublicShell({ children }: { children: React.ReactNode }) {
     const { t } = useTranslation();
 
@@ -20,6 +21,14 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
                     <h1 className="text-2xl">{t('common.appName')}</h1>
                 </div>
                 <div className="rounded-2xl border bg-card p-6 shadow-sm">{children}</div>
+                <p className="mt-6 flex justify-center gap-4 text-xs text-muted-foreground">
+                    <Link href="/privacy_policy" className="hover:text-foreground">
+                        {t('common.privacyPolicy')}
+                    </Link>
+                    <Link href="/terms_of_service" className="hover:text-foreground">
+                        {t('common.termsOfService')}
+                    </Link>
+                </p>
             </main>
         </div>
     );

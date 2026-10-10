@@ -43,6 +43,7 @@ jobs:
                   build-args: |
                       NEXT_PUBLIC_API_URL=${{ vars.API_URL }}
                       NEXT_PUBLIC_APP_URL=${{ vars.APP_URL }}
+                      NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ vars.GOOGLE_SITE_VERIFICATION }}
                   tags: |
                       ${{ secrets.DOCKERHUB_USERNAME }}/bzim-web:latest
                       ${{ secrets.DOCKERHUB_USERNAME }}/bzim-web:${{ github.sha }}

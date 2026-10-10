@@ -24,15 +24,6 @@ const nextConfig: NextConfig = {
      */
     transpilePackages: ['@bzim/types'],
 
-    /**
-     * The root has no page of its own: the app lives under `(app)`. Declared
-     * here rather than as a page calling `redirect()` so nothing is rendered or
-     * bundled for it. Temporary (307) because a signed-out landing page may
-     * claim `/` later.
-     */
-    async redirects() {
-        return [{ source: '/', destination: '/groups', permanent: false }];
-    },
 };
 
 export default nextConfig;
