@@ -566,6 +566,13 @@ export const en = {
         total: 'at {{time}}',
         help: 'Runs on this device and keeps going while you look elsewhere.',
     },
+    history: {
+        title: 'Score history',
+        toBoard: 'To the board',
+        by: '{{name}}, {{when}}',
+        emptyTitle: 'Nothing happened yet',
+        emptyDescription: 'Every score entered, changed or cleared shows up here.',
+    },
     settings: {
         title: 'Settings',
         subtitle: 'How the app looks and talks to you.',

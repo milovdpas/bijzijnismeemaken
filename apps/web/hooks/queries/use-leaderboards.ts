@@ -8,7 +8,9 @@ import type {
     LeaderboardInput,
     LeaderboardListingDto,
     LeaderboardMemberDto,
+    Paginated,
     PeriodsResponse,
+    ScoreHistoryDto,
     ScoresResponse,
 } from '@bzim/types';
 
@@ -18,6 +20,7 @@ import {
     createLeaderboard,
     deleteLeaderboard,
     fetchLeaderboard,
+    fetchHistory,
     fetchLeaderboards,
     fetchPeriods,
     fetchScores,
@@ -179,5 +182,19 @@ export function useScoreNewPlayer(
         const member = await addLeaderboardMember(groupId, leaderboardId, who);
         await setScore(groupId, leaderboardId, member.id, score);
         return member.id;
+    });
+}
+
+/** One page of the board's history, newest first; the previous page stays while the next loads. */
+export function useHistory(
+    groupId: string,
+    leaderboardId: string,
+    page: number,
+    pageSize: number,
+): UseQueryResult<Paginated<ScoreHistoryDto>> {
+    return useQuery({
+        queryKey: queryKeys.leaderboards.history(groupId, leaderboardId, page),
+        queryFn: () => fetchHistory(groupId, leaderboardId, page, pageSize),
+        placeholderData: keepPreviousData,
     });
 }

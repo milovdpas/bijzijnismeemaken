@@ -565,6 +565,13 @@ export const nl: Dict = {
         total: 'op {{time}}',
         help: 'Loopt op dit apparaat en blijft lopen terwijl je ergens anders kijkt.',
     },
+    history: {
+        title: 'Scoregeschiedenis',
+        toBoard: 'Naar de lijst',
+        by: '{{name}}, {{when}}',
+        emptyTitle: 'Nog niets gebeurd',
+        emptyDescription: 'Elke score die is ingevoerd, gewijzigd of gewist komt hier te staan.',
+    },
     settings: {
         title: 'Instellingen',
         subtitle: 'Hoe de app eruitziet en met je praat.',

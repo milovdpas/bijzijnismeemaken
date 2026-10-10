@@ -1,7 +1,7 @@
 'use client';
 
 import { EditMode, ERROR_CODES, ScoreType } from '@bzim/types';
-import { ArrowLeft, Hash, Pencil, Timer, Trash2, Trophy } from 'lucide-react';
+import { ArrowLeft, Hash, History, Pencil, Timer, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -117,27 +117,38 @@ export function LeaderboardDetailView({
                             })}
                         </p>
                     </div>
-                    {data.canManage && (
-                        <div className="flex shrink-0 gap-1">
-                            <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                aria-label={t('leaderboards.edit')}
-                                nativeButton={false}
-                                render={<Link href={`${listHref}/${leaderboardId}/edit`} />}
-                            >
-                                <Pencil />
-                            </Button>
-                            <Button
-                                size="icon-sm"
-                                variant="ghost"
-                                aria-label={t('leaderboardDetail.delete')}
-                                onClick={() => setDeleting(true)}
-                            >
-                                <Trash2 />
-                            </Button>
-                        </div>
-                    )}
+                    <div className="flex shrink-0 gap-1">
+                        <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            aria-label={t('history.title')}
+                            nativeButton={false}
+                            render={<Link href={`${listHref}/${leaderboardId}/history`} />}
+                        >
+                            <History />
+                        </Button>
+                        {data.canManage && (
+                            <>
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    aria-label={t('leaderboards.edit')}
+                                    nativeButton={false}
+                                    render={<Link href={`${listHref}/${leaderboardId}/edit`} />}
+                                >
+                                    <Pencil />
+                                </Button>
+                                <Button
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    aria-label={t('leaderboardDetail.delete')}
+                                    onClick={() => setDeleting(true)}
+                                >
+                                    <Trash2 />
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
                 {data.description !== null && (
                     <p className="text-sm whitespace-pre-line">{data.description}</p>

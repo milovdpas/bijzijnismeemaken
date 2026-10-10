@@ -18,3 +18,10 @@ export function formatMonth(year: number, month: number, lang: string | undefine
         .setLocale(lang ?? 'nl')
         .toFormat('LLLL yyyy');
 }
+
+/** A moment for people: "3 okt 2026, 14:05" or "Oct 3, 2026, 2:05 PM". */
+export function formatDateTime(iso: string, lang: string | undefined): string {
+    return DateTime.fromISO(iso, { zone: TIME_ZONE })
+        .setLocale(lang ?? 'nl')
+        .toLocaleString(DateTime.DATETIME_MED);
+}
