@@ -10,7 +10,7 @@ import { escapeLike } from '../utils/Database';
 import { normalizeHandle } from '../utils/Normalize';
 import { hashPassword, verifyPassword } from '../utils/Password';
 import { DepartureService } from './DepartureService';
-import type { CancelledByDeparture } from './DepartureService';
+import type { Departure } from './DepartureService';
 import { SessionService } from './SessionService';
 
 export type UpdateResult = { ok: true; user: User } | { ok: false; problem: 'HANDLE_TAKEN' };
@@ -111,7 +111,7 @@ export class UserService {
             relations: { group: true },
         });
         const departures = await AppDataSource.transaction(async (manager) => {
-            const all: { membership: GroupMember; cancelled: CancelledByDeparture[] }[] = [];
+            const all: { membership: GroupMember; departure: Departure }[] = [];
             for (const membership of memberships) {
                 await manager.delete(GroupInvite, {
                     groupId: membership.groupId,
@@ -120,15 +120,15 @@ export class UserService {
                 await manager.remove(membership);
                 all.push({
                     membership,
-                    cancelled: await DepartureService.detach(manager, membership.group, user.id),
+                    departure: await DepartureService.detach(manager, membership.group, user.id),
                 });
             }
             await manager.remove(user);
             return all;
         });
         await Promise.all(
-            departures.map(({ membership, cancelled }) =>
-                DepartureService.notify(membership.group, cancelled),
+            departures.map(({ membership, departure }) =>
+                DepartureService.notify(membership.group, departure),
             ),
         );
     }

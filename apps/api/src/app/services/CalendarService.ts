@@ -125,6 +125,11 @@ export class CalendarService {
             );
             return created;
         });
+        // Asking for the write scope is asking for auto-add: the setting follows the grant.
+        if (row.purpose === OAuthPurpose.CALENDAR_WRITE && connection.hasWriteScope) {
+            user.autoAddToCalendar = true;
+            await user.save();
+        }
         return { ok: true, connection: await CalendarService.reload(connection.id) };
     }
 

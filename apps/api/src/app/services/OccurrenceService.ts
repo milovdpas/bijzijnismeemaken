@@ -16,6 +16,7 @@ import type User from '../models/User.entity';
 import { calendarSpan } from '../utils/CalendarLinks';
 import type { CalendarEvent } from '../utils/CalendarLinks';
 import { signOccurrenceToken } from '../utils/SignedLink';
+import { CalendarWriteService } from './CalendarWriteService';
 import { NotificationService } from './NotificationService';
 
 export type OccurrenceProblem =
@@ -82,6 +83,7 @@ export class OccurrenceService {
         await OccurrenceService.markIn(activity, input.participantIds, planner);
         const occurrence = await OccurrenceService.reload(created.id);
         await OccurrenceService.tellNewParticipants(group, activity, occurrence, planner);
+        await CalendarWriteService.sync(group, activity, occurrence);
         return { ok: true, occurrence: await OccurrenceService.reload(created.id) };
     }
 
@@ -117,6 +119,7 @@ export class OccurrenceService {
             const current = new Set(occurrence.participants.map((row) => row.userId));
             const gone = occurrence.participants.filter((row) => !wanted.has(row.userId));
             if (gone.length > 0) {
+                await CalendarWriteService.remove(gone);
                 await OccurrenceParticipant.remove(gone);
             }
             const added = [...wanted]
@@ -141,6 +144,7 @@ export class OccurrenceService {
             await OccurrenceService.tellNewParticipants(group, activity, fresh, editor);
             await OccurrenceService.tellRescheduled(group, activity, fresh, editor);
         }
+        await CalendarWriteService.sync(group, activity, fresh);
         return { ok: true, occurrence: await OccurrenceService.reload(occurrence.id) };
     }
 
@@ -153,6 +157,7 @@ export class OccurrenceService {
         if (occurrence.status === OccurrenceStatus.PLANNED) {
             await OccurrenceService.tellCancelled(group, activity, occurrence);
         }
+        await CalendarWriteService.remove(occurrence.participants);
         await occurrence.remove();
     }
 

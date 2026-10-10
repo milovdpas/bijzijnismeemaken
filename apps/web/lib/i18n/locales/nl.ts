@@ -688,6 +688,11 @@ export const nl: Dict = {
         reconnect: 'Opnieuw koppelen',
         lastError: 'Laatste fout: {{error}}',
         syncNow: 'Nu synchroniseren',
+        autoAdd: 'Geplande activiteiten in mijn agenda zetten',
+        autoAddHelp:
+            'Elke activiteit waarvoor je bent ingepland komt in je hoofdagenda en verhuist mee met de datum.',
+        autoAddNeedsScope:
+            'Google vraagt dan nog één keer om toestemming om afspraken toe te voegen.',
         disconnect: 'Ontkoppelen',
         disconnectDescription:
             'De gesynchroniseerde afspraken worden verwijderd en je beschikbaarheid gaat terug naar wat je zelf instelde.',

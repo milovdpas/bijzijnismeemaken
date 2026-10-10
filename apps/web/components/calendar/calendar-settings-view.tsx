@@ -31,6 +31,7 @@ import {
     useSyncCalendar,
     useUpdateCalendarSource,
 } from '@/hooks/queries/use-calendar';
+import { useMe, useUpdateMe } from '@/hooks/queries/use-me';
 import { calendarConnectUrl } from '@/lib/api/calendar';
 import { errorKey } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format-date';
@@ -40,8 +41,20 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
     const { t, i18n } = useTranslation();
     const sync = useSyncCalendar();
     const disconnect = useDisconnectCalendar();
+    const me = useMe();
+    const updateMe = useUpdateMe();
     const [confirming, setConfirming] = useState(false);
     const needsReauth = connection.status === CalendarConnectionStatus.REAUTH_REQUIRED;
+    const autoAdd = me.data?.autoAddToCalendar === true && connection.hasWriteScope;
+    // Turning it on without the write scope means asking Google for it first;
+    // the callback switches the setting on once the grant is in.
+    const toggleAutoAdd = (on: boolean) => {
+        if (on && !connection.hasWriteScope) {
+            window.location.assign(calendarConnectUrl('readwrite'));
+            return;
+        }
+        updateMe.mutate({ autoAddToCalendar: on });
+    };
 
     return (
         <Card>
@@ -68,6 +81,26 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
                               })}
                     </span>
                 </div>
+                <label className="flex items-center justify-between gap-4 rounded-xl border px-3 py-2.5">
+                    <span>
+                        <span className="block text-sm font-semibold">
+                            {t('calendarSettings.autoAdd')}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                            {connection.hasWriteScope
+                                ? t('calendarSettings.autoAddHelp')
+                                : t('calendarSettings.autoAddNeedsScope')}
+                        </span>
+                    </span>
+                    <Switch
+                        checked={autoAdd}
+                        disabled={updateMe.isPending || needsReauth}
+                        onCheckedChange={toggleAutoAdd}
+                    />
+                </label>
+                {updateMe.isError && (
+                    <FormMessage tone="error">{t(errorKey(updateMe.error))}</FormMessage>
+                )}
                 {needsReauth && (
                     <FormMessage tone="error">
                         {t('calendarSettings.reauthHelp')}{' '}

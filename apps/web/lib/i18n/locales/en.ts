@@ -690,6 +690,10 @@ export const en = {
         reconnect: 'Reconnect',
         lastError: 'Last error: {{error}}',
         syncNow: 'Sync now',
+        autoAdd: 'Add planned activities to my calendar',
+        autoAddHelp:
+            'Every activity you are planned in for appears in your main calendar and follows its date.',
+        autoAddNeedsScope: 'Google will ask once more, for permission to add events.',
         disconnect: 'Disconnect',
         disconnectDescription:
             'The synced appointments are removed and your availability goes back to what you set by hand.',

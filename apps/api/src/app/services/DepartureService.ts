@@ -12,6 +12,7 @@ import LeaderboardMember from '../models/LeaderboardMember.entity';
 import LeaderboardScoreHistory from '../models/LeaderboardScoreHistory.entity';
 import OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
 import User from '../models/User.entity';
+import { CalendarWriteService } from './CalendarWriteService';
 import { NotificationService } from './NotificationService';
 
 /** An occurrence that was cancelled by somebody's departure, with the people who had been told about it. */
@@ -19,6 +20,15 @@ export interface CancelledByDeparture {
     activity: Activity;
     occurrence: ActivityOccurrence;
     rows: OccurrenceParticipant[];
+    /** Every participant, for the calendar events that were written for them. */
+    everyone: OccurrenceParticipant[];
+}
+
+/** What `detach` leaves for after the commit: cancellations to mail, calendar events to take out. */
+export interface Departure {
+    cancelled: CancelledByDeparture[];
+    /** The leaver's own participations elsewhere, as they were before deletion. */
+    left: OccurrenceParticipant[];
 }
 
 /**
@@ -32,11 +42,7 @@ export interface CancelledByDeparture {
  * cancellation mails are sent by `notify` once that has committed.
  */
 export class DepartureService {
-    static async detach(
-        manager: EntityManager,
-        group: Group,
-        userId: string,
-    ): Promise<CancelledByDeparture[]> {
+    static async detach(manager: EntityManager, group: Group, userId: string): Promise<Departure> {
         const user = await manager.findOneByOrFail(User, { id: userId });
         const name = user.displayName ?? user.handle ?? '';
         const avatarKey = user.avatarKey ?? AVATAR_KEYS[0];
@@ -84,6 +90,7 @@ export class DepartureService {
                         activity,
                         occurrence,
                         rows: occurrence.participants.filter((row) => row.notifiedAt !== null),
+                        everyone: occurrence.participants,
                     });
                 }
             }
@@ -94,11 +101,15 @@ export class DepartureService {
         if (activityIds.length > 0) {
             await manager.delete(ActivityInterest, { userId, activityId: In(activityIds) });
         }
-        if (occurrenceIds.length > 0) {
-            await manager.delete(OccurrenceParticipant, {
-                userId,
-                occurrenceId: In(occurrenceIds),
-            });
+        const left =
+            occurrenceIds.length === 0
+                ? []
+                : await manager.findBy(OccurrenceParticipant, {
+                      userId,
+                      occurrenceId: In(occurrenceIds),
+                  });
+        if (left.length > 0) {
+            await manager.delete(OccurrenceParticipant, { id: In(left.map((row) => row.id)) });
         }
 
         // Leaderboards: the rows stay, the person behind them goes.
@@ -121,13 +132,17 @@ export class DepartureService {
             );
         }
 
-        return cancelled;
+        return { cancelled, left };
     }
 
-    /** After the commit: the people who had been told about a now-cancelled occurrence hear it is off. */
-    static async notify(group: Group, cancelled: CancelledByDeparture[]): Promise<void> {
+    /**
+     * After the commit: the people who had been told about a now-cancelled
+     * occurrence hear it is off, and every calendar event that was written for
+     * those occurrences, or for the leaver elsewhere, is taken out again.
+     */
+    static async notify(group: Group, departure: Departure): Promise<void> {
         await Promise.all(
-            cancelled
+            departure.cancelled
                 .filter((entry) => entry.rows.length > 0)
                 .map((entry) =>
                     NotificationService.occurrenceCancelled(
@@ -138,5 +153,9 @@ export class DepartureService {
                     ),
                 ),
         );
+        await CalendarWriteService.remove([
+            ...departure.cancelled.flatMap((entry) => entry.everyone),
+            ...departure.left,
+        ]);
     }
 }
