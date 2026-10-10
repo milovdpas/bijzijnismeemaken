@@ -44,7 +44,13 @@ export function asUser(accessToken: string) {
                 .put(path)
                 .set('authorization', auth)
                 .send(body as object),
-        delete: (path: string): supertest.Test => api.delete(path).set('authorization', auth),
+        // A body on DELETE is unusual but the unavailability block is identified by one.
+        delete: (path: string, body?: unknown): supertest.Test =>
+            api
+                .delete(path)
+                .set('authorization', auth)
+                .send(body === undefined ? undefined : JSON.stringify(body))
+                .set('content-type', 'application/json'),
     };
 }
 

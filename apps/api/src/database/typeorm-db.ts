@@ -10,10 +10,12 @@ import Group from '../app/models/Group.entity';
 import GroupInvite from '../app/models/GroupInvite.entity';
 import NotificationSetting from '../app/models/NotificationSetting.entity';
 import GroupMember from '../app/models/GroupMember.entity';
+import ManualUnavailability from '../app/models/ManualUnavailability.entity';
 import OAuthState from '../app/models/OAuthState.entity';
 import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
 import RefreshToken from '../app/models/RefreshToken.entity';
 import User from '../app/models/User.entity';
+import WeeklyUnavailabilityRule from '../app/models/WeeklyUnavailabilityRule.entity';
 
 /**
  * TypeORM owns runtime queries. Knex owns schema.
@@ -56,6 +58,8 @@ export const AppDataSource = new DataSource({
         ActivityInterest,
         ActivityOccurrence,
         OccurrenceParticipant,
+        ManualUnavailability,
+        WeeklyUnavailabilityRule,
     ],
 });
 

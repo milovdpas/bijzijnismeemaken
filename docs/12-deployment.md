@@ -110,7 +110,7 @@ Production uses the HTTP API (`MAIL_DRIVER=brevo`, set in `.env.dist`), so no SM
 
 ## 7. VPS: proxy and certificates
 
-Two conf files in `/opt/apps/proxy/conf.d/`, created as `.conf.disabled` first because nginx refuses a conf whose certificate does not exist yet.
+Two conf files in `/opt/apps/proxy/conf.d/`, created as `.conf.disabled` and **left disabled until after the first deploy**. nginx refuses to load a conf whose certificate does not exist yet, and also one whose `proxy_pass` names a container that does not exist yet (`host not found in upstream "bzim-api"`). Certificates can be issued now; the confs are switched on in step 8, once the two containers run.
 
 `bzim-web.conf` (the app, plus the English alias as a redirect; one certificate covers both names):
 
@@ -184,12 +184,9 @@ docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/
   -d bijzijnismeemaken-api.milovanderpas.nl \
   --email vanderpasmilo@gmail.com --agree-tos --no-eff-email
 
-mv conf.d/bzim-web.conf.disabled conf.d/bzim-web.conf
-mv conf.d/bzim-api.conf.disabled conf.d/bzim-api.conf
-docker exec proxy nginx -t && docker exec proxy nginx -s reload
 ```
 
-nginx will answer 502 for the app and the API until the containers exist. That is expected; the redirect works at once.
+Leave both files as `.conf.disabled` for now. Enabling them before the containers exist fails the whole nginx config test, which would also block reloads for every other app on the proxy.
 
 ## 8. First deploy
 
@@ -199,6 +196,17 @@ The workflows are in the repository but **not committed yet** on purpose: a push
 2. **Then web.** Trigger `deploy-web.yml` the same way. The two `NEXT_PUBLIC_` URLs are baked into the image at build time from the variables above, so a hostname change later means a rebuild, not an `.env` edit.
 
 The API workflow runs the migrations inside the container after it is healthy, restarts the Ofelia scheduler so the cron labels register, and verifies the health endpoint reports the database as reachable.
+
+3. **Then switch the proxy on.** Both containers exist now, so nginx can resolve them:
+
+```bash
+cd /opt/apps/proxy
+mv conf.d/bzim-web.conf.disabled conf.d/bzim-web.conf
+mv conf.d/bzim-api.conf.disabled conf.d/bzim-api.conf
+docker exec proxy nginx -t && docker exec proxy nginx -s reload
+```
+
+If `nginx -t` still complains about an upstream, `docker ps` must show `bzim-api` and `bzim-web` on the `web` network before this can pass.
 
 ## 9. Verify
 

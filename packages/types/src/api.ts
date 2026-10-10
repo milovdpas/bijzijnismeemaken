@@ -357,3 +357,66 @@ export interface ImageSearchResponse {
 export interface ImageUsedRequest {
     useToken: string;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Availability                                                                */
+/* -------------------------------------------------------------------------- */
+
+/** Why a daypart is busy. Only the person themselves ever sees the reason. */
+export type AvailabilityReason = 'manual' | 'rule' | 'calendar';
+
+/** One day of the caller's own availability: each daypart free (null) or busy for a reason. */
+export interface MyAvailabilityDay {
+    date: IsoDateString;
+    dayparts: Record<Daypart, AvailabilityReason | null>;
+}
+
+/** `GET /me/availability?from=&to=`. */
+export interface MyAvailabilityResponse {
+    from: IsoDateString;
+    to: IsoDateString;
+    days: MyAvailabilityDay[];
+}
+
+/** One day of a group: per daypart, who is busy. Everyone else in `users` is free. */
+export interface GroupAvailabilityDay {
+    date: IsoDateString;
+    dayparts: Record<Daypart, { busy: Uuid[] }>;
+}
+
+export interface AvailabilityUser {
+    user: UserSummary;
+    /** Whether a calendar feeds this person's availability; false means "free unless they said otherwise". */
+    hasCalendar: boolean;
+}
+
+/** `GET /groups/:id/availability?from=&to=&activityId=`. */
+export interface GroupAvailabilityResponse {
+    from: IsoDateString;
+    to: IsoDateString;
+    users: AvailabilityUser[];
+    days: GroupAvailabilityDay[];
+}
+
+/** A one-off block: this date, this daypart. `PUT` adds, `DELETE` removes, both with this body. */
+export interface UnavailabilityDto {
+    date: IsoDateString;
+    daypart: Daypart;
+}
+
+/** A weekly rule: every `weekday`, this daypart, within the optional validity range. */
+export interface UnavailabilityRuleDto {
+    id: Uuid;
+    weekday: Weekday;
+    daypart: Daypart;
+    validFrom: IsoDateString | null;
+    validUntil: IsoDateString | null;
+}
+
+/** `POST` and `PATCH /me/unavailability-rules[/:id]`; all optional on PATCH. */
+export interface UnavailabilityRuleInput {
+    weekday: Weekday;
+    daypart: Daypart;
+    validFrom?: IsoDateString | null;
+    validUntil?: IsoDateString | null;
+}

@@ -18,13 +18,12 @@ import {
 import { icsFor } from '../utils/CalendarLinks';
 import { verifyOccurrenceToken } from '../utils/SignedLink';
 import { activityParamSchema } from '../validators/activitySchemas';
-import { groupIdParamSchema } from '../validators/commonSchemas';
+import { groupIdParamSchema, rangeQuerySchema } from '../validators/commonSchemas';
 import {
     icsQuerySchema,
     occurrenceIdParamSchema,
     occurrenceParamSchema,
     planOccurrenceSchema,
-    rangeQuerySchema,
     updateOccurrenceSchema,
 } from '../validators/occurrenceSchemas';
 

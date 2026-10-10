@@ -1,6 +1,5 @@
-import { DateTime } from 'luxon';
 import { z } from 'zod';
-import { ACTIVITY, AVAILABILITY, Daypart, OccurrenceStatus, TIME_ZONE } from '@bzim/types';
+import { ACTIVITY, Daypart, OccurrenceStatus } from '@bzim/types';
 
 export const occurrenceParamSchema = z.object({
     groupId: z.uuid(),
@@ -33,22 +32,6 @@ export const updateOccurrenceSchema = planOccurrenceSchema
     .extend({ status: z.enum(OccurrenceStatus) })
     .partial()
     .refine((body) => Object.keys(body).length > 0, 'At least one field is required');
-
-/** `from..to`, inclusive, at most `AVAILABILITY.MAX_RANGE_DAYS` apart. */
-export const rangeQuerySchema = z
-    .object({
-        from: z.iso.date(),
-        to: z.iso.date(),
-    })
-    .refine((range) => range.from <= range.to, { message: 'from must not be after to' })
-    .refine(
-        (range) =>
-            DateTime.fromISO(range.to, { zone: TIME_ZONE }).diff(
-                DateTime.fromISO(range.from, { zone: TIME_ZONE }),
-                'days',
-            ).days < AVAILABILITY.MAX_RANGE_DAYS,
-        { message: `At most ${String(AVAILABILITY.MAX_RANGE_DAYS)} days` },
-    );
 
 export const icsQuerySchema = z.object({
     token: z.string().min(1).max(128),

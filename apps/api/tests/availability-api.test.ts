@@ -1,0 +1,209 @@
+import { describe, expect, it } from 'vitest';
+import { API_ENDPOINTS, Daypart, Weekday } from '@bzim/types';
+import type {
+    GroupAvailabilityResponse,
+    MyAvailabilityResponse,
+    UnavailabilityDto,
+    UnavailabilityRuleDto,
+} from '@bzim/types';
+
+import ManualUnavailability from '../src/app/models/ManualUnavailability.entity';
+import WeeklyUnavailabilityRule from '../src/app/models/WeeklyUnavailabilityRule.entity';
+import { AvailabilityService } from '../src/app/services/AvailabilityService';
+import { sessionFor } from './support/auth';
+import { asUser, data } from './support/client';
+import {
+    seedActivity,
+    seedBlock,
+    seedGroup,
+    seedInterest,
+    seedMember,
+    seedRule,
+    seedUser,
+} from './support/factories';
+
+// 2026-11-02 is a Monday; 2026-11-08 a Sunday.
+const WEEK = { from: '2026-11-02', to: '2026-11-08' };
+
+describe('AvailabilityService.matrix', () => {
+    it('marks one-off blocks and weekly rules inside their validity, nothing else', async () => {
+        const user = await seedUser();
+        await seedBlock(user, '2026-11-03', Daypart.EVENING);
+        await seedRule(user, Weekday.WEDNESDAY, Daypart.MORNING);
+        await seedRule(user, Weekday.FRIDAY, Daypart.AFTERNOON, { validUntil: '2026-11-05' });
+        await seedRule(user, Weekday.SATURDAY, Daypart.AFTERNOON, { validFrom: '2026-11-07' });
+        // Somebody else's block never leaks in.
+        await seedBlock(await seedUser(), '2026-11-03', Daypart.MORNING);
+
+        const matrix = await AvailabilityService.matrix([user.id], WEEK.from, WEEK.to);
+        const mine = matrix.get(user.id);
+
+        expect(mine?.get('2026-11-03')?.get(Daypart.EVENING)).toBe('manual');
+        expect(mine?.get('2026-11-03')?.get(Daypart.MORNING)).toBeUndefined();
+        expect(mine?.get('2026-11-04')?.get(Daypart.MORNING)).toBe('rule');
+        expect(mine?.get('2026-11-06')?.get(Daypart.AFTERNOON)).toBeUndefined();
+        expect(mine?.get('2026-11-07')?.get(Daypart.AFTERNOON)).toBe('rule');
+    });
+
+    it('lets a one-off block name the reason when a rule says the same', async () => {
+        const user = await seedUser();
+        await seedRule(user, Weekday.TUESDAY, Daypart.EVENING);
+        await seedBlock(user, '2026-11-03', Daypart.EVENING);
+        const matrix = await AvailabilityService.matrix([user.id], WEEK.from, WEEK.to);
+        expect(matrix.get(user.id)?.get('2026-11-03')?.get(Daypart.EVENING)).toBe('manual');
+    });
+});
+
+describe('GET /me/availability', () => {
+    it('answers every day with reasons for the caller', async () => {
+        const user = await seedUser();
+        await seedBlock(user, '2026-11-03', Daypart.EVENING);
+        const client = asUser((await sessionFor(user)).accessToken);
+
+        const response = await client.get(
+            `${API_ENDPOINTS.ME.AVAILABILITY}?from=${WEEK.from}&to=${WEEK.to}`,
+        );
+        expect(response.status).toBe(200);
+        const body = data<MyAvailabilityResponse>(response);
+        expect(body.days).toHaveLength(7);
+        expect(body.days[1]?.date).toBe('2026-11-03');
+        expect(body.days[1]?.dayparts).toEqual({
+            morning: null,
+            afternoon: null,
+            evening: 'manual',
+        });
+
+        expect(
+            (await client.get(`${API_ENDPOINTS.ME.AVAILABILITY}?from=2026-11-08&to=2026-11-02`))
+                .status,
+        ).toBe(422);
+    });
+});
+
+describe('/me/unavailability', () => {
+    it('adds, lists in range, and removes blocks; adding twice is harmless', async () => {
+        const user = await seedUser();
+        const client = asUser((await sessionFor(user)).accessToken);
+        const block = { date: '2026-11-03', daypart: Daypart.EVENING };
+
+        expect((await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, block)).status).toBe(204);
+        expect((await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, block)).status).toBe(204);
+        expect(await ManualUnavailability.count()).toBe(1);
+
+        const listed = data<UnavailabilityDto[]>(
+            await client.get(`${API_ENDPOINTS.ME.UNAVAILABILITY}?from=${WEEK.from}&to=${WEEK.to}`),
+        );
+        expect(listed).toEqual([block]);
+        const outside = data<UnavailabilityDto[]>(
+            await client.get(`${API_ENDPOINTS.ME.UNAVAILABILITY}?from=2026-12-01&to=2026-12-07`),
+        );
+        expect(outside).toEqual([]);
+
+        expect((await client.delete(API_ENDPOINTS.ME.UNAVAILABILITY, block)).status).toBe(204);
+        expect(await ManualUnavailability.count()).toBe(0);
+        expect((await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, { date: 'soon' })).status).toBe(
+            422,
+        );
+    });
+});
+
+describe('/me/unavailability-rules', () => {
+    it("creates, lists, updates and deletes the caller's own rules", async () => {
+        const user = await seedUser();
+        const client = asUser((await sessionFor(user)).accessToken);
+        const stranger = asUser((await sessionFor(await seedUser())).accessToken);
+
+        const created = await client.post(API_ENDPOINTS.ME.UNAVAILABILITY_RULES, {
+            weekday: Weekday.TUESDAY,
+            daypart: Daypart.EVENING,
+            validUntil: '2026-12-31',
+        });
+        expect(created.status).toBe(201);
+        const rule = data<UnavailabilityRuleDto>(created);
+        expect(rule).toMatchObject({
+            weekday: 2,
+            daypart: 'evening',
+            validFrom: null,
+            validUntil: '2026-12-31',
+        });
+
+        expect(
+            data<UnavailabilityRuleDto[]>(await client.get(API_ENDPOINTS.ME.UNAVAILABILITY_RULES)),
+        ).toEqual([rule]);
+        expect(
+            data<UnavailabilityRuleDto[]>(
+                await stranger.get(API_ENDPOINTS.ME.UNAVAILABILITY_RULES),
+            ),
+        ).toEqual([]);
+
+        const bad = await client.post(API_ENDPOINTS.ME.UNAVAILABILITY_RULES, {
+            weekday: 8,
+            daypart: Daypart.EVENING,
+        });
+        expect(bad.status).toBe(422);
+        const inverted = await client.post(API_ENDPOINTS.ME.UNAVAILABILITY_RULES, {
+            weekday: 1,
+            daypart: Daypart.EVENING,
+            validFrom: '2026-12-31',
+            validUntil: '2026-01-01',
+        });
+        expect(inverted.status).toBe(422);
+
+        const url = API_ENDPOINTS.ME.UNAVAILABILITY_RULE(rule.id);
+        expect((await stranger.patch(url, { daypart: Daypart.MORNING })).status).toBe(404);
+        const updated = await client.patch(url, { daypart: Daypart.MORNING, validUntil: null });
+        expect(updated.status).toBe(200);
+        expect(data<UnavailabilityRuleDto>(updated)).toMatchObject({
+            daypart: 'morning',
+            validUntil: null,
+        });
+
+        expect((await stranger.delete(url)).status).toBe(404);
+        expect((await client.delete(url)).status).toBe(204);
+        expect(await WeeklyUnavailabilityRule.count()).toBe(0);
+    });
+});
+
+describe('GET /groups/:groupId/availability', () => {
+    it('shows who is busy per daypart, without reasons, for the group or for an activity', async () => {
+        const owner = await seedUser({ displayName: 'Milo' });
+        const group = await seedGroup(owner);
+        const anna = await seedUser({ displayName: 'Anna' });
+        await seedMember(group, anna);
+        const bob = await seedUser({ displayName: 'Bob' });
+        await seedMember(group, bob);
+        await seedBlock(anna, '2026-11-03', Daypart.EVENING);
+        await seedRule(bob, Weekday.TUESDAY, Daypart.EVENING);
+        const activity = await seedActivity(group, owner);
+        await seedInterest(activity, anna);
+        const client = asUser((await sessionFor(owner)).accessToken);
+        const url = API_ENDPOINTS.GROUPS.AVAILABILITY(group.id);
+
+        const whole = data<GroupAvailabilityResponse>(
+            await client.get(`${url}?from=${WEEK.from}&to=${WEEK.to}`),
+        );
+        expect(whole.users.map((entry) => entry.user.displayName)).toEqual(['Anna', 'Bob', 'Milo']);
+        expect(whole.users.every((entry) => !entry.hasCalendar)).toBe(true);
+        const tuesday = whole.days.find((day) => day.date === '2026-11-03');
+        expect(tuesday?.dayparts.evening.busy.sort()).toEqual([anna.id, bob.id].sort());
+        expect(tuesday?.dayparts.morning.busy).toEqual([]);
+        expect(JSON.stringify(whole)).not.toContain('manual');
+
+        const forActivity = data<GroupAvailabilityResponse>(
+            await client.get(`${url}?from=${WEEK.from}&to=${WEEK.to}&activityId=${activity.id}`),
+        );
+        expect(forActivity.users.map((entry) => entry.user.id)).toEqual([anna.id]);
+        expect(
+            forActivity.days.find((day) => day.date === '2026-11-03')?.dayparts.evening.busy,
+        ).toEqual([anna.id]);
+
+        const otherGroup = await seedGroup(owner);
+        const foreign = await seedActivity(otherGroup, owner);
+        expect(
+            (await client.get(`${url}?from=${WEEK.from}&to=${WEEK.to}&activityId=${foreign.id}`))
+                .status,
+        ).toBe(404);
+        const outsider = asUser((await sessionFor(await seedUser())).accessToken);
+        expect((await outsider.get(`${url}?from=${WEEK.from}&to=${WEEK.to}`)).status).toBe(404);
+    });
+});

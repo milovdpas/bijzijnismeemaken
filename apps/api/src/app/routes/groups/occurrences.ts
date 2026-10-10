@@ -8,13 +8,12 @@ import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
 import { activityParamSchema } from '../../validators/activitySchemas';
-import { groupIdParamSchema } from '../../validators/commonSchemas';
+import { groupIdParamSchema, rangeQuerySchema } from '../../validators/commonSchemas';
 import {
     icsQuerySchema,
     occurrenceIdParamSchema,
     occurrenceParamSchema,
     planOccurrenceSchema,
-    rangeQuerySchema,
     updateOccurrenceSchema,
 } from '../../validators/occurrenceSchemas';
 

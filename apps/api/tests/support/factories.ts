@@ -4,10 +4,12 @@ import type { DeepPartial } from 'typeorm';
 import {
     ActivityCategory,
     DateMode,
+    Daypart,
     GroupAccess,
     GroupRole,
     Locale,
     OccurrenceStatus,
+    Weekday,
     slugify,
 } from '@bzim/types';
 
@@ -16,8 +18,10 @@ import ActivityInterest from '../../src/app/models/ActivityInterest.entity';
 import ActivityOccurrence from '../../src/app/models/ActivityOccurrence.entity';
 import Group from '../../src/app/models/Group.entity';
 import GroupMember from '../../src/app/models/GroupMember.entity';
+import ManualUnavailability from '../../src/app/models/ManualUnavailability.entity';
 import OccurrenceParticipant from '../../src/app/models/OccurrenceParticipant.entity';
 import User from '../../src/app/models/User.entity';
+import WeeklyUnavailabilityRule from '../../src/app/models/WeeklyUnavailabilityRule.entity';
 
 import { generateToken } from '../../src/app/utils/Token';
 
@@ -159,4 +163,29 @@ export async function seedParticipant(
         notifiedForStartTime: null,
         calendarEventId: null,
     }).save();
+}
+
+export async function seedBlock(
+    user: User,
+    date: string,
+    daypart: Daypart,
+): Promise<ManualUnavailability> {
+    return ManualUnavailability.create({ userId: user.id, date, daypart }).save();
+}
+
+export async function seedRule(
+    user: User,
+    weekday: Weekday,
+    daypart: Daypart,
+    overrides: DeepPartial<WeeklyUnavailabilityRule> = {},
+): Promise<WeeklyUnavailabilityRule> {
+    const rule = WeeklyUnavailabilityRule.create({
+        userId: user.id,
+        weekday,
+        daypart,
+        validFrom: null,
+        validUntil: null,
+    });
+    Object.assign(rule, overrides);
+    return rule.save();
 }
