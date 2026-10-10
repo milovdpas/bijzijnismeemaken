@@ -104,3 +104,22 @@ export function renderGroupInvite(
         }),
     };
 }
+
+export function renderActivityCreated(
+    locale: Locale,
+    to: string,
+    values: { creator: string; group: string; title: string; link: string },
+): MailMessage {
+    const dict = DICTS[locale];
+    const names = { creator: values.creator, group: values.group, title: values.title };
+    return {
+        to,
+        subject: fill(dict.activityCreated.subject, names),
+        ...layout(dict, {
+            intro: fill(dict.activityCreated.intro, names),
+            button: dict.activityCreated.button,
+            link: values.link,
+            expiry: dict.activityCreated.expiry,
+        }),
+    };
+}

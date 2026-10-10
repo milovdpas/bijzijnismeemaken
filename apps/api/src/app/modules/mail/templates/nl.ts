@@ -19,6 +19,12 @@ export const nl: MailDict = {
         button: 'Bekijk de uitnodiging',
         expiry: 'De uitnodiging blijft staan tot je antwoordt.',
     },
+    activityCreated: {
+        subject: '{{creator}} zette "{{title}}" op de lijst van {{group}}',
+        intro: '{{creator}} heeft een nieuw idee op de lijst van {{group}} gezet: "{{title}}". Kijk even en zeg of je meedoet.',
+        button: 'Bekijk de activiteit',
+        expiry: 'Je kunt deze mails uitzetten bij de meldingsinstellingen.',
+    },
     resetPassword: {
         subject: 'Nieuw wachtwoord instellen',
         intro: 'Iemand heeft gevraagd het wachtwoord voor dit adres opnieuw in te stellen. Klik op de knop om een nieuw wachtwoord te kiezen.',

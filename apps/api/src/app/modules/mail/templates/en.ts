@@ -21,6 +21,12 @@ export const en = {
         button: 'See the invitation',
         expiry: 'The invitation stays open until you answer it.',
     },
+    activityCreated: {
+        subject: '{{creator}} added "{{title}}" to {{group}}',
+        intro: '{{creator}} put a new idea on the list of {{group}}: "{{title}}". Have a look and say if you are in.',
+        button: 'See the activity',
+        expiry: 'You can switch these emails off under notification settings.',
+    },
     resetPassword: {
         subject: 'Reset your password',
         intro: 'Somebody asked to reset the password for this address. Click the button to choose a new one.',

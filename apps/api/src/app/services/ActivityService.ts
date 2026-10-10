@@ -94,7 +94,12 @@ export class ActivityService {
         activity: Activity,
         patch: Partial<ActivityInput>,
     ): Promise<ActivityResult> {
-        Object.assign(activity, patch);
+        // A PATCH body arrives with every absent field as undefined; those must not
+        // overwrite what is there.
+        Object.assign(
+            activity,
+            Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)),
+        );
         const problem = activityRuleProblem(ruleFields(activity));
         if (problem !== null) {
             return { ok: false, problem };

@@ -3,8 +3,11 @@ import { NotificationChannel, NotificationType } from '@bzim/types';
 import { env } from '../../config/app';
 import { deliver } from '../modules/mail';
 import type { MailMessage } from '../modules/mail';
-import { renderGroupInvite } from '../modules/mail/templates';
+import { renderActivityCreated, renderGroupInvite } from '../modules/mail/templates';
+import type Activity from '../models/Activity.entity';
+import type Group from '../models/Group.entity';
 import type GroupInvite from '../models/GroupInvite.entity';
+import GroupMember from '../models/GroupMember.entity';
 import type User from '../models/User.entity';
 import { NotificationSettingService } from './NotificationSettingService';
 
@@ -30,6 +33,25 @@ export class NotificationService {
                     group: invite.group.name,
                     link: `${env.appUrl}/invites`,
                 }),
+        );
+    }
+
+    /** Every other member hears about a new idea; the person who had it does not. */
+    static async activityCreated(activity: Activity, group: Group, creator: User): Promise<void> {
+        const members = await GroupMember.find({
+            where: { groupId: group.id },
+            relations: { user: true },
+        });
+        const others = members
+            .map((member) => member.user)
+            .filter((user) => user.id !== creator.id);
+        await NotificationService.dispatch(NotificationType.ACTIVITY_CREATED, others, (user) =>
+            renderActivityCreated(user.locale, user.email, {
+                creator: creator.displayName ?? creator.handle ?? group.name,
+                group: group.name,
+                title: activity.title,
+                link: `${env.appUrl}/groups/${group.id}/activities/${activity.id}`,
+            }),
         );
     }
 
