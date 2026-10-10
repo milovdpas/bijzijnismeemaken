@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { MeResponse, UpdateMeRequest } from '@bzim/types';
 
 import { logout } from '@/lib/api/auth';
+import { deleteMe } from '@/lib/api/users';
 import { ApiError } from '@/lib/api/client';
 import { fetchMe, updateMe } from '@/lib/api/users';
 import { queryKeys } from '@/lib/query-keys';
@@ -38,6 +39,17 @@ export function useLogout() {
     return useMutation({
         mutationFn: logout,
         onSettled: () => {
+            client.clear();
+        },
+    });
+}
+
+/** The account is gone, and with it every cache; the API cleared the cookies. */
+export function useDeleteAccount() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: deleteMe,
+        onSuccess: () => {
             client.clear();
         },
     });

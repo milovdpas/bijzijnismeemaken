@@ -655,6 +655,13 @@ export const nl: Dict = {
         viaGoogle: 'Google',
         viaPassword: 'Wachtwoord',
         signOut: 'Uitloggen',
+        dangerTitle: 'Account verwijderen',
+        dangerDescription:
+            'Je verlaat elke groep, wat je plande wordt afgezegd, en je bent voorgoed weg.',
+        deleteAccount: 'Mijn account verwijderen',
+        deleteAccountDescription:
+            'Je verlaat elke groep; je activiteiten worden verborgen en wat je plande wordt afgezegd. Scores die je invoerde blijven staan, met je naam. Dit kan niet ongedaan worden gemaakt. Draag eerst groepen over waarvan je eigenaar bent.',
+        deleteAccountConfirm: 'Voorgoed verwijderen',
         setPassword: 'Wachtwoord instellen',
         setPasswordDescription: 'Zodat je ook zonder Google kunt inloggen.',
         changePassword: 'Wachtwoord wijzigen',

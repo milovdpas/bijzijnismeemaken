@@ -2,10 +2,15 @@ import { Like, Not } from 'typeorm';
 import { PROFILE } from '@bzim/types';
 import type { UpdateMeRequest } from '@bzim/types';
 
+import { AppDataSource } from '../../database/typeorm-db';
+import GroupInvite from '../models/GroupInvite.entity';
+import GroupMember from '../models/GroupMember.entity';
 import User from '../models/User.entity';
 import { escapeLike } from '../utils/Database';
 import { normalizeHandle } from '../utils/Normalize';
 import { hashPassword, verifyPassword } from '../utils/Password';
+import { DepartureService } from './DepartureService';
+import type { CancelledByDeparture } from './DepartureService';
 import { SessionService } from './SessionService';
 
 export type UpdateResult = { ok: true; user: User } | { ok: false; problem: 'HANDLE_TAKEN' };
@@ -92,12 +97,39 @@ export class UserService {
     }
 
     /**
-     * Deletes the account. Group decoupling (snapshots, ownership checks)
-     * arrives with the groups in task 30; until then the row and everything
-     * cascading from it simply go.
+     * Deletes the account in the order docs/03 gives: every session is
+     * revoked, every group is left with the departure rules (snapshots,
+     * cancellations, decoupled rows; the controller has already refused an
+     * owner), then the user row goes and the database cascades the rest.
+     * Calendar tokens are revoked at the provider from M2. The cancellation
+     * mails go out once everything has committed.
      */
     static async deleteAccount(user: User): Promise<void> {
         await SessionService.revokeAllForUser(user.id);
-        await user.remove();
+        const memberships = await GroupMember.find({
+            where: { userId: user.id },
+            relations: { group: true },
+        });
+        const departures = await AppDataSource.transaction(async (manager) => {
+            const all: { membership: GroupMember; cancelled: CancelledByDeparture[] }[] = [];
+            for (const membership of memberships) {
+                await manager.delete(GroupInvite, {
+                    groupId: membership.groupId,
+                    invitedUserId: user.id,
+                });
+                await manager.remove(membership);
+                all.push({
+                    membership,
+                    cancelled: await DepartureService.detach(manager, membership.group, user.id),
+                });
+            }
+            await manager.remove(user);
+            return all;
+        });
+        await Promise.all(
+            departures.map(({ membership, cancelled }) =>
+                DepartureService.notify(membership.group, cancelled),
+            ),
+        );
     }
 }

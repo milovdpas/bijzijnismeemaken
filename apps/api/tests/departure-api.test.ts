@@ -3,6 +3,7 @@ import { API_ENDPOINTS, GroupRole, OccurrenceStatus } from '@bzim/types';
 import type { ActivityListingDto, LeaderboardDetailDto } from '@bzim/types';
 
 import Activity from '../src/app/models/Activity.entity';
+import GroupMember from '../src/app/models/GroupMember.entity';
 import Leaderboard from '../src/app/models/Leaderboard.entity';
 import ActivityInterest from '../src/app/models/ActivityInterest.entity';
 import ActivityOccurrence from '../src/app/models/ActivityOccurrence.entity';
@@ -10,6 +11,7 @@ import LeaderboardEditor from '../src/app/models/LeaderboardEditor.entity';
 import LeaderboardMember from '../src/app/models/LeaderboardMember.entity';
 import LeaderboardScoreHistory from '../src/app/models/LeaderboardScoreHistory.entity';
 import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
+import User from '../src/app/models/User.entity';
 import { mailer } from '../src/app/modules/mail';
 import type { MailMessage } from '../src/app/modules/mail';
 import { ScoreService } from '../src/app/services/ScoreService';
@@ -148,5 +150,18 @@ describe('being removed from a group', () => {
             (await w.asOwner.delete(API_ENDPOINTS.GROUPS.MEMBER(w.group.id, w.anna.id))).status,
         ).toBe(204);
         await expectDetached(w, sent);
+    });
+});
+
+describe('deleting the account', () => {
+    it('leaves every group with the same rules, then removes the person', async () => {
+        const w = await world();
+        const other = await seedGroup(await seedUser());
+        await seedMember(other, w.anna);
+        const sent = outbox();
+        expect((await w.asAnna.delete(API_ENDPOINTS.ME.ROOT)).status).toBe(204);
+        await expectDetached(w, sent);
+        expect(await User.countBy({ id: w.anna.id })).toBe(0);
+        expect(await GroupMember.countBy({ groupId: other.id })).toBe(1);
     });
 });

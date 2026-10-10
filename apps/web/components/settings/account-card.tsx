@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/card';
 import { useLogout } from '@/hooks/queries/use-me';
 
-/** Who is signed in, how, and the way out. Account deletion joins in task 30. */
+/** Who is signed in, how, and the way out. Deleting the account is its own card below. */
 export function AccountCard({ me }: { me: MeResponse }) {
     const { t } = useTranslation();
     const router = useRouter();

@@ -656,6 +656,13 @@ export const en = {
         viaGoogle: 'Google',
         viaPassword: 'Password',
         signOut: 'Sign out',
+        dangerTitle: 'Delete account',
+        dangerDescription:
+            'Leaves every group, cancels what you planned, and removes you for good.',
+        deleteAccount: 'Delete my account',
+        deleteAccountDescription:
+            'You leave every group; your activities are hidden and anything you planned is cancelled. Scores you entered stay, with your name. This cannot be undone. Transfer any group you own first.',
+        deleteAccountConfirm: 'Delete for good',
         setPassword: 'Set a password',
         setPasswordDescription: 'So you can also sign in without Google.',
         changePassword: 'Change password',
