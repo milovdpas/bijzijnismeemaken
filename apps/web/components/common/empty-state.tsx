@@ -1,6 +1,6 @@
 'use client';
 
-import type { LucideIcon } from 'lucide-react';
+import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ export function EmptyState({
     action,
     className,
 }: {
-    icon: LucideIcon;
+    icon: ComponentType<{ className?: string }>;
     titleKey: string;
     descriptionKey?: string;
     action?: React.ReactNode;

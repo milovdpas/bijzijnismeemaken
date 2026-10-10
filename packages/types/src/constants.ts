@@ -45,6 +45,20 @@ export const LEADERBOARD = {
     RANK_LIMIT: 500,
 } as const;
 
+export const ACTIVITY = {
+    TITLE_MIN_LENGTH: 2,
+    TITLE_MAX_LENGTH: 80,
+    DESCRIPTION_MAX_LENGTH: 2000,
+    LOCATION_MAX_LENGTH: 120,
+    URL_MAX_LENGTH: 500,
+    NOTES_MAX_LENGTH: 255,
+    /** Minutes; a day at most, so a wrongly typed value cannot block a whole week. */
+    DURATION_MAX_MINUTES: 24 * 60,
+    PEOPLE_MAX: 500,
+    /** Used when an occurrence has a start time but the activity no duration. */
+    DEFAULT_DURATION_MINUTES: 120,
+} as const;
+
 export const AVAILABILITY = {
     /** Longest `from..to` range a single availability or occurrences request may ask for. */
     MAX_RANGE_DAYS: 93,

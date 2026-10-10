@@ -1,6 +1,17 @@
-import type { GroupAccess, GroupRole, Locale, NotificationType } from './enums';
+import type {
+    ActivityCategory,
+    ActivityLabel,
+    DateMode,
+    Daypart,
+    GroupAccess,
+    GroupRole,
+    Locale,
+    NotificationType,
+    OccurrenceStatus,
+    Weekday,
+} from './enums';
 import type { AvatarKey } from './constants';
-import type { IsoDateTimeString, Uuid } from './domain';
+import type { IsoDateString, IsoDateTimeString, LocalTimeString, Uuid } from './domain';
 
 /* -------------------------------------------------------------------------- */
 /* Envelopes                                                                   */
@@ -198,8 +209,88 @@ export interface InviteRequest {
     handle: string;
 }
 
-/*
- * Activity, availability and leaderboard DTOs are added by the task that
- * introduces each endpoint, so that the DTO and the entity's toDto() land in
- * the same change.
- */
+/* -------------------------------------------------------------------------- */
+/* Activities                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/** An activity's own columns. The creator is null once they left or deleted their account. */
+export interface ActivityDto {
+    id: Uuid;
+    groupId: Uuid;
+    category: ActivityCategory;
+    title: string;
+    description: string | null;
+    imageUrl: string | null;
+    isRecurring: boolean;
+    dateMode: DateMode;
+    specificDate: IsoDateString | null;
+    weekday: Weekday | null;
+    startTime: LocalTimeString | null;
+    locationText: string | null;
+    locationUrl: string | null;
+    minPeople: number | null;
+    maxPeople: number | null;
+    costPerPerson: number | null;
+    durationMinutes: number | null;
+    externalUrl: string | null;
+    preferredDayparts: Daypart[] | null;
+    /** False once the creator left the group; hidden from members, visible to admins. */
+    isActive: boolean;
+    creator: UserSummary | null;
+    /** The creator's name as it was, for when `creator` is null. */
+    creatorName: string | null;
+    createdAt: IsoDateTimeString;
+    updatedAt: IsoDateTimeString;
+}
+
+/** One planned (or done, or cancelled) moment of an activity, with who is in it. */
+export interface OccurrenceDto {
+    id: Uuid;
+    activityId: Uuid;
+    date: IsoDateString;
+    daypart: Daypart | null;
+    startTime: LocalTimeString | null;
+    status: OccurrenceStatus;
+    notes: string | null;
+    plannedBy: UserSummary | null;
+    participants: UserSummary[];
+    createdAt: IsoDateTimeString;
+}
+
+/** The activity list: each row plus what the list needs to sort, filter and show. */
+export interface ActivityListingDto extends ActivityDto {
+    /** Derived: planned if any occurrence is planned, done for a finished one-off, idea otherwise. */
+    label: ActivityLabel;
+    /** The earliest planned occurrence, past ones included (they await confirmation). */
+    nextOccurrence: OccurrenceDto | null;
+    interestCount: number;
+    /** Whether the caller marked themselves (or was marked) in. */
+    iAmIn: boolean;
+}
+
+export interface ActivityDetailDto extends ActivityListingDto {
+    interests: UserSummary[];
+    /** Newest date first. */
+    occurrences: OccurrenceDto[];
+}
+
+/** `POST` and `PATCH /groups/:id/activities[/:id]`; every field optional on PATCH. */
+export interface ActivityInput {
+    category: ActivityCategory;
+    title: string;
+    description?: string | null;
+    imageUrl?: string | null;
+    isRecurring: boolean;
+    dateMode: DateMode;
+    specificDate?: IsoDateString | null;
+    weekday?: Weekday | null;
+    startTime?: LocalTimeString | null;
+    locationText?: string | null;
+    locationUrl?: string | null;
+    minPeople?: number | null;
+    maxPeople?: number | null;
+    costPerPerson?: number | null;
+    durationMinutes?: number | null;
+    externalUrl?: string | null;
+    preferredDayparts?: Daypart[] | null;
+}

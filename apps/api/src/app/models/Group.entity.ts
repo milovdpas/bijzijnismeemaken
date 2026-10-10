@@ -40,7 +40,7 @@ export default class Group extends BaseEntity {
     @Column({ type: 'varchar', length: 16 })
     access!: GroupAccess;
 
-    /** Only set while `access` is `invite_link`; nulled when it changes. */
+    /** Set for public and invite-link groups; null for invite-only. */
     @Column({ name: 'invite_token', type: 'varchar', length: 43, nullable: true, unique: true })
     inviteToken!: string | null;
 
@@ -56,6 +56,16 @@ export default class Group extends BaseEntity {
 
     @UpdateDateColumn({ name: 'updated_at', type: 'datetime', precision: 3 })
     updatedAt!: Date;
+
+    /** The access modes that carry an invite link: open groups share one too, so nobody has to search. */
+    static readonly LINK_ACCESS: readonly GroupAccess[] = [
+        GroupAccess.PUBLIC,
+        GroupAccess.INVITE_LINK,
+    ];
+
+    static usesInviteLink(access: GroupAccess): boolean {
+        return Group.LINK_ACCESS.includes(access);
+    }
 
     isPublic(): boolean {
         return this.access === GroupAccess.PUBLIC;

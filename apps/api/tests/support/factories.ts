@@ -1,10 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import { DateTime } from 'luxon';
 import type { DeepPartial } from 'typeorm';
-import { GroupAccess, GroupRole, Locale, slugify } from '@bzim/types';
+import {
+    ActivityCategory,
+    DateMode,
+    GroupAccess,
+    GroupRole,
+    Locale,
+    OccurrenceStatus,
+    slugify,
+} from '@bzim/types';
 
+import Activity from '../../src/app/models/Activity.entity';
+import ActivityInterest from '../../src/app/models/ActivityInterest.entity';
+import ActivityOccurrence from '../../src/app/models/ActivityOccurrence.entity';
 import Group from '../../src/app/models/Group.entity';
 import GroupMember from '../../src/app/models/GroupMember.entity';
+import OccurrenceParticipant from '../../src/app/models/OccurrenceParticipant.entity';
 import User from '../../src/app/models/User.entity';
 
 import { generateToken } from '../../src/app/utils/Token';
@@ -52,7 +64,7 @@ export async function seedGroup(owner: User, overrides: DeepPartial<Group> = {})
         slug: slugify(name),
         description: null,
         access,
-        inviteToken: access === GroupAccess.INVITE_LINK ? generateToken() : null,
+        inviteToken: Group.usesInviteLink(access) ? generateToken() : null,
         ownerId: owner.id,
     });
     Object.assign(group, overrides);
@@ -69,4 +81,80 @@ export async function seedMember(
     role: GroupRole = GroupRole.MEMBER,
 ): Promise<GroupMember> {
     return GroupMember.create({ groupId: group.id, userId: user.id, role }).save();
+}
+
+/** An idea without a date by default; override `dateMode` and friends for the other shapes. */
+export async function seedActivity(
+    group: Group,
+    creator: User,
+    overrides: DeepPartial<Activity> = {},
+): Promise<Activity> {
+    counter += 1;
+    const activity = Activity.create({
+        groupId: group.id,
+        createdById: creator.id,
+        creatorNameSnapshot: null,
+        category: ActivityCategory.OTHER,
+        title: `Activity ${String(counter)}`,
+        description: null,
+        imageUrl: null,
+        isRecurring: false,
+        dateMode: DateMode.NONE,
+        specificDate: null,
+        weekday: null,
+        startTime: null,
+        locationText: null,
+        locationUrl: null,
+        minPeople: null,
+        maxPeople: null,
+        costPerPerson: null,
+        durationMinutes: null,
+        externalUrl: null,
+        preferredDayparts: null,
+        isActive: true,
+    });
+    Object.assign(activity, overrides);
+    return activity.save();
+}
+
+export async function seedInterest(activity: Activity, user: User): Promise<ActivityInterest> {
+    return ActivityInterest.create({
+        activityId: activity.id,
+        userId: user.id,
+        addedById: null,
+    }).save();
+}
+
+/** A planned occurrence on `date` with no participants; add them with `seedParticipant`. */
+export async function seedOccurrence(
+    activity: Activity,
+    plannedBy: User,
+    overrides: DeepPartial<ActivityOccurrence> = {},
+): Promise<ActivityOccurrence> {
+    const occurrence = ActivityOccurrence.create({
+        activityId: activity.id,
+        date: '2026-11-01',
+        daypart: null,
+        startTime: null,
+        status: OccurrenceStatus.PLANNED,
+        plannedById: plannedBy.id,
+        notes: null,
+    });
+    Object.assign(occurrence, overrides);
+    return occurrence.save();
+}
+
+export async function seedParticipant(
+    occurrence: ActivityOccurrence,
+    user: User,
+): Promise<OccurrenceParticipant> {
+    return OccurrenceParticipant.create({
+        occurrenceId: occurrence.id,
+        userId: user.id,
+        notifiedAt: null,
+        notifiedForDate: null,
+        notifiedForDaypart: null,
+        notifiedForStartTime: null,
+        calendarEventId: null,
+    }).save();
 }

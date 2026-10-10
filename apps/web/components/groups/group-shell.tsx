@@ -91,7 +91,7 @@ export function GroupShell({ groupId, children }: { groupId: string; children: R
 
             <nav
                 aria-label={group.data.name}
-                className="-mx-4 mb-6 flex gap-1 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0 [scrollbar-width:none]"
+                className="-mx-4 mb-6 flex gap-1 overflow-x-auto pb-1 pl-4 [scrollbar-width:none] after:block after:w-4 after:shrink-0 after:content-[''] md:mx-0 md:pl-0 md:after:hidden"
             >
                 {GROUP_TABS.filter((item) => canSeeTab(item, group.data.role)).map(
                     ({ tab, labelKey, icon: Icon }) => (

@@ -34,6 +34,7 @@ Carried over from `C:\Users\milov\PersonalProjects\dynamic_alarm\apps\api` (its 
 - Migrations are self-contained: they import only `knex` and Node built-ins, never app code. A migration is frozen history and must produce the same result after the app code moves on (and the test runner loads migrations outside the TypeScript transform, so app imports would not resolve there). Data transformations that mirror a util (such as the `Crypt` payload format) are spelled out inside the migration.
 - Time logic (dayparts, "today", current month) uses Luxon in `Europe/Amsterdam` through `utils/Dates.ts`. The database stores UTC.
 - Never use the JavaScript `Date` API directly. Wall-clock time is Luxon `DateTime`; elapsed time for timing a job is `process.hrtime.bigint()` (monotonic, unaffected by clock adjustments).
+- `DATE` and `TIME` columns are strings on entities (`YYYY-MM-DD`, `HH:mm`): they are wall-clock values with no instant. The data source sets `dateStrings: ['DATE']`; `time` columns use `timeTransformer` from `utils/ColumnTransformers.ts`. Never map them to `Date`.
 
 ## Auth and security
 - `UserAuth` reads the `access_token` cookie (or `Authorization: Bearer` for tools and tests), verifies the JWT, rejects `type !== 'access'`, and loads the user onto `req.user`. `RequireGroupRole(minRole)` loads the membership onto `req.membership`.

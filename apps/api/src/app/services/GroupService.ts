@@ -1,4 +1,4 @@
-import { Like } from 'typeorm';
+import { In, Like } from 'typeorm';
 import { GroupAccess, GroupRole, PAGINATION, slugify } from '@bzim/types';
 import type { GroupListingResponse, PublicGroupResponse } from '@bzim/types';
 
@@ -38,7 +38,7 @@ export class GroupService {
                 slug: slugify(input.name),
                 description: input.description,
                 access: input.access,
-                inviteToken: input.access === GroupAccess.INVITE_LINK ? generateToken() : null,
+                inviteToken: Group.usesInviteLink(input.access) ? generateToken() : null,
                 ownerId: owner.id,
             });
             await manager.save(group);
@@ -102,7 +102,7 @@ export class GroupService {
 
     /** By invite token, for the link preview and the join. */
     static findByInviteToken(token: string): Promise<Group | null> {
-        return Group.findOneBy({ inviteToken: token, access: GroupAccess.INVITE_LINK });
+        return Group.findOneBy({ inviteToken: token, access: In(Group.LINK_ACCESS) });
     }
 
     /**
@@ -123,10 +123,10 @@ export class GroupService {
     }
 
     /**
-     * Settings. A rename refreshes the slug. Switching access away from the
-     * invite link voids the token, so a link that was shared stops working the
-     * moment the group is no longer meant to be joined that way; switching to
-     * it mints a fresh one.
+     * Settings. A rename refreshes the slug. Switching to invite-only voids the
+     * token, so a link that was shared stops working the moment the group is no
+     * longer meant to be joined that way; switching away from it mints a fresh
+     * one. Public and invite-link groups both carry a link.
      */
     static async update(group: Group, patch: Partial<GroupInput>): Promise<Group> {
         if (patch.name !== undefined) {
@@ -136,7 +136,7 @@ export class GroupService {
         if (patch.description !== undefined) group.description = patch.description;
         if (patch.access !== undefined && patch.access !== group.access) {
             group.access = patch.access;
-            group.inviteToken = patch.access === GroupAccess.INVITE_LINK ? generateToken() : null;
+            group.inviteToken = Group.usesInviteLink(patch.access) ? generateToken() : null;
         }
         return group.save();
     }

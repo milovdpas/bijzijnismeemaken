@@ -114,7 +114,7 @@ export const en = {
     access: {
         label: 'Who can join',
         public: 'Public',
-        publicDescription: 'Listed for everyone. Anyone can join.',
+        publicDescription: 'Listed for everyone. Anyone can join; every member can share the link.',
         invite_link: 'Invite link',
         invite_linkDescription: 'Hidden. Anyone with the link can join.',
         invite_only: 'Invite only',
@@ -129,7 +129,8 @@ export const en = {
         descriptionHelp: 'Optional. What the group is about.',
         submit: 'Create group',
         createdTitle: '{{name}} is ready',
-        created_public: 'Anyone can find it under public groups and join. Time to add an activity.',
+        created_public:
+            'Anyone can find it under public groups, and this link takes a friend straight there.',
         created_invite_link: 'Share this link with your friends. Anyone who has it can join.',
         created_invite_only:
             'Invite your friends by their handle. They get an email and accept in the app.',
@@ -196,7 +197,8 @@ export const en = {
         detailsTitle: 'Details',
         detailsDescription: 'Name, description and who can join.',
         linkTitle: 'Invite link',
-        linkDescription: 'Anyone with this link can join.',
+        linkDescription:
+            'Anyone with this link can join. In a public group every member can share it.',
         newLink: 'New link',
         newLinkDescription:
             'The current link stops working the moment the new one exists. Anyone still holding the old one sees "this link does not work".',

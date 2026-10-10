@@ -49,6 +49,20 @@ export enum GroupRole {
 }
 
 /** How an activity's date field is to be read. */
+/**
+ * What kind of thing an activity is. One column, used for the icon, the filter
+ * and which optional fields the form suggests; never for separate schemas.
+ */
+export enum ActivityCategory {
+    EVENT = 'event',
+    HOME = 'home',
+    OUTDOORS = 'outdoors',
+    SPORTS = 'sports',
+    FOOD_AND_DRINKS = 'food_and_drinks',
+    TRIP = 'trip',
+    OTHER = 'other',
+}
+
 export enum DateMode {
     /** No date preference. */
     NONE = 'none',

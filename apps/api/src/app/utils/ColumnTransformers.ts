@@ -21,3 +21,15 @@ export const decimalTransformer: ValueTransformer = {
         return typeof value === 'number' ? value : Number.parseFloat(value);
     },
 };
+
+/**
+ * A MySQL `time` column as the API speaks it: `19:30`.
+ *
+ * The driver hands back `19:30:00`; the API's `LocalTimeString` has no
+ * seconds, because nothing here is scheduled to the second and a form field
+ * should not have to invent them.
+ */
+export const timeTransformer: ValueTransformer = {
+    to: (value: string | null): string | null => value,
+    from: (value: string | null): string | null => (value === null ? null : value.slice(0, 5)),
+};

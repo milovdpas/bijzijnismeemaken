@@ -86,6 +86,13 @@ describe('GroupService', () => {
         expect(linked.slug).toBe('vrijdagavond');
         expect(linked.inviteToken).toHaveLength(43);
         expect(closed.inviteToken).toBeNull();
+        const open = await GroupService.create(owner, {
+            name: 'Open',
+            description: null,
+            access: GroupAccess.PUBLIC,
+        });
+        expect(open.inviteToken).toHaveLength(43);
+        expect((await GroupService.findByInviteToken(open.inviteToken ?? ''))?.id).toBe(open.id);
         const membership = await GroupMember.findOneByOrFail({
             groupId: linked.id,
             userId: owner.id,

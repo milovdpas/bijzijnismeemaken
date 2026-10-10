@@ -25,9 +25,13 @@ export default class GroupPresenter {
         return { ...group.toDto(), memberCount };
     }
 
-    /** One group for one member. The invite link is only shown to those who may share it. */
+    /**
+     * One group for one member. In a public group every member may share the
+     * link (anyone could join anyway); in an invite-link group only those who
+     * may regenerate it see it.
+     */
     static detail(group: Group, role: GroupRole, memberCount: number): GroupDetailResponse {
-        const mayShare = role === GroupRole.OWNER || role === GroupRole.ADMIN;
+        const mayShare = group.isPublic() || role === GroupRole.OWNER || role === GroupRole.ADMIN;
         return {
             ...GroupPresenter.listing(group, role, memberCount),
             inviteLink: mayShare ? group.inviteLink() : null,

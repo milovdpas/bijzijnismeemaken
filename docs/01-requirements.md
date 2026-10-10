@@ -53,15 +53,15 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 
 ## 1.2 Groups
 - Create group: name, description, access = `public` | `invite_link` | `invite_only`. Creator becomes owner.
-- Public groups: listed with search by name; any signed-in user can join.
-- Invite link: `APP_URL/join/<slug>-<token>`; the API resolves by token only (slug is cosmetic). The token is the last 43 characters of the path (base64url, so it can contain dashes itself); the web page extracts it that way. Non-expiring; owner/admin can regenerate (invalidating the old one); the token is nulled when access changes away from `invite_link`.
+- Public groups: listed with search by name; any signed-in user can join. They carry an invite link as well (added 2026-10-10), so a member can hand a friend a link instead of a search; every member may copy it, owner/admin regenerate it.
+- Invite link: `APP_URL/join/<slug>-<token>`; the API resolves by token only (slug is cosmetic). The token is the last 43 characters of the path (base64url, so it can contain dashes itself); the web page extracts it that way. Non-expiring; owner/admin can regenerate (invalidating the old one); the token is nulled when access becomes invite-only and minted when it becomes public or invite-link.
 - Invite only: owner/admin invites by `@handle`; invitee gets a notification + in-app pending invite; accepts or declines.
 - Roles: owner (1), admin, member. Owner transfers ownership to another member (old owner becomes admin). Owner deletes group.
 - Admin: change settings, invite/add/remove members (not owner, not other admins), regenerate link. Owner additionally: promote/demote admins, remove admins, transfer, delete.
 - Leave group (admin/member): see 1.6.
 
 ## 1.3 Activities
-- Any member creates an activity: title, description, image URL, date mode (`none` | `specific` date | `weekday`), optional time, recurring flag, optional extras: location text + maps URL, min/max people, cost per person, duration (minutes), external URL, preferred dayparts (subset of morning/afternoon/evening).
+- Any member creates an activity: category (event, home, outdoors, sports, food and drinks, trip, other; one column for icon, filter and form hints, never separate schemas; decided 2026-10-10), title, description, image URL, date mode (`none` | `specific` date | `weekday`), optional time, recurring flag, optional extras: location text + maps URL, min/max people, cost per person, duration (minutes), external URL, preferred dayparts (subset of morning/afternoon/evening).
 - Edit/delete: creator, admin, owner.
 - "I'm in": member toggles own interest; admin/owner can mark others in/out.
 - Planning (creator/admin/owner): choose date (+ optional daypart, optional start time), select which "in" members count → creates an occurrence with status `planned`; only the selected participants get notified (with add-to-calendar); re-date and cancel notify participants again. Occurrence can be re-dated, cancelled or marked done.

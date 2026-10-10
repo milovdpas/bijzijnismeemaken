@@ -1,5 +1,6 @@
-import { CalendarDays, SlidersHorizontal, Sparkles, Trophy, Users } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { CalendarDays, Sparkles, Trophy, Users } from 'lucide-react';
+import { GearIcon } from '@/components/icons/gear-icon';
+import type { NavIcon } from '@/lib/navigation';
 import { GroupRole } from '@bzim/types';
 
 /**
@@ -11,7 +12,7 @@ export type GroupTab = 'activities' | 'availability' | 'leaderboards' | 'members
 export interface GroupTabItem {
     tab: GroupTab;
     labelKey: string;
-    icon: LucideIcon;
+    icon: NavIcon;
     /** Settings is for the people who can change them. */
     adminOnly: boolean;
 }
@@ -26,7 +27,7 @@ export const GROUP_TABS: readonly GroupTabItem[] = [
     },
     { tab: 'leaderboards', labelKey: 'groupTabs.leaderboards', icon: Trophy, adminOnly: false },
     { tab: 'members', labelKey: 'groupTabs.members', icon: Users, adminOnly: false },
-    { tab: 'settings', labelKey: 'groupTabs.settings', icon: SlidersHorizontal, adminOnly: true },
+    { tab: 'settings', labelKey: 'groupTabs.settings', icon: GearIcon, adminOnly: true },
 ];
 
 export function groupHref(groupId: string, tab: GroupTab = 'activities'): string {

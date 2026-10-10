@@ -109,7 +109,8 @@ export const nl: Dict = {
     access: {
         label: 'Wie kan erbij',
         public: 'Openbaar',
-        publicDescription: 'Voor iedereen te vinden. Iedereen kan erbij.',
+        publicDescription:
+            'Voor iedereen te vinden. Iedereen kan erbij; elk lid kan de link delen.',
         invite_link: 'Uitnodigingslink',
         invite_linkDescription: 'Verborgen. Iedereen met de link kan erbij.',
         invite_only: 'Alleen op uitnodiging',
@@ -125,7 +126,7 @@ export const nl: Dict = {
         submit: 'Groep aanmaken',
         createdTitle: '{{name}} staat klaar',
         created_public:
-            'Iedereen kan hem vinden bij openbare groepen en meedoen. Tijd voor een eerste activiteit.',
+            'Iedereen kan hem vinden bij openbare groepen, en met deze link zit een vriend er meteen in.',
         created_invite_link: 'Deel deze link met je vrienden. Iedereen die hem heeft kan meedoen.',
         created_invite_only:
             'Nodig je vrienden uit op hun handle. Ze krijgen een mail en nemen aan in de app.',
@@ -193,7 +194,8 @@ export const nl: Dict = {
         detailsTitle: 'Gegevens',
         detailsDescription: 'Naam, omschrijving en wie erbij kan.',
         linkTitle: 'Uitnodigingslink',
-        linkDescription: 'Iedereen met deze link kan meedoen.',
+        linkDescription:
+            'Iedereen met deze link kan meedoen. In een openbare groep kan elk lid hem delen.',
         newLink: 'Nieuwe link',
         newLinkDescription:
             'De huidige link werkt niet meer zodra de nieuwe bestaat. Wie de oude nog heeft ziet "deze link werkt niet".',

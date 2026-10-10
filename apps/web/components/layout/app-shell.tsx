@@ -65,8 +65,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <nav className="fixed inset-x-0 bottom-0 z-(--z-nav) border-t bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
                 <div className="flex h-16">
-                    {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
+                    {NAV_ITEMS.map(({ href, labelKey, icon, activeIcon }) => {
                         const active = isActiveNav(pathname, href);
+                        const Icon = active ? (activeIcon ?? icon) : icon;
                         return (
                             <Link
                                 key={href}

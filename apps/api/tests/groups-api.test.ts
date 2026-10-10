@@ -12,6 +12,7 @@ import type {
 import { env } from '../src/config/app';
 import Group from '../src/app/models/Group.entity';
 import GroupMember from '../src/app/models/GroupMember.entity';
+import { GroupService } from '../src/app/services/GroupService';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedGroup, seedMember, seedUser } from './support/factories';
@@ -126,6 +127,13 @@ describe('GET /groups/:groupId', () => {
 
         expect(forOwner.inviteLink).toContain('/join/');
         expect(forMember.inviteLink).toBeNull();
+
+        // A public group's link is for everyone in it.
+        await GroupService.update(group, { access: GroupAccess.PUBLIC });
+        const open = data<GroupDetailResponse>(
+            await asMember.get(API_ENDPOINTS.GROUPS.DETAIL(group.id)),
+        );
+        expect(open.inviteLink).toContain('/join/');
         expect(forMember.role).toBe(GroupRole.MEMBER);
         expect(forMember.memberCount).toBe(2);
     });

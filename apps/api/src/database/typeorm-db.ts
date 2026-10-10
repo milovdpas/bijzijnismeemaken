@@ -2,12 +2,16 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 
 import { databaseConfig } from '../config/database';
+import Activity from '../app/models/Activity.entity';
+import ActivityInterest from '../app/models/ActivityInterest.entity';
+import ActivityOccurrence from '../app/models/ActivityOccurrence.entity';
 import EmailToken from '../app/models/EmailToken.entity';
 import Group from '../app/models/Group.entity';
 import GroupInvite from '../app/models/GroupInvite.entity';
 import NotificationSetting from '../app/models/NotificationSetting.entity';
 import GroupMember from '../app/models/GroupMember.entity';
 import OAuthState from '../app/models/OAuthState.entity';
+import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
 import RefreshToken from '../app/models/RefreshToken.entity';
 import User from '../app/models/User.entity';
 
@@ -35,6 +39,10 @@ export const AppDataSource = new DataSource({
     // Every timestamp is stored and read as UTC. Leaving this to the server's
     // local zone silently shifts stored times when the clocks change.
     timezone: 'Z',
+    // DATE columns are calendar dates with no instant, so they come back as
+    // 'YYYY-MM-DD' strings. Inflating them to midnight Date objects and then
+    // formatting with local getters would shift the day on a server west of UTC.
+    dateStrings: ['DATE'],
     entities: [
         User,
         RefreshToken,
@@ -44,6 +52,10 @@ export const AppDataSource = new DataSource({
         GroupMember,
         GroupInvite,
         NotificationSetting,
+        Activity,
+        ActivityInterest,
+        ActivityOccurrence,
+        OccurrenceParticipant,
     ],
 });
 
