@@ -6,6 +6,7 @@ import type {
     EditMode,
     GroupAccess,
     GroupRole,
+    LeaderboardPeriod,
     Locale,
     NotificationType,
     OccurrenceStatus,
@@ -14,7 +15,7 @@ import type {
     Weekday,
 } from './enums';
 import type { AvatarKey } from './constants';
-import type { IsoDateString, IsoDateTimeString, LocalTimeString, Uuid } from './domain';
+import type { IsoDateString, IsoDateTimeString, LocalTimeString, ScoreValue, Uuid } from './domain';
 
 /* -------------------------------------------------------------------------- */
 /* Envelopes                                                                   */
@@ -468,6 +469,8 @@ export interface LeaderboardDto {
     showMonthly: boolean;
     showYearly: boolean;
     showAllTime: boolean;
+    /** Plus and minus buttons beside each score. Only ever true on a `number` board. */
+    showSteppers: boolean;
     creator: UserSummary | null;
     creatorName: string | null;
     createdAt: IsoDateTimeString;
@@ -515,4 +518,62 @@ export interface LeaderboardInput {
     showMonthly: boolean;
     showYearly: boolean;
     showAllTime: boolean;
+    /** Default false; forced false on a `time` board. */
+    showSteppers?: boolean;
+}
+
+/** One row of a ranking. */
+export interface ScoreEntryDto {
+    rank: number;
+    member: LeaderboardMemberDto;
+    score: ScoreValue;
+    /** When this value was set; the tie-break (first to reach a score ranks higher). */
+    updatedAt: IsoDateTimeString;
+}
+
+/**
+ * The caller's own place on the board. `rank` is the number as a string, or
+ * "500+" when they are below `LEADERBOARD.RANK_LIMIT`: the API stops counting there.
+ */
+export interface MyScoreDto {
+    rank: string;
+    score: ScoreValue;
+}
+
+/** `GET …/scores?period=&year=&month=&page=&pageSize=`. `total` is capped at `LEADERBOARD.RANK_LIMIT`. */
+export interface ScoresResponse extends Paginated<ScoreEntryDto> {
+    period: LeaderboardPeriod;
+    year: number | null;
+    month: number | null;
+    /** The caller's own entry when they are on the board with a score for this period. */
+    me: MyScoreDto | null;
+}
+
+/** `GET …/periods`: which months and years have scores, newest first, for the pickers. */
+export interface PeriodsResponse {
+    months: { year: number; month: number }[];
+    years: number[];
+}
+
+/** One change in a board's history. `newScore` null means cleared or removed. */
+export interface ScoreHistoryDto {
+    id: Uuid;
+    member: LeaderboardMemberDto;
+    changedBy: UserSummary | null;
+    changedByName: string;
+    oldScore: ScoreValue | null;
+    newScore: ScoreValue | null;
+    year: number;
+    month: number;
+    createdAt: IsoDateTimeString;
+}
+
+/** `PUT …/members/:id/score`. Absolute, for the current period only. */
+export interface SetScoreRequest {
+    score: ScoreValue;
+}
+
+/** `POST …/leaderboards/:id/members`. */
+export interface AddLeaderboardMemberRequest {
+    userId: Uuid;
 }

@@ -214,6 +214,7 @@ export async function seedLeaderboard(
         showMonthly: true,
         showYearly: true,
         showAllTime: true,
+        showSteppers: false,
     });
     Object.assign(leaderboard, overrides);
     return leaderboard.save();

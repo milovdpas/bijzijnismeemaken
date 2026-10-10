@@ -11,6 +11,8 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Period tables | Always write monthly + yearly + all-time (3 tables). Per leaderboard setting which of the three are shown. |
 | Sort order | Per leaderboard `SortOrder` enum `asc` / `desc` (replaces a "higher is better" boolean). Scores are always absolute values. |
 | Score write semantics | Write-through: an entry sets the current month, current year and all-time rows to the same value (overwrite, not only-if-better). Absolute values, no increments. |
+| Score steppers | Per leaderboard setting `show_steppers` (number boards only): the board shows +1 / −1 buttons beside each score. A screen convenience; the button computes the new absolute value and sends it like any entry. |
+| My rank beyond the top 500 | The API counts at most `RANK_LIMIT` rows ahead of the caller; past that `me.rank` is the string `"500+"` (ranks are strings in `me`), so a long tail never costs a full count. |
 | Admin override | Owner and admins can always edit/delete scores; history records who did it. |
 | Owner leaving | Owner cannot leave. Must transfer ownership or delete the group. Account deletion is blocked while owning a group. |
 | Dayparts | morning 08:00–12:00, afternoon 12:00–18:00, evening 18:00–24:00. Europe/Amsterdam, platform-wide. |
@@ -46,7 +48,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 - As a user I reset a forgotten password through an emailed link (1 h, single use); a successful reset signs out every other session. A Google-only account can use the same flow to add a password.
 - As a user I change my password in settings (current password required when one exists).
 - One account per email: signing in with Google on an address that already has a verified password account links the two; both methods then work.
-- As a new user I complete onboarding: unique handle (3–24 chars, `[a-z0-9_]`), display name, avatar from a fixed set (16 built-in icon avatars), language (nl/en, prefilled from browser).
+- As a new user I complete onboarding: unique handle (3–24 chars, `[a-z0-9_]`), display name, avatar from a fixed set (16 built-in icon avatars), language (nl/en, prefilled from browser). From M2 (task 38b) two skippable steps follow: connect Google Calendar and mark the dayparts I am usually busy; skipping leaves a "finish your setup" card on the groups page.
 - As a user I edit profile, language, notification preferences and "auto add planned activities to my calendar".
 - As a user I can delete my account (blocked while I own a group; otherwise leaves all groups with the leave rules, deletes calendar data, tokens, user).
 - A user can be in many groups.

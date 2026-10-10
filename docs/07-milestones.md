@@ -36,7 +36,7 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 25. Suggestions endpoint + planning dialog integration (ranked list, select/deselect "in" members).
 26. Migration + entities: leaderboards, editors, members, 3 score tables, history. `LeaderboardService` (settings, members, editors, permission checks).
 27. `ScoreService` (write-through to current month/year/total, history, no-op on equal) + `ScoreQueryService` (ranked pages, cap 500, consistent tie-break, periods list). Leaderboards API + tests.
-28. Web: leaderboards list, create/edit dialog, members management; board view with period tabs, month/year pickers, pagination, my rank; score entry dialog (number / hh:mm:ss.SSS input); history page. (Split into 2–3 sessions as needed: list+settings, board+entry, history.)
+28. Web: leaderboards list, create/edit dialog, members management; board view with period tabs, month/year pickers, pagination, my rank; score entry dialog (number / hh:mm:ss.SSS input) and +1 / −1 steppers when `showSteppers` is on; history page. (Split into 2–3 sessions as needed: list+settings, board+entry, history.)
     28b. Group dashboard: `group_widgets` migration + entity, seeding on group creation, widget endpoints (list, add, update, remove, reorder, restore defaults) with per-type zod configs, cleanup when a leaderboard or activity is deleted, tests. Web: dashboard as the group root and first tab (`upcoming`, `ideas`, `leaderboard`, `note`, `activity`, `link` widgets), admin edit mode (add sheet, config dialogs, reorder with drag on desktop and up/down buttons on phones). Split into API and web sessions.
 29. Leave-group decoupling: activities inactive + open occurrences cancelled, leaderboard member decoupling, tests.
 30. Account deletion (full order from section 3) + settings "danger zone".
@@ -50,6 +50,7 @@ Backend tasks include vitest integration tests in the dynamic_alarm style.
 36. `CalendarSyncService` + `POST /worker/calendar-sync` (per connection, per enabled source, window today..+180d, replace-in-window transaction, error states) + Ofelia label.
 37. Ignore rules endpoints + own events listing; `AvailabilityService` calendar path + tests (overlap edge cases, all-day, DST, transparency).
 38. Web: calendar settings page (connect, pick calendars, status/reauth banner, sync now), my events list with "ignore title / ignore series" actions; availability views now show calendar-derived busy.
+    38b. Onboarding, extended: after profile and language, two skippable steps, "connect your Google Calendar" (the task 38 connect flow, then pick calendars) and "when are you usually busy?" (the task 23 week grid for weekly rules). A "finish your setup" card on the groups page for people who skipped either, dismissable. `users.onboarding_steps_done` or a per-step timestamp so the card knows. Decided 2026-10-10.
 39. Auto-add setting: incremental write-scope consent flow, create/update/delete provider events on occurrence plan/re-date/cancel (and on decoupling/deletion) for participants with the setting on; store ids on `occurrence_participants`.
 
 ## M3 — Notifications & polish

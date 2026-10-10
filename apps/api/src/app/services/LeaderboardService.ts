@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon';
 import { In } from 'typeorm';
 import type { FindOptionsRelations } from 'typeorm';
-import { EditMode, GroupRole, TIME_ZONE } from '@bzim/types';
+import { EditMode, GroupRole, ScoreType, TIME_ZONE } from '@bzim/types';
 import type { LeaderboardDetailDto, LeaderboardInput, LeaderboardListingDto } from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
@@ -70,6 +70,7 @@ export class LeaderboardService {
                     showMonthly: input.showMonthly,
                     showYearly: input.showYearly,
                     showAllTime: input.showAllTime,
+                    showSteppers: LeaderboardService.steppersFor(input),
                 }),
             );
             await manager.save(
@@ -80,6 +81,14 @@ export class LeaderboardService {
             return leaderboard;
         });
         return { ok: true, leaderboard: await LeaderboardService.reload(created.id) };
+    }
+
+    /** Steppers are a points thing: a time board never shows them, whatever was asked. */
+    private static steppersFor(settings: {
+        scoreType: ScoreType;
+        showSteppers?: boolean;
+    }): boolean {
+        return settings.scoreType === ScoreType.NUMBER && (settings.showSteppers ?? false);
     }
 
     /** Settings. The editor list is replaced wholesale when given. */
@@ -99,6 +108,7 @@ export class LeaderboardService {
             return { ok: false, problem: 'EDITOR_NOT_MEMBER' };
         }
         Object.assign(leaderboard, stripUndefined({ ...patch, editorIds: undefined }));
+        leaderboard.showSteppers = LeaderboardService.steppersFor(leaderboard);
         await AppDataSource.transaction(async (manager) => {
             await manager.save(leaderboard);
             if (patch.editorIds !== undefined) {

@@ -123,4 +123,4 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | GET | `/health` | DB check | public |
 | (phase 3) POST/DELETE | `/me/push-subscriptions` | Web push | S |
 
-Pagination contract: every list endpoint shown with `page=` accepts `page` (1-based) and `pageSize` (default 50, max 100); response `{ items, page, pageSize, total, hasMore }`. Leaderboard scores: `total = min(count, 500)`, pages beyond 500 return empty, and the body adds `me: { rank, score } | null`. Range endpoints (`from`/`to`) are capped at 93 days (422 beyond).
+Pagination contract: every list endpoint shown with `page=` accepts `page` (1-based) and `pageSize` (default 50, max 100); response `{ items, page, pageSize, total, hasMore }`. Leaderboard scores: `total = min(count, 500)`, pages beyond 500 return empty, and the body adds `me: { rank, score } | null`, where `rank` is a string: the position, or `"500+"` when more than `RANK_LIMIT` rows order ahead (the count stops there). Range endpoints (`from`/`to`) are capped at 93 days (422 beyond).

@@ -67,6 +67,10 @@ export default class Leaderboard extends BaseEntity {
     @Column({ name: 'show_all_time', type: 'boolean', default: true })
     showAllTime!: boolean;
 
+    /** Plus and minus buttons beside each score; only ever true on a number board. */
+    @Column({ name: 'show_steppers', type: 'boolean', default: false })
+    showSteppers!: boolean;
+
     @OneToMany(() => LeaderboardEditor, (editor) => editor.leaderboard)
     editors!: LeaderboardEditor[];
 
@@ -100,6 +104,7 @@ export default class Leaderboard extends BaseEntity {
             showMonthly: this.showMonthly,
             showYearly: this.showYearly,
             showAllTime: this.showAllTime,
+            showSteppers: this.showSteppers,
             creator,
             creatorName: creator?.displayName ?? this.creatorNameSnapshot,
             createdAt: this.createdAt.toISOString(),

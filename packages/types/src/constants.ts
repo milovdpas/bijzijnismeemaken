@@ -46,6 +46,9 @@ export const LEADERBOARD = {
     NAME_MIN_LENGTH: 2,
     NAME_MAX_LENGTH: 60,
     DESCRIPTION_MAX_LENGTH: 1000,
+    /** DECIMAL(16,3): thirteen digits before the point. Times are milliseconds, so ~317 years. */
+    SCORE_MAX: 9_999_999_999_999,
+    SCORE_DECIMALS: 3,
 } as const;
 
 export const ACTIVITY = {
