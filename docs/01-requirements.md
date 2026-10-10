@@ -45,7 +45,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 - As a user I reset a forgotten password through an emailed link (1 h, single use); a successful reset signs out every other session. A Google-only account can use the same flow to add a password.
 - As a user I change my password in settings (current password required when one exists).
 - One account per email: signing in with Google on an address that already has a verified password account links the two; both methods then work.
-- As a new user I complete onboarding: unique handle (3–24 chars, `[a-z0-9_]`), display name, avatar from a fixed set (~16 built-in SVGs), language (nl/en, prefilled from browser).
+- As a new user I complete onboarding: unique handle (3–24 chars, `[a-z0-9_]`), display name, avatar from a fixed set (16 built-in icon avatars), language (nl/en, prefilled from browser).
 - As a user I edit profile, language, notification preferences and "auto add planned activities to my calendar".
 - As a user I can delete my account (blocked while I own a group; otherwise leaves all groups with the leave rules, deletes calendar data, tokens, user).
 - A user can be in many groups.

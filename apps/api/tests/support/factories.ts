@@ -28,7 +28,7 @@ export async function seedUser(overrides: DeepPartial<User> = {}): Promise<User>
         email: `user${n}-${randomUUID().slice(0, 8)}@example.com`,
         handle: `user${n}_${randomUUID().slice(0, 6)}`,
         displayName: `User ${n}`,
-        avatarKey: 'fox',
+        avatarKey: 'cat',
         passwordHash: null,
         emailVerifiedAt: DateTime.utc().toJSDate(),
         locale: Locale.NL,

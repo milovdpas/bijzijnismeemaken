@@ -39,14 +39,14 @@ describe('PATCH /me', () => {
             await asUser(accessToken).patch(API_ENDPOINTS.ME.ROOT, {
                 handle: ' Milo_01 ',
                 displayName: '  Milo  ',
-                avatarKey: 'owl',
+                avatarKey: 'bird',
                 locale: 'en',
             }),
         );
 
         expect(me.handle).toBe('milo_01');
         expect(me.displayName).toBe('Milo');
-        expect(me.avatarKey).toBe('owl');
+        expect(me.avatarKey).toBe('bird');
         expect(me.locale).toBe('en');
         expect(me.onboardingDone).toBe(true);
     });
@@ -199,7 +199,7 @@ describe('GET /users/search', () => {
             id: expect.any(String) as string,
             handle: 'annabel',
             displayName: 'Annabel',
-            avatarKey: 'fox',
+            avatarKey: 'cat',
         });
         expect(JSON.stringify(results)).not.toContain('@example.com');
     });

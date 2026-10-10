@@ -75,27 +75,28 @@ export const PROFILE = {
 /* -------------------------------------------------------------------------- */
 /* Avatars                                                                     */
 /*                                                                            */
-/* The built-in set. Keys map to `apps/web/public/avatars/<key>.svg`; the API */
-/* only validates that a key is in this list.                                 */
+/* The built-in set. Each key is drawn by the web app as a lucide icon on a   */
+/* coloured tile (`apps/web/lib/avatars.ts`); the API only validates that a   */
+/* key is in this list.                                                       */
 /* -------------------------------------------------------------------------- */
 
 export const AVATAR_KEYS = [
-    'bear',
+    'bird',
+    'bot',
+    'bug',
     'cat',
     'dog',
-    'fox',
-    'frog',
-    'hedgehog',
-    'koala',
-    'lion',
-    'monkey',
-    'octopus',
-    'owl',
+    'fish',
+    'ghost',
     'panda',
-    'penguin',
     'rabbit',
-    'tiger',
-    'whale',
+    'rat',
+    'rocket',
+    'shrimp',
+    'snail',
+    'squirrel',
+    'star',
+    'turtle',
 ] as const;
 
 export type AvatarKey = (typeof AVATAR_KEYS)[number];

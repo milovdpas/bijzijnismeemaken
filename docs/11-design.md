@@ -47,6 +47,9 @@ Adding a style: one `PALETTES` entry (id, label key, two swatches) plus one CSS 
 - `EmptyState` (icon on a yellow tile, title, description, optional action). Every list has one.
 - Cards: `Card` with `CardHeader` (title + description) and `CardContent`. Settings are a 2-column grid of cards from `md`.
 - Choices with 2–3 options are pill radios (see `appearance-card.tsx`), not selects.
+- Forms: `Field` (label, help, error, `aria-describedby` wired), `FormMessage` (inline error or success under the form; no toasts yet), controlled `FormState` + derived `canSave`. See `components/auth/*` and `components/settings/*`.
+- People: `Avatar` (lucide icon on a coloured tile, 16 keys in `lib/avatars.ts`) and `AvatarPicker`. Never an image upload.
+- Signed-out pages use `PublicShell` (one centred card under the logo); signed-in pages sit in `AppShell` behind `AuthGate`.
 - Toasts (task 42) sit above everything via `--z-toast`.
 
 ## Do / don't
