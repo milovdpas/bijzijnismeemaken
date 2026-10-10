@@ -10,16 +10,20 @@ import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormMessage } from '@/components/common/form-message';
-import { LeaderboardMembersSection } from '@/components/leaderboards/leaderboard-members-section';
+import { PlayersTab } from '@/components/leaderboards/players-tab';
+import { RankingTab } from '@/components/leaderboards/ranking-tab';
+import { TimerTab } from '@/components/leaderboards/timer-tab';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteLeaderboard, useLeaderboard } from '@/hooks/queries/use-leaderboards';
 import { errorKey, isApiError } from '@/lib/api/errors';
 import { enabledPeriods } from '@/lib/leaderboard-periods';
 
 /**
- * One board: its settings in a header, who is on it, and (next session) the
- * rankings per period with score entry and the history page.
+ * One board: its settings in a header, then one card with two tabs, the
+ * rankings per period with score entry and the players, plus a stopwatch
+ * on a time board. The history page is its own route.
  */
 export function LeaderboardDetailView({
     groupId,
@@ -154,13 +158,28 @@ export function LeaderboardDetailView({
                 </dl>
             </header>
 
-            <LeaderboardMembersSection groupId={groupId} leaderboard={data} />
-
-            <EmptyState
-                icon={Trophy}
-                titleKey="leaderboardDetail.scoresSoonTitle"
-                descriptionKey="leaderboardDetail.scoresSoonDescription"
-            />
+            <Tabs defaultValue="ranking" className="rounded-2xl border bg-card p-4">
+                <TabsList className="w-full">
+                    <TabsTrigger value="ranking">{t('leaderboardDetail.tabRanking')}</TabsTrigger>
+                    <TabsTrigger value="players">
+                        {t('leaderboardDetail.tabPlayers', { count: data.memberCount })}
+                    </TabsTrigger>
+                    {data.scoreType === ScoreType.TIME && (
+                        <TabsTrigger value="timer">{t('leaderboardDetail.tabTimer')}</TabsTrigger>
+                    )}
+                </TabsList>
+                <TabsContent value="ranking" className="pt-3">
+                    <RankingTab groupId={groupId} leaderboard={data} />
+                </TabsContent>
+                <TabsContent value="players" className="pt-3">
+                    <PlayersTab groupId={groupId} leaderboard={data} />
+                </TabsContent>
+                {data.scoreType === ScoreType.TIME && (
+                    <TabsContent value="timer" className="pt-3">
+                        <TimerTab groupId={groupId} leaderboard={data} />
+                    </TabsContent>
+                )}
+            </Tabs>
 
             <ConfirmDialog
                 open={deleting}

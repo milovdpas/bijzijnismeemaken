@@ -97,3 +97,8 @@ export function avatarPages(perPage = 16): AvatarKey[][] {
     }
     return pages;
 }
+
+/** A face for somebody added by name only. */
+export function randomAvatarKey(): AvatarKey {
+    return AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)] ?? AVATAR_KEYS[0];
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
     AddLeaderboardMemberRequest,
@@ -8,6 +8,8 @@ import type {
     LeaderboardInput,
     LeaderboardListingDto,
     LeaderboardMemberDto,
+    PeriodsResponse,
+    ScoresResponse,
 } from '@bzim/types';
 
 import { ApiError } from '@/lib/api/client';
@@ -17,9 +19,13 @@ import {
     deleteLeaderboard,
     fetchLeaderboard,
     fetchLeaderboards,
+    fetchPeriods,
+    fetchScores,
     removeLeaderboardMember,
+    setScore,
     updateLeaderboard,
 } from '@/lib/api/leaderboards';
+import type { ScoresQuery } from '@/lib/api/leaderboards';
 import { queryKeys } from '@/lib/query-keys';
 
 function retryUnlessNotFound(count: number, error: Error): boolean {
@@ -125,4 +131,53 @@ export function useRemoveLeaderboardMember(
     return useMemberChange(groupId, leaderboardId, (memberId: string) =>
         removeLeaderboardMember(groupId, leaderboardId, memberId),
     );
+}
+
+/** One ranked page. The previous page stays on screen while the next loads. */
+export function useScores(
+    groupId: string,
+    leaderboardId: string,
+    query: ScoresQuery,
+): UseQueryResult<ScoresResponse> {
+    return useQuery({
+        queryKey: queryKeys.leaderboards.scores(groupId, leaderboardId, JSON.stringify(query)),
+        queryFn: () => fetchScores(groupId, leaderboardId, query),
+        placeholderData: keepPreviousData,
+    });
+}
+
+export function usePeriods(
+    groupId: string,
+    leaderboardId: string,
+): UseQueryResult<PeriodsResponse> {
+    return useQuery({
+        queryKey: queryKeys.leaderboards.periods(groupId, leaderboardId),
+        queryFn: () => fetchPeriods(groupId, leaderboardId),
+    });
+}
+
+/** Setting or clearing (null) a score moves every ranking of the board and the card in the list. */
+export function useSetScore(
+    groupId: string,
+    leaderboardId: string,
+): UseMutationResult<void, Error, { memberId: string; score: number | null }> {
+    return useMemberChange(groupId, leaderboardId, ({ memberId, score }) =>
+        setScore(groupId, leaderboardId, memberId, score),
+    );
+}
+
+/**
+ * A first score for somebody not on the board yet: they are added, then
+ * scored. Two requests; if the second fails they are on the board without
+ * a score, which the players tab shows and the next try corrects.
+ */
+export function useScoreNewPlayer(
+    groupId: string,
+    leaderboardId: string,
+): UseMutationResult<string, Error, { who: AddLeaderboardMemberRequest; score: number }> {
+    return useMemberChange(groupId, leaderboardId, async ({ who, score }) => {
+        const member = await addLeaderboardMember(groupId, leaderboardId, who);
+        await setScore(groupId, leaderboardId, member.id, score);
+        return member.id;
+    });
 }

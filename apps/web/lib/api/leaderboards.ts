@@ -74,10 +74,14 @@ export function removeLeaderboardMember(
     });
 }
 
-export interface ScoresQuery {
+/** Which ranking: the period, and the year and month where the period cares. */
+export interface ScoreScope {
     period: LeaderboardPeriod;
     year?: number;
     month?: number;
+}
+
+export interface ScoresQuery extends ScoreScope {
     page: number;
     pageSize: number;
 }

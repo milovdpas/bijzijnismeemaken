@@ -11,3 +11,10 @@ export function formatDate(iso: string, lang: string | undefined): string {
         .setLocale(lang ?? 'nl')
         .toLocaleString(DateTime.DATE_MED);
 }
+
+/** A month for a picker: "oktober 2026" or "October 2026". */
+export function formatMonth(year: number, month: number, lang: string | undefined): string {
+    return DateTime.fromObject({ year, month }, { zone: TIME_ZONE })
+        .setLocale(lang ?? 'nl')
+        .toFormat('LLLL yyyy');
+}

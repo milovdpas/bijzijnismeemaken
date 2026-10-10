@@ -64,7 +64,11 @@ export function LeaderboardCard({
                             >
                                 {entry.rank}
                             </span>
-                            <Avatar avatarKey={entry.member.avatarKey} size="sm" />
+                            <Avatar
+                                avatarKey={entry.member.avatarKey}
+                                size="sm"
+                                gold={entry.rank === 1}
+                            />
                             <span className="min-w-0 flex-1 truncate font-semibold">
                                 {entry.member.displayName}
                             </span>
