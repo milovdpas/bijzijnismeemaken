@@ -96,9 +96,11 @@ The API workflow refuses to deploy when any of `DB_HOST DB_USER DB_NAME JWT_SECR
 In the Google Cloud project that holds the OAuth client already used locally, under the **Web application** client:
 
 - Authorised JavaScript origin: `https://bijzijnismeemaken.milovanderpas.nl`
-- Authorised redirect URI: `https://bijzijnismeemaken-api.milovanderpas.nl/api/v1/auth/google/callback`
+- Authorised redirect URIs: `https://bijzijnismeemaken-api.milovanderpas.nl/api/v1/auth/google/callback` (sign-in) and `https://bijzijnismeemaken-api.milovanderpas.nl/api/v1/calendar/google/callback` (calendar, from task 35)
 
-Keep the localhost entries so local sign-in keeps working. On the OAuth consent screen, set the publishing status to **In production** once the calendar scopes arrive (M2); for sign-in alone, Testing with your friends as test users is enough, but test users' refresh tokens expire after seven days, which will bite the moment calendar sync lands. Easier to publish now.
+Keep the localhost entries so local sign-in keeps working: `http://localhost:4000/api/v1/auth/google/callback` and `http://localhost:4000/api/v1/calendar/google/callback`.
+
+For the calendar connection, also in that project: enable the **Google Calendar API** (APIs & Services → Library), and add the scopes `.../auth/calendar.readonly` and `.../auth/calendar.events` on the OAuth consent screen (Data access). The connect flow asks for `openid email` plus those; a project without the API enabled answers the calendar list with 403. On the OAuth consent screen, set the publishing status to **In production** once the calendar scopes arrive (M2); for sign-in alone, Testing with your friends as test users is enough, but test users' refresh tokens expire after seven days, which will bite the moment calendar sync lands. Easier to publish now.
 
 ## 6. Brevo
 
@@ -233,5 +235,5 @@ Then the real test: sign in with Google on the production app, finish onboarding
 - **Unsplash production tier.** The photo search runs on a demo key (50 searches an hour, app id 1098263). Apply for production (1,000 an hour) once that limit is felt. Their checklist: hotlinking (done), the download ping (done), no Unsplash branding in the app name (done), an accurate name and description in their form, and the "Photo by Name on Unsplash" credit with both links wherever a photo is shown, with screenshots. The picker credits already; the activity page credit lands with task 21, which stores the photographer beside the image URL.
 
 - **Worker runner (done 2026-10-10).** `node dist/tools/worker.js cleanup` runs the nightly sweep through `POST /worker/cleanup`; the `bzim-calendar-sync` label stays registered but that endpoint only gets its work in M2, so until then its nightly run logs a failure that means nothing. The workflow's `npx knex migrate:latest --knexfile dist/database/knexfile.js` was checked against a local compiled build: the compiled knexfile resolves `dist/database/migrations/*.js`, which is what the image holds. One rule follows from it: Knex records migration file names with their extension, so the production database must only ever be migrated through the image (`.js` names). Running `npm run migrate` (tsx, `.ts` names) against it once would make the next deploy's runner call the directory corrupt, and the reverse holds for a development database.
-- **Calendar sync** is M2. `CALENDAR_TOKEN_KEY` is read from task 33 on (optional; the API boots without it and the first calendar connection fails loudly). Set it before task 35 goes live.
+- **Calendar sync** is live from task 38 (2026-10-11). `CALENDAR_TOKEN_KEY` must be set as a GitHub secret (the workflow passes it; the API boots without it but the first connection fails with a clear error), and step 5 needs the calendar redirect URI, the Calendar API enabled and the two scopes on the consent screen. Auto-add to the person's own calendar (write scope) is task 39.
 - **Add to the VPS inventory.** After the first green deploy, add both hostnames to the table in `vps_hosting/03-architecture.md` and the proxy conf list in `02-reverse-proxy-and-tls.md`, as the checklist there asks.
