@@ -22,7 +22,7 @@ describe('GET /me', () => {
         expect(me.hasGoogle).toBe(true);
         expect(me.hasPassword).toBe(false);
         expect(me.locale).toBe('nl');
-        expect(me.notifyEmailInvites).toBe(true);
+        expect(me.autoAddToCalendar).toBe(false);
     });
 
     it('needs a session', async () => {
@@ -71,11 +71,11 @@ describe('PATCH /me', () => {
 
         const response = await asUser(accessToken).patch(API_ENDPOINTS.ME.ROOT, {
             handle: 'mine',
-            notifyEmailNewActivity: false,
+            autoAddToCalendar: true,
         });
 
         expect(response.status).toBe(200);
-        expect(data<MeResponse>(response).notifyEmailNewActivity).toBe(false);
+        expect(data<MeResponse>(response).autoAddToCalendar).toBe(true);
     });
 
     it('validates the handle, the avatar and the empty body', async () => {

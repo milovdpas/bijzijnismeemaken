@@ -63,15 +63,6 @@ export default class User extends BaseEntity {
     @Column({ name: 'auto_add_to_calendar', type: 'boolean', default: false })
     autoAddToCalendar!: boolean;
 
-    @Column({ name: 'notify_email_invites', type: 'boolean', default: true })
-    notifyEmailInvites!: boolean;
-
-    @Column({ name: 'notify_email_planned', type: 'boolean', default: true })
-    notifyEmailPlanned!: boolean;
-
-    @Column({ name: 'notify_email_new_activity', type: 'boolean', default: true })
-    notifyEmailNewActivity!: boolean;
-
     @Column({ name: 'last_login_at', type: 'datetime', precision: 3, nullable: true })
     lastLoginAt!: Date | null;
 
@@ -119,9 +110,6 @@ export default class User extends BaseEntity {
             hasPassword: this.passwordHash !== null,
             hasGoogle: this.googleSub !== null,
             autoAddToCalendar: this.autoAddToCalendar,
-            notifyEmailInvites: this.notifyEmailInvites,
-            notifyEmailPlanned: this.notifyEmailPlanned,
-            notifyEmailNewActivity: this.notifyEmailNewActivity,
             createdAt: this.createdAt.toISOString(),
         };
     }

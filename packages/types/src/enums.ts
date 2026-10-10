@@ -110,6 +110,12 @@ export enum NotificationType {
     ACTIVITY_CANCELLED = 'activity_cancelled',
 }
 
+/** How a notification reaches someone. Each type can be switched per channel. Push lands in phase 3. */
+export enum NotificationChannel {
+    EMAIL = 'email',
+    PUSH = 'push',
+}
+
 /** Calendar providers behind the provider abstraction. Google is the only one implemented. */
 export enum CalendarProviderKey {
     GOOGLE = 'google',

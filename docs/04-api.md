@@ -20,7 +20,9 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | POST | `/auth/reset-password` | `{ token, password }` → 204, revokes all sessions | public |
 | PATCH | `/me/password` | `{ currentPassword?, newPassword }`; current required when a password exists; revokes other sessions | S |
 | GET | `/me` | Current user + preferences + `onboardingDone` | S |
-| PATCH | `/me` | handle, display_name, avatar_key, locale, notification prefs, auto_add_to_calendar | S |
+| PATCH | `/me` | handle, display_name, avatar_key, locale, auto_add_to_calendar | S |
+| GET | `/me/notification-settings` | One entry per `NotificationType` with `email` + `push`, defaults filled in | S |
+| PUT | `/me/notification-settings/:type` | `{ email, push }` upsert | S |
 | GET | `/users/handle-available?handle=` | Onboarding check | any |
 | GET | `/users/search?q=` | Handle prefix search (for invites), returns id/handle/display_name/avatar | any (rate limited) |
 | DELETE | `/me` | Delete account (409 `OWNER_MUST_TRANSFER` if owning groups) | S |

@@ -154,6 +154,8 @@ export const API_ENDPOINTS = {
         CALENDAR_EVENTS: `${V1}/me/calendar/events`,
         CALENDAR_IGNORE_RULES: `${V1}/me/calendar/ignore-rules`,
         CALENDAR_IGNORE_RULE: (ruleId: string) => `${V1}/me/calendar/ignore-rules/${ruleId}`,
+        NOTIFICATION_SETTINGS: `${V1}/me/notification-settings`,
+        NOTIFICATION_SETTING: (type: string) => `${V1}/me/notification-settings/${type}`,
         PUSH_SUBSCRIPTIONS: `${V1}/me/push-subscriptions`,
     },
 

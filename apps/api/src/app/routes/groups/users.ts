@@ -9,6 +9,8 @@ import { validate } from '../../middleware/ValidateRequest';
 import {
     changePasswordSchema,
     handleAvailableQuerySchema,
+    notificationSettingSchema,
+    notificationTypeParamSchema,
     searchUsersQuerySchema,
     updateMeSchema,
 } from '../../validators/userSchemas';
@@ -37,6 +39,18 @@ export default class UserRoutes implements IRoute {
             this.controller.changePassword,
         );
         router.delete(API_ENDPOINTS.ME.ROOT, userAuth, this.controller.deleteMe);
+
+        router.get(
+            API_ENDPOINTS.ME.NOTIFICATION_SETTINGS,
+            userAuth,
+            this.controller.notificationSettings,
+        );
+        router.put(
+            API_ENDPOINTS.ME.NOTIFICATION_SETTING(':type'),
+            userAuth,
+            validate({ params: notificationTypeParamSchema, body: notificationSettingSchema }),
+            this.controller.updateNotificationSetting,
+        );
 
         // Both are typed-into fields: limited so a loop cannot enumerate handles.
         router.get(

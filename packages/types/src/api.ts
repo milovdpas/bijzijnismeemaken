@@ -1,4 +1,4 @@
-import type { GroupAccess, GroupRole, Locale } from './enums';
+import type { GroupAccess, GroupRole, Locale, NotificationType } from './enums';
 import type { AvatarKey } from './constants';
 import type { IsoDateTimeString, Uuid } from './domain';
 
@@ -75,9 +75,6 @@ export interface MeResponse {
     hasPassword: boolean;
     hasGoogle: boolean;
     autoAddToCalendar: boolean;
-    notifyEmailInvites: boolean;
-    notifyEmailPlanned: boolean;
-    notifyEmailNewActivity: boolean;
     createdAt: IsoDateTimeString;
 }
 
@@ -88,9 +85,22 @@ export interface UpdateMeRequest {
     avatarKey?: AvatarKey;
     locale?: Locale;
     autoAddToCalendar?: boolean;
-    notifyEmailInvites?: boolean;
-    notifyEmailPlanned?: boolean;
-    notifyEmailNewActivity?: boolean;
+}
+
+/**
+ * One notification type and the channels it may use. `GET /me/notification-settings`
+ * returns one per `NotificationType`, defaults filled in for types never touched.
+ */
+export interface NotificationSettingDto {
+    type: NotificationType;
+    email: boolean;
+    push: boolean;
+}
+
+/** `PUT /me/notification-settings/:type`. Both channels, so the row is always whole. */
+export interface UpdateNotificationSettingRequest {
+    email: boolean;
+    push: boolean;
 }
 
 /** `PATCH /me/password`. `currentPassword` is required when the account already has one. */

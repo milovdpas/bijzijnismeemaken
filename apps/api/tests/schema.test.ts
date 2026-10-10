@@ -26,9 +26,6 @@ describe('users', () => {
         const fresh = await User.findOneByOrFail({ id: user.id });
         expect(fresh.locale).toBe('nl');
         expect(fresh.autoAddToCalendar).toBe(false);
-        expect(fresh.notifyEmailInvites).toBe(true);
-        expect(fresh.notifyEmailPlanned).toBe(true);
-        expect(fresh.notifyEmailNewActivity).toBe(true);
         expect(fresh.onboardingDone()).toBe(false);
     });
 

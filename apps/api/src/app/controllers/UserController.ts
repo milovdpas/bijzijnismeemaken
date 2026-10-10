@@ -1,10 +1,16 @@
 import { ERROR_CODES } from '@bzim/types';
-import type { HandleAvailableResponse, MeResponse, UserSummary } from '@bzim/types';
+import type {
+    HandleAvailableResponse,
+    MeResponse,
+    NotificationSettingDto,
+    UserSummary,
+} from '@bzim/types';
 
 import type { Handler } from '../../interfaces/IHttp';
-import { queryOf } from '../middleware/ValidateRequest';
+import { paramsOf, queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
 import Group from '../models/Group.entity';
+import { NotificationSettingService } from '../services/NotificationSettingService';
 import { SessionService } from '../services/SessionService';
 import { UserService } from '../services/UserService';
 import { sendConflict, sendError, sendNoContent, sendSuccess } from '../utils/ApiResponses';
@@ -12,6 +18,8 @@ import { clearAuthCookies, setAuthCookies } from '../utils/Cookies';
 import {
     changePasswordSchema,
     handleAvailableQuerySchema,
+    notificationSettingSchema,
+    notificationTypeParamSchema,
     searchUsersQuerySchema,
     updateMeSchema,
 } from '../validators/userSchemas';
@@ -23,25 +31,13 @@ export default class UserController {
     };
 
     updateMe: Handler<BodyOf<typeof updateMeSchema>> = async (req, res) => {
-        const {
-            handle,
-            displayName,
-            avatarKey,
-            locale,
-            autoAddToCalendar,
-            notifyEmailInvites,
-            notifyEmailPlanned,
-            notifyEmailNewActivity,
-        } = req.body;
+        const { handle, displayName, avatarKey, locale, autoAddToCalendar } = req.body;
         const result = await UserService.update(req.user, {
             handle,
             displayName,
             avatarKey,
             locale,
             autoAddToCalendar,
-            notifyEmailInvites,
-            notifyEmailPlanned,
-            notifyEmailNewActivity,
         });
         if (!result.ok) {
             sendConflict(res, 'That handle is taken', ERROR_CODES.CONFLICT, { field: 'handle' });
@@ -99,5 +95,21 @@ export default class UserController {
         await UserService.deleteAccount(req.user);
         clearAuthCookies(res);
         sendNoContent(res);
+    };
+
+    notificationSettings: Handler = async (req, res) => {
+        sendSuccess<NotificationSettingDto[]>(res, await NotificationSettingService.list(req.user));
+    };
+
+    updateNotificationSetting: Handler<BodyOf<typeof notificationSettingSchema>> = async (
+        req,
+        res,
+    ) => {
+        const { type } = paramsOf(req, notificationTypeParamSchema);
+        const { email, push } = req.body;
+        sendSuccess<NotificationSettingDto>(
+            res,
+            await NotificationSettingService.update(req.user, type, { email, push }),
+        );
     };
 }

@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_ENDPOINTS, ERROR_CODES, GroupRole, Locale } from '@bzim/types';
+import { API_ENDPOINTS, ERROR_CODES, GroupRole, Locale, NotificationType } from '@bzim/types';
 import type { GroupDetailResponse, GroupInviteDto } from '@bzim/types';
 
 import GroupInvite from '../src/app/models/GroupInvite.entity';
 import GroupMember from '../src/app/models/GroupMember.entity';
+import NotificationSetting from '../src/app/models/NotificationSetting.entity';
 import { mailer } from '../src/app/modules/mail';
 import type { MailMessage } from '../src/app/modules/mail';
 import { sessionFor } from './support/auth';
@@ -62,8 +63,12 @@ describe('POST /groups/:groupId/invites', () => {
     it("respects the invitee's email preference", async () => {
         const sent = outbox();
         const { group, invitee, asAdmin } = await setup();
-        invitee.notifyEmailInvites = false;
-        await invitee.save();
+        await NotificationSetting.create({
+            userId: invitee.id,
+            type: NotificationType.GROUP_INVITE,
+            email: false,
+            push: false,
+        }).save();
 
         expect(
             (await asAdmin.post(API_ENDPOINTS.GROUPS.INVITES(group.id), { handle: 'anna' })).status,

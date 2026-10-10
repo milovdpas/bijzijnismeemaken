@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AUTH, AVATAR_KEYS, Locale, PROFILE } from '@bzim/types';
+import { AUTH, AVATAR_KEYS, Locale, NotificationType, PROFILE } from '@bzim/types';
 
 import { normalizeHandle } from '../utils/Normalize';
 
@@ -22,9 +22,6 @@ export const updateMeSchema = z
         avatarKey: z.enum(AVATAR_KEYS),
         locale: z.enum(Locale),
         autoAddToCalendar: z.boolean(),
-        notifyEmailInvites: z.boolean(),
-        notifyEmailPlanned: z.boolean(),
-        notifyEmailNewActivity: z.boolean(),
     })
     .partial()
     .refine((body) => Object.keys(body).length > 0, 'At least one field is required');
@@ -41,4 +38,13 @@ export const handleAvailableQuerySchema = z.object({
 
 export const searchUsersQuerySchema = z.object({
     q: z.string().transform(normalizeHandle).pipe(z.string().min(2).max(PROFILE.HANDLE_MAX_LENGTH)),
+});
+
+export const notificationTypeParamSchema = z.object({
+    type: z.enum(NotificationType),
+});
+
+export const notificationSettingSchema = z.object({
+    email: z.boolean(),
+    push: z.boolean(),
 });

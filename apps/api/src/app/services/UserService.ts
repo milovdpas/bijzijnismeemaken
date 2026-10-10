@@ -34,13 +34,6 @@ export class UserService {
         if (patch.avatarKey !== undefined) user.avatarKey = patch.avatarKey;
         if (patch.locale !== undefined) user.locale = patch.locale;
         if (patch.autoAddToCalendar !== undefined) user.autoAddToCalendar = patch.autoAddToCalendar;
-        if (patch.notifyEmailInvites !== undefined)
-            user.notifyEmailInvites = patch.notifyEmailInvites;
-        if (patch.notifyEmailPlanned !== undefined)
-            user.notifyEmailPlanned = patch.notifyEmailPlanned;
-        if (patch.notifyEmailNewActivity !== undefined) {
-            user.notifyEmailNewActivity = patch.notifyEmailNewActivity;
-        }
 
         await user.save();
         return { ok: true, user };
