@@ -46,6 +46,7 @@ export const queryKeys = {
         group: (groupId: string, from: string, to: string) =>
             ['occurrences', groupId, from, to] as const,
     },
+    widgets: (groupId: string) => ['widgets', groupId] as const,
     leaderboards: {
         list: (groupId: string) => ['leaderboards', groupId, 'list'] as const,
         /** Everything about one board: detail, rankings, periods, history. */

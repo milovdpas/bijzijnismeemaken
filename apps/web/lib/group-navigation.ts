@@ -1,4 +1,4 @@
-import { Sparkles, Trophy } from 'lucide-react';
+import { LayoutGrid, Sparkles, Trophy } from 'lucide-react';
 import { CalendarDaysIcon } from '@/components/icons/calendar-days-icon';
 import { GearIcon } from '@/components/icons/gear-icon';
 import { PeopleIcon } from '@/components/icons/people-icon';
@@ -7,9 +7,10 @@ import { GroupRole } from '@bzim/types';
 
 /**
  * The sections inside one group. Rendered by `GroupShell` as a tab row, so
- * the five group pages never have to agree on their own order or icons.
+ * the group pages never have to agree on their own order or icons.
  */
-export type GroupTab = 'activities' | 'availability' | 'leaderboards' | 'members' | 'settings';
+export type GroupTab =
+    'dashboard' | 'activities' | 'availability' | 'leaderboards' | 'members' | 'settings';
 
 export interface GroupTabItem {
     tab: GroupTab;
@@ -20,6 +21,7 @@ export interface GroupTabItem {
 }
 
 export const GROUP_TABS: readonly GroupTabItem[] = [
+    { tab: 'dashboard', labelKey: 'groupTabs.dashboard', icon: LayoutGrid, adminOnly: false },
     { tab: 'activities', labelKey: 'groupTabs.activities', icon: Sparkles, adminOnly: false },
     {
         tab: 'availability',
@@ -32,12 +34,14 @@ export const GROUP_TABS: readonly GroupTabItem[] = [
     { tab: 'settings', labelKey: 'groupTabs.settings', icon: GearIcon, adminOnly: true },
 ];
 
-export function groupHref(groupId: string, tab: GroupTab = 'activities'): string {
-    return `/groups/${groupId}/${tab}`;
+/** The dashboard is the group's root; every other tab is a path under it. */
+export function groupHref(groupId: string, tab: GroupTab = 'dashboard'): string {
+    return tab === 'dashboard' ? `/groups/${groupId}` : `/groups/${groupId}/${tab}`;
 }
 
 /** Which tab owns the current path, including its sub-pages (an activity's detail is still "activities"). */
 export function activeGroupTab(pathname: string, groupId: string): GroupTab | null {
+    if (pathname === `/groups/${groupId}`) return 'dashboard';
     const rest = pathname.startsWith(`/groups/${groupId}/`)
         ? pathname.slice(`/groups/${groupId}/`.length)
         : '';

@@ -1,9 +1,11 @@
-import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 
-import { groupHref } from '@/lib/group-navigation';
+import { DashboardView } from '@/components/dashboard/dashboard-view';
 
-/** A group's root is its activities; there is nothing else to show on it. */
+export const metadata: Metadata = { title: 'Dashboard' };
+
+/** A group's root is its dashboard. */
 export default async function GroupPage({ params }: { params: Promise<{ groupId: string }> }) {
     const { groupId } = await params;
-    redirect(groupHref(groupId));
+    return <DashboardView groupId={groupId} />;
 }
