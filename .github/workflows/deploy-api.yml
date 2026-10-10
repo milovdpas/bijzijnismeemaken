@@ -62,6 +62,7 @@ jobs:
                   GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
                   CALENDAR_TOKEN_KEY: ${{ secrets.CALENDAR_TOKEN_KEY }}
                   BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+                  UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
                   MAIL_FROM_EMAIL: ${{ vars.MAIL_FROM_EMAIL }}
                   MAIL_FROM_NAME: ${{ vars.MAIL_FROM_NAME }}
                   WORKER_TOKEN: ${{ secrets.WORKER_TOKEN }}
