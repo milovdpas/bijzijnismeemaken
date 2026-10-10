@@ -85,7 +85,14 @@ Status legend: `[ ]` todo · `[~]` in progress · `[x]` done. Each done line get
 - [ ] **43.** Operational: backup note for external MySQL, log review, rate-limit tuning, Dependabot config.
 - [ ] **44.** Tools tab on the group page: tool registry + score tracker, darts scorer (501/301, around the clock), Yahtzee sheet; per device, no leaderboard hand-off. One of the last things. Decided 2026-10-10; see docs/07.
 
-## M4 — Later ideas (not committed)
+## M4 — Tournaments
+
+- [ ] **45.** Tournaments schema, `tournament` activity category, pure bracket/standings logic with tests. Decided 2026-10-10; see docs/01 §1.5c, docs/03, docs/04.
+- [ ] **46.** Tournaments API: list, create, settings, entries, draw, start, results, advance, finish; tests.
+- [ ] **47.** Web: Tournaments tab, list and archive, create form, draft screen with entries, team builder, seeding and groups.
+- [ ] **48.** Web: bracket and group tables, result entry, advance and finish, archive detail; "create tournament" on a `tournament` activity.
+
+## M5 — Later ideas (not committed)
 
 - No tasks yet; candidates are listed in [07-milestones.md](07-milestones.md).
 

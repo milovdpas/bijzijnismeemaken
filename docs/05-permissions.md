@@ -24,5 +24,9 @@
 | View the dashboard | ✔ | ✔ | ✔ | | | |
 | Add, configure, reorder, remove dashboard widgets | ✔ | ✔ | ✘ | | | |
 | Edit past months | ✘ | ✘ | ✘ | | ✘ | ✘ |
+| Create a tournament | ✔ | ✔ | ✔ | | | |
+| Tournament settings, entries, draw, start, advance, finish, delete (organiser = creator) | ✔ | ✔ | ✘ | organiser ✔ | | |
+| Enter a result | ✔ | ✔ | own match only, while it has none | organiser ✔ | | |
+| Correct or clear a result | ✔ | ✔ | ✘ | organiser ✔ | | |
 
 Implementation: `requireGroupRole(minRole)` middleware loads `group_members` row for `req.user` + `:groupId` → `req.membership`; 404 if not a member (hides existence) except for public groups (403 `NOT_A_MEMBER`). Resource-level checks (creator, editor) live in services returning `{ ok:false, problem:'FORBIDDEN' }`.

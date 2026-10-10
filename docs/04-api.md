@@ -114,6 +114,24 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | PUT | `/groups/:groupId/widgets/order` | `{ widgetIds[] }` full order; 422 unless it is a permutation of the group's widgets | A |
 | POST | `/groups/:groupId/widgets/restore-defaults` | Appends any default widget type that is missing | A |
 
+## Tournaments (M4)
+| Method | Path | Purpose | Perm |
+|---|---|---|---|
+| GET | `/groups/:groupId/tournaments?status=` | List (running first; `finished` for the archive) | M |
+| POST | `/groups/:groupId/tournaments` | Create (draft; optional `activityId` of a `tournament`-category activity) | M |
+| GET | `…/:tournamentId` | Detail: settings, entries with members, matches, group standings, winner | M |
+| PATCH | `…/:tournamentId` | Settings while draft | C, A |
+| DELETE | `…/:tournamentId` | Delete | C, A |
+| POST | `…/entries` | Add an entry: `{ userId }`, `{ name }` (guest) or `{ name, members: [...] }` (team) | C, A (draft) |
+| PATCH | `…/entries/:entryId` | Name, members, seed, group | C, A (draft) |
+| DELETE | `…/entries/:entryId` | Remove | C, A (draft) |
+| POST | `…/draw` | `{ teams?: boolean }`: shuffle the seeds (and build random teams of `team_size` from the people added) | C, A (draft) |
+| POST | `…/start` | Generate matches, status `running` | C, A |
+| PUT | `…/matches/:matchId/result` | `{ homeScore, awayScore }`; a side's member while the match has no result, C/A always | side, C, A |
+| DELETE | `…/matches/:matchId/result` | Clear a result (and what followed from it, if nothing later was played) | C, A |
+| POST | `…/advance` | Group stage complete → knockout from the standings | C, A |
+| POST | `…/finish` | Final played → status `finished`, winner set | C, A |
+
 ## Worker (cron) & internal
 | Method | Path | Purpose | Perm |
 |---|---|---|---|
