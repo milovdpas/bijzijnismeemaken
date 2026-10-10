@@ -56,8 +56,8 @@ export default class OccurrenceController {
         });
         if (!result.ok) {
             switch (result.problem) {
-                case 'PARTICIPANT_NOT_IN':
-                    sendValidationFailed(res, 'Every participant must be in', {
+                case 'PARTICIPANT_NOT_MEMBER':
+                    sendValidationFailed(res, 'Every participant must be a member', {
                         problem: result.problem,
                     });
                     return;
@@ -97,7 +97,9 @@ export default class OccurrenceController {
             status,
         });
         if (!result.ok) {
-            sendValidationFailed(res, 'Every participant must be in', { problem: result.problem });
+            sendValidationFailed(res, 'Every participant must be a member', {
+                problem: result.problem,
+            });
             return;
         }
         sendSuccess<OccurrenceDto>(res, result.occurrence.toDto());

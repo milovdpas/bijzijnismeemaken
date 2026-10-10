@@ -15,7 +15,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Owner leaving | Owner cannot leave. Must transfer ownership or delete the group. Account deletion is blocked while owning a group. |
 | Dayparts | morning 08:00–12:00, afternoon 12:00–18:00, evening 18:00–24:00. Europe/Amsterdam, platform-wide. |
 | Sessions | JWT access (15 min) + refresh (60 days) like carrefour, delivered as httpOnly cookies on the shared parent domain. |
-| FE ↔ API | Separate hosts: app `bijzijnismeemaken.milovanderpas.nl`, API `bijzijnismeemaken-api.milovanderpas.nl` (hostnames settled 2026-10-10). CORS with credentials, cookie `Domain=.bijzijn.milovanderpas.nl`. |
+| FE ↔ API | Separate hosts: app `bijzijnismeemaken.milovanderpas.nl` (with `bethereorbesquare.milovanderpas.nl` as a redirect-only alias), API `bijzijnismeemaken-api.milovanderpas.nl` (hostnames settled 2026-10-10). CORS with credentials, cookie `Domain=.bijzijn.milovanderpas.nl`. |
 | Email | Brevo (HTTP API) behind a `Mailer` interface. |
 | Web push | Phase 3; schema designed now. |
 | Who plans | Activity creator + admins/owner. |

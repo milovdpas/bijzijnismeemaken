@@ -80,6 +80,8 @@ describe('activityToForm', () => {
             title: 'Weekend weg',
             description: null,
             imageUrl: null,
+            imageCreditName: null,
+            imageCreditUrl: null,
             isRecurring: false,
             dateMode: DateMode.SPECIFIC,
             specificDate: '2027-03-06',

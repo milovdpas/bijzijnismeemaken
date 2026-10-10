@@ -98,6 +98,8 @@ export async function seedActivity(
         title: `Activity ${String(counter)}`,
         description: null,
         imageUrl: null,
+        imageCreditName: null,
+        imageCreditUrl: null,
         isRecurring: false,
         dateMode: DateMode.NONE,
         specificDate: null,

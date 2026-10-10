@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Between } from 'typeorm';
+import { Between, In } from 'typeorm';
 import type { FindOptionsRelations } from 'typeorm';
 import { API_ENDPOINTS, OccurrenceStatus, occurrenceWindow, windowsOverlap } from '@bzim/types';
 import type { GroupOccurrenceDto, OccurrenceInput, OccurrenceUpdateInput } from '@bzim/types';
@@ -10,6 +10,7 @@ import type Activity from '../models/Activity.entity';
 import ActivityInterest from '../models/ActivityInterest.entity';
 import ActivityOccurrence from '../models/ActivityOccurrence.entity';
 import type Group from '../models/Group.entity';
+import GroupMember from '../models/GroupMember.entity';
 import OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
 import type User from '../models/User.entity';
 import { calendarSpan } from '../utils/CalendarLinks';
@@ -18,8 +19,8 @@ import { signOccurrenceToken } from '../utils/SignedLink';
 import { NotificationService } from './NotificationService';
 
 export type OccurrenceProblem =
-    /** A participant who never said "I'm in". */
-    | 'PARTICIPANT_NOT_IN'
+    /** A participant who is not in the group. */
+    | 'PARTICIPANT_NOT_MEMBER'
     /** A one-off activity already has a planned occurrence; re-date that one. */
     | 'ALREADY_OPEN';
 
@@ -54,8 +55,8 @@ export class OccurrenceService {
         ) {
             return { ok: false, problem: 'ALREADY_OPEN' };
         }
-        if (!(await OccurrenceService.allIn(activity, input.participantIds))) {
-            return { ok: false, problem: 'PARTICIPANT_NOT_IN' };
+        if (!(await OccurrenceService.allMembers(group, input.participantIds))) {
+            return { ok: false, problem: 'PARTICIPANT_NOT_MEMBER' };
         }
 
         const created = await AppDataSource.transaction(async (manager) => {
@@ -78,6 +79,7 @@ export class OccurrenceService {
             return occurrence;
         });
 
+        await OccurrenceService.markIn(activity, input.participantIds, planner);
         const occurrence = await OccurrenceService.reload(created.id);
         await OccurrenceService.tellNewParticipants(group, activity, occurrence, planner);
         return { ok: true, occurrence: await OccurrenceService.reload(created.id) };
@@ -97,9 +99,9 @@ export class OccurrenceService {
     ): Promise<OccurrenceResult> {
         if (
             patch.participantIds !== undefined &&
-            !(await OccurrenceService.allIn(activity, patch.participantIds))
+            !(await OccurrenceService.allMembers(group, patch.participantIds))
         ) {
-            return { ok: false, problem: 'PARTICIPANT_NOT_IN' };
+            return { ok: false, problem: 'PARTICIPANT_NOT_MEMBER' };
         }
         const wasPlanned = occurrence.status === OccurrenceStatus.PLANNED;
 
@@ -127,6 +129,9 @@ export class OccurrenceService {
             }
         }
 
+        if (patch.participantIds !== undefined) {
+            await OccurrenceService.markIn(activity, patch.participantIds, editor);
+        }
         const fresh = await OccurrenceService.reload(occurrence.id);
         if (fresh.status === OccurrenceStatus.CANCELLED) {
             if (wasPlanned) {
@@ -236,12 +241,34 @@ export class OccurrenceService {
         return `${env.appUrl}/groups/${activity.groupId}/activities/${activity.id}`;
     }
 
-    /** Every participant must have said "I'm in"; the planner picks from that list. */
-    private static async allIn(activity: Activity, userIds: string[]): Promise<boolean> {
-        if (userIds.length === 0) return true;
+    /** Anyone in the group may be counted in; the planner knows who said yes at the bar. */
+    private static async allMembers(group: Group, userIds: string[]): Promise<boolean> {
+        const unique = [...new Set(userIds)];
+        if (unique.length === 0) return true;
+        const found = await GroupMember.countBy({ groupId: group.id, userId: In(unique) });
+        return found === unique.length;
+    }
+
+    /**
+     * Being picked for a date means being in. Whoever had not pressed the
+     * button gets the mark on the planner's behalf, so the activity's "in"
+     * list and its participants never disagree.
+     */
+    private static async markIn(activity: Activity, userIds: string[], actor: User): Promise<void> {
+        if (userIds.length === 0) return;
         const interests = await ActivityInterest.findBy({ activityId: activity.id });
         const inIds = new Set(interests.map((row) => row.userId));
-        return userIds.every((userId) => inIds.has(userId));
+        const missing = [...new Set(userIds)].filter((userId) => !inIds.has(userId));
+        if (missing.length === 0) return;
+        await ActivityInterest.save(
+            missing.map((userId) =>
+                ActivityInterest.create({
+                    activityId: activity.id,
+                    userId,
+                    addedById: userId === actor.id ? null : actor.id,
+                }),
+            ),
+        );
     }
 
     private static async tellNewParticipants(

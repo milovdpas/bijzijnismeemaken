@@ -7,16 +7,20 @@ Hostnames:
 | What | Hostname | Container |
 |---|---|---|
 | Web app | `bijzijnismeemaken.milovanderpas.nl` | `bzim-web` (port 3000) |
+| English alias | `bethereorbesquare.milovanderpas.nl` | none: a permanent redirect to the web app, in the proxy |
 | API | `bijzijnismeemaken-api.milovanderpas.nl` | `bzim-api` (port 3000) |
+
+One app, one origin. The English name only redirects: the app is built around a single origin (CORS, the origin check, the Google sign-in return, invite links and emails, the installed PWA), and serving it on two hostnames would mean two sessions and two icons on a phone.
 
 The two are siblings under `milovanderpas.nl`, not parent and child. That is why `COOKIE_DOMAIN` stays empty: the session cookies are host-only on the API hostname, and a same-site request from the app carries them under `SameSite=Lax`. Setting `Domain=.milovanderpas.nl` would hand the cookies to every other app on the domain.
 
 ## 1. DNS
 
-Two A records at the registrar, both to the VPS (`159.195.28.227`):
+Three A records at the registrar, all to the VPS (`159.195.28.227`):
 
 ```
 bijzijnismeemaken.milovanderpas.nl      A   159.195.28.227
+bethereorbesquare.milovanderpas.nl      A   159.195.28.227
 bijzijnismeemaken-api.milovanderpas.nl  A   159.195.28.227
 ```
 
@@ -24,6 +28,7 @@ Check before going on, certbot needs them live:
 
 ```bash
 dig +short bijzijnismeemaken.milovanderpas.nl
+dig +short bethereorbesquare.milovanderpas.nl
 dig +short bijzijnismeemaken-api.milovanderpas.nl
 ```
 
@@ -107,7 +112,7 @@ Production uses the HTTP API (`MAIL_DRIVER=brevo`, set in `.env.dist`), so no SM
 
 Two conf files in `/opt/apps/proxy/conf.d/`, created as `.conf.disabled` first because nginx refuses a conf whose certificate does not exist yet.
 
-`bzim-web.conf`:
+`bzim-web.conf` (the app, plus the English alias as a redirect; one certificate covers both names):
 
 ```nginx
 server {
@@ -125,6 +130,18 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
+
+# The English name: same certificate, nothing but a redirect.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name bethereorbesquare.milovanderpas.nl;
+
+    ssl_certificate     /etc/letsencrypt/live/bijzijnismeemaken.milovanderpas.nl/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bijzijnismeemaken.milovanderpas.nl/privkey.pem;
+
+    return 301 https://bijzijnismeemaken.milovanderpas.nl$request_uri;
 }
 ```
 
@@ -158,8 +175,9 @@ Then, on the VPS:
 cd /opt/apps/proxy
 docker compose up -d
 
+# Both web names on ONE certificate; the first -d names the /etc/letsencrypt/live/ directory.
 docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
-  -d bijzijnismeemaken.milovanderpas.nl \
+  -d bijzijnismeemaken.milovanderpas.nl -d bethereorbesquare.milovanderpas.nl \
   --email vanderpasmilo@gmail.com --agree-tos --no-eff-email
 
 docker compose run --rm --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
@@ -171,7 +189,7 @@ mv conf.d/bzim-api.conf.disabled conf.d/bzim-api.conf
 docker exec proxy nginx -t && docker exec proxy nginx -s reload
 ```
 
-nginx will answer 502 for both hosts until the containers exist. That is expected.
+nginx will answer 502 for the app and the API until the containers exist. That is expected; the redirect works at once.
 
 ## 8. First deploy
 
@@ -190,6 +208,9 @@ curl -s https://bijzijnismeemaken-api.milovanderpas.nl/api/v1/health
 
 curl -I https://bijzijnismeemaken.milovanderpas.nl
 # HTTP/2 200
+
+curl -I https://bethereorbesquare.milovanderpas.nl
+# HTTP/2 301, location: https://bijzijnismeemaken.milovanderpas.nl/
 
 docker logs scheduler 2>&1 | grep 'job registered'
 # two bzim lines: bzim-cleanup and bzim-calendar-sync

@@ -2,14 +2,26 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import type { ActivityDetailDto, ActivityInput, ActivityListingDto } from '@bzim/types';
+import type {
+    ActivityDetailDto,
+    ActivityInput,
+    ActivityListingDto,
+    OccurrenceInput,
+    OccurrenceUpdateInput,
+} from '@bzim/types';
 
 import { ApiError } from '@/lib/api/client';
 import {
     createActivity,
+    deleteActivity,
+    deleteOccurrence,
     fetchActivities,
     fetchActivity,
+    planOccurrence,
+    setMemberInterest,
+    setMyInterest,
     updateActivity,
+    updateOccurrence,
 } from '@/lib/api/activities';
 import type { ActivityFilters } from '@/lib/api/activities';
 import { queryKeys } from '@/lib/query-keys';
@@ -63,4 +75,79 @@ export function useUpdateActivity(
             void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
         },
     });
+}
+
+/** Drops the activity from every cache; the list no longer has it. */
+export function useDeleteActivity(groupId: string): UseMutationResult<void, Error, string> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (activityId: string) => deleteActivity(groupId, activityId),
+        onSuccess: (_result, activityId) => {
+            client.removeQueries({ queryKey: queryKeys.activities.detail(groupId, activityId) });
+            void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
+        },
+    });
+}
+
+/**
+ * Interest changes, the caller's own or (for admins) somebody else's. Both
+ * refetch the activity, since the "in" list is what the detail shows.
+ */
+export function useSetInterest(
+    groupId: string,
+    activityId: string,
+): UseMutationResult<void, Error, { userId: string | null; inFor: boolean }> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, inFor }) =>
+            userId === null
+                ? setMyInterest(groupId, activityId, inFor)
+                : setMemberInterest(groupId, activityId, userId, inFor),
+        onSuccess: () => {
+            void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
+        },
+    });
+}
+
+/** Plan, change or remove an occurrence. One invalidation serves all three: the activity carries them. */
+function useOccurrenceMutation<TArgs>(
+    groupId: string,
+    action: (args: TArgs) => Promise<unknown>,
+): UseMutationResult<unknown, Error, TArgs> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: action,
+        onSuccess: () => {
+            void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
+        },
+    });
+}
+
+export function usePlanOccurrence(
+    groupId: string,
+    activityId: string,
+): UseMutationResult<unknown, Error, OccurrenceInput> {
+    return useOccurrenceMutation(groupId, (input: OccurrenceInput) =>
+        planOccurrence(groupId, activityId, input),
+    );
+}
+
+export function useUpdateOccurrence(
+    groupId: string,
+    activityId: string,
+): UseMutationResult<unknown, Error, { occurrenceId: string; patch: OccurrenceUpdateInput }> {
+    return useOccurrenceMutation(
+        groupId,
+        ({ occurrenceId, patch }: { occurrenceId: string; patch: OccurrenceUpdateInput }) =>
+            updateOccurrence(groupId, activityId, occurrenceId, patch),
+    );
+}
+
+export function useDeleteOccurrence(
+    groupId: string,
+    activityId: string,
+): UseMutationResult<unknown, Error, string> {
+    return useOccurrenceMutation(groupId, (occurrenceId: string) =>
+        deleteOccurrence(groupId, activityId, occurrenceId),
+    );
 }

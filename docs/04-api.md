@@ -67,7 +67,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | PUT | `…/interest/:userId` · DELETE | Mark/unmark another member | A |
 | GET | `…/suggestions?memberIds=&from=&weeks=` | Ranked date suggestions (default members = all "in") | M |
 | GET | `/groups/:groupId/occurrences?from=&to=` | Planned occurrences across the group in a range (agenda, availability overlay, conflict flags) | M |
-| POST | `…/occurrences` | Plan: `{ date, daypart?, startTime?, participantIds[] }` (must be ⊆ "in" members) → `ACTIVITY_PLANNED` to participants | C, A |
+| POST | `…/occurrences` | Plan: `{ date, daypart?, startTime?, participantIds[] }` (any group member; someone picked who had not said "in" is marked in on the planner's behalf) → `ACTIVITY_PLANNED` to participants | C, A |
 | PATCH | `…/occurrences/:occurrenceId` | Re-date / participants / status planned→done/cancelled (also done→planned to reopen). Notifications are driven by `occurrence_participants.notified_*`: never-notified rows get `ACTIVITY_PLANNED`, rows notified for different date/daypart/time get `ACTIVITY_RESCHEDULED`, cancel sends `ACTIVITY_CANCELLED` to all notified rows | C, A |
 | DELETE | `…/occurrences/:occurrenceId` | Remove | C, A |
 | GET | `/occurrences/:occurrenceId/ics?token=` | ICS download via signed token (email button, no login) | signed |

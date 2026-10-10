@@ -39,6 +39,8 @@ const activityFields = z.object({
     title: z.string().trim().min(ACTIVITY.TITLE_MIN_LENGTH).max(ACTIVITY.TITLE_MAX_LENGTH),
     description: optionalText(ACTIVITY.DESCRIPTION_MAX_LENGTH).optional(),
     imageUrl: optionalUrl.optional(),
+    imageCreditName: optionalText(80).optional(),
+    imageCreditUrl: optionalUrl.optional(),
     isRecurring: z.boolean(),
     dateMode: z.enum(DateMode),
     specificDate: z.iso.date().nullable().optional(),

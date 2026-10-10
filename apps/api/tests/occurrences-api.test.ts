@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, Daypart, GroupRole, Locale, OccurrenceStatus } from '@bzim/types';
 import type { GroupOccurrenceDto, OccurrenceDto } from '@bzim/types';
 
+import ActivityInterest from '../src/app/models/ActivityInterest.entity';
 import ActivityOccurrence from '../src/app/models/ActivityOccurrence.entity';
 import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
 import { mailer } from '../src/app/modules/mail';
@@ -93,13 +94,27 @@ describe('POST …/occurrences', () => {
         expect(activity.isRecurring).toBe(false);
     });
 
-    it('refuses people who are not in, a second open plan for a one-off, and non-managers', async () => {
+    it('refuses outsiders, a second open plan for a one-off, and non-managers; marks a picked member in', async () => {
         outbox();
-        const { anna, cas, asAnna, asBob, asOwner, plan } = await setup();
+        const { anna, cas, activity, asAnna, asBob, asOwner, plan } = await setup();
+        const outsider = await seedUser();
 
-        const notIn = await asAnna.post(plan, { date: '2026-11-06', participantIds: [cas.id] });
-        expect(notIn.status).toBe(422);
-        expect(error(notIn).details).toEqual({ problem: 'PARTICIPANT_NOT_IN' });
+        const notMember = await asAnna.post(plan, {
+            date: '2026-11-06',
+            participantIds: [outsider.id],
+        });
+        expect(notMember.status).toBe(422);
+        expect(error(notMember).details).toEqual({ problem: 'PARTICIPANT_NOT_MEMBER' });
+
+        // Cas never pressed "I'm in" but is in the group: allowed, and marked in by Anna.
+        const withCas = await asAnna.post(plan, { date: '2026-11-06', participantIds: [cas.id] });
+        expect(withCas.status).toBe(201);
+        const mark = await ActivityInterest.findOneByOrFail({
+            activityId: activity.id,
+            userId: cas.id,
+        });
+        expect(mark.addedById).toBe(anna.id);
+        await ActivityOccurrence.delete({ id: data<OccurrenceDto>(withCas).id });
 
         expect((await asBob.post(plan, { date: '2026-11-06', participantIds: [] })).status).toBe(
             403,

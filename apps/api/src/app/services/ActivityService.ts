@@ -66,6 +66,8 @@ export class ActivityService {
             title: input.title,
             description: input.description ?? null,
             imageUrl: input.imageUrl ?? null,
+            imageCreditName: input.imageCreditName ?? null,
+            imageCreditUrl: input.imageCreditUrl ?? null,
             isRecurring: input.isRecurring,
             dateMode: input.dateMode,
             specificDate: input.specificDate ?? null,

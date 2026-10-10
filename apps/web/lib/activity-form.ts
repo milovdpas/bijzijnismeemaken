@@ -17,6 +17,8 @@ export interface ActivityFormState {
     title: string;
     description: string;
     imageUrl: string;
+    imageCreditName: string;
+    imageCreditUrl: string;
     isRecurring: boolean;
     dateMode: DateMode;
     specificDate: string;
@@ -37,6 +39,8 @@ export const blankActivityForm: ActivityFormState = {
     title: '',
     description: '',
     imageUrl: '',
+    imageCreditName: '',
+    imageCreditUrl: '',
     isRecurring: false,
     dateMode: DateMode.NONE,
     specificDate: '',
@@ -58,6 +62,8 @@ export function activityToForm(activity: ActivityDto): ActivityFormState {
         title: activity.title,
         description: activity.description ?? '',
         imageUrl: activity.imageUrl ?? '',
+        imageCreditName: activity.imageCreditName ?? '',
+        imageCreditUrl: activity.imageCreditUrl ?? '',
         isRecurring: activity.isRecurring,
         dateMode: activity.dateMode,
         specificDate: activity.specificDate ?? '',
@@ -120,6 +126,8 @@ export function toActivityInput(form: ActivityFormState): ActivityInput {
         title: form.title.trim(),
         description: text(form.description),
         imageUrl: text(form.imageUrl),
+        imageCreditName: text(form.imageCreditName),
+        imageCreditUrl: text(form.imageCreditUrl),
         isRecurring: form.isRecurring,
         dateMode: form.dateMode,
         specificDate: form.dateMode === DateMode.SPECIFIC ? text(form.specificDate) : null,

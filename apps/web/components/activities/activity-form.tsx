@@ -145,7 +145,7 @@ export function ActivityForm({
                     </div>
                 </Field>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid items-start gap-4 sm:grid-cols-2">
                     {form.dateMode === DateMode.SPECIFIC && (
                         <Field
                             label={t('activityForm.specificDate')}
@@ -309,7 +309,18 @@ export function ActivityForm({
                 <h2 className="text-base">{t('imageField.sectionTitle')}</h2>
                 <ImageField
                     value={form.imageUrl}
-                    onChange={(imageUrl) => patch({ imageUrl })}
+                    credit={
+                        form.imageCreditName === ''
+                            ? null
+                            : { name: form.imageCreditName, url: form.imageCreditUrl }
+                    }
+                    onChange={(imageUrl, credit) =>
+                        patch({
+                            imageUrl,
+                            imageCreditName: credit?.name ?? '',
+                            imageCreditUrl: credit?.url ?? '',
+                        })
+                    }
                     suggestedQuery={form.title.trim()}
                 />
             </section>

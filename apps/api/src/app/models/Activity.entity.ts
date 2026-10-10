@@ -60,6 +60,13 @@ export default class Activity extends BaseEntity {
     @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
     imageUrl!: string | null;
 
+    /** The photographer, when the picture came from the stock photo search; null for a pasted link. */
+    @Column({ name: 'image_credit_name', type: 'varchar', length: 80, nullable: true })
+    imageCreditName!: string | null;
+
+    @Column({ name: 'image_credit_url', type: 'varchar', length: 500, nullable: true })
+    imageCreditUrl!: string | null;
+
     @Column({ name: 'is_recurring', type: 'boolean', default: false })
     isRecurring!: boolean;
 
@@ -140,6 +147,8 @@ export default class Activity extends BaseEntity {
             title: this.title,
             description: this.description,
             imageUrl: this.imageUrl,
+            imageCreditName: this.imageCreditName,
+            imageCreditUrl: this.imageCreditUrl,
             isRecurring: this.isRecurring,
             dateMode: this.dateMode,
             specificDate: this.specificDate,

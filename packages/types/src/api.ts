@@ -221,6 +221,9 @@ export interface ActivityDto {
     title: string;
     description: string | null;
     imageUrl: string | null;
+    /** Photographer credit when the picture came from the stock photo search. */
+    imageCreditName: string | null;
+    imageCreditUrl: string | null;
     isRecurring: boolean;
     dateMode: DateMode;
     specificDate: IsoDateString | null;
@@ -280,6 +283,8 @@ export interface ActivityInput {
     title: string;
     description?: string | null;
     imageUrl?: string | null;
+    imageCreditName?: string | null;
+    imageCreditUrl?: string | null;
     isRecurring: boolean;
     dateMode: DateMode;
     specificDate?: IsoDateString | null;
