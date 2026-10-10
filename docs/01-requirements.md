@@ -53,7 +53,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 ## 1.2 Groups
 - Create group: name, description, access = `public` | `invite_link` | `invite_only`. Creator becomes owner.
 - Public groups: listed with search by name; any signed-in user can join.
-- Invite link: `APP_URL/join/<slug>-<token>`; the API resolves by token only (slug is cosmetic). Non-expiring; owner/admin can regenerate (invalidating the old one); the token is nulled when access changes away from `invite_link`.
+- Invite link: `APP_URL/join/<slug>-<token>`; the API resolves by token only (slug is cosmetic). The token is the last 43 characters of the path (base64url, so it can contain dashes itself); the web page extracts it that way. Non-expiring; owner/admin can regenerate (invalidating the old one); the token is nulled when access changes away from `invite_link`.
 - Invite only: owner/admin invites by `@handle`; invitee gets a notification + in-app pending invite; accepts or declines.
 - Roles: owner (1), admin, member. Owner transfers ownership to another member (old owner becomes admin). Owner deletes group.
 - Admin: change settings, invite/add/remove members (not owner, not other admins), regenerate link. Owner additionally: promote/demote admins, remove admins, transfer, delete.

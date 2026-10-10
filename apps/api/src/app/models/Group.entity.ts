@@ -11,6 +11,7 @@ import {
 import { GroupAccess } from '@bzim/types';
 import type { GroupResponse } from '@bzim/types';
 
+import { env } from '../../config/app';
 import GroupMember from './GroupMember.entity';
 import User from './User.entity';
 
@@ -74,6 +75,13 @@ export default class Group extends BaseEntity {
 
     memberCount(): Promise<number> {
         return GroupMember.countBy({ groupId: this.id });
+    }
+
+    /** `APP_URL/join/<slug>-<token>`, or null while link access is off. The web page reads the last 43 characters. */
+    inviteLink(): string | null {
+        return this.inviteToken === null
+            ? null
+            : `${env.appUrl}/join/${this.slug}-${this.inviteToken}`;
     }
 
     /** How many groups a person owns; a non-zero answer blocks their account deletion and leaving. */

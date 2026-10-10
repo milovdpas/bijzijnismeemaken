@@ -22,7 +22,26 @@ export default class UserController {
     };
 
     updateMe: Handler<BodyOf<typeof updateMeSchema>> = async (req, res) => {
-        const result = await UserService.update(req.user, req.body);
+        const {
+            handle,
+            displayName,
+            avatarKey,
+            locale,
+            autoAddToCalendar,
+            notifyEmailInvites,
+            notifyEmailPlanned,
+            notifyEmailNewActivity,
+        } = req.body;
+        const result = await UserService.update(req.user, {
+            handle,
+            displayName,
+            avatarKey,
+            locale,
+            autoAddToCalendar,
+            notifyEmailInvites,
+            notifyEmailPlanned,
+            notifyEmailNewActivity,
+        });
         if (!result.ok) {
             sendConflict(res, 'That handle is taken', ERROR_CODES.CONFLICT, { field: 'handle' });
             return;

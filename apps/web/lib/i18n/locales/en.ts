@@ -149,6 +149,7 @@ export const en = {
         EMAIL_NOT_VERIFIED: 'Check your inbox and click the verification link first.',
         TOKEN_INVALID: 'This link is no longer valid. Request a new one.',
         OWNER_MUST_TRANSFER: 'Transfer ownership of your groups first.',
+        ONBOARDING_REQUIRED: 'Finish your profile first.',
         WORKER_BUSY: 'That job is still running.',
         PROVIDER_ERROR: 'An external service failed. Try again later.',
         INTERNAL_ERROR: 'Something went wrong on our side.',

@@ -64,6 +64,14 @@ export const AUTH = {
     RESET_PASSWORD_MINUTES: 60,
 } as const;
 
+export const GROUP = {
+    NAME_MIN_LENGTH: 2,
+    NAME_MAX_LENGTH: 60,
+    DESCRIPTION_MAX_LENGTH: 1000,
+    /** Characters in an invite token (32 random bytes, base64url). The link ends with it. */
+    INVITE_TOKEN_LENGTH: 43,
+} as const;
+
 export const PROFILE = {
     HANDLE_MIN_LENGTH: 3,
     HANDLE_MAX_LENGTH: 24,
@@ -267,6 +275,8 @@ export const ERROR_CODES = {
     TOKEN_INVALID: 'TOKEN_INVALID',
     /** The owner tried to leave or delete their account without transferring first. */
     OWNER_MUST_TRANSFER: 'OWNER_MUST_TRANSFER',
+    /** Groups need a handle, name and avatar first; the app sends the person to onboarding. */
+    ONBOARDING_REQUIRED: 'ONBOARDING_REQUIRED',
     /** A worker endpoint was called while the same job was still running. */
     WORKER_BUSY: 'WORKER_BUSY',
     /** Google (OAuth or Calendar) or the mail provider failed or timed out. */

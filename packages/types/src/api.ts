@@ -136,6 +136,34 @@ export interface PublicGroupResponse extends GroupResponse {
     memberCount: number;
 }
 
+/**
+ * One group, for a member. `inviteLink` is only filled for admins and owners
+ * of an invite-link group; everybody else sees null.
+ */
+export interface GroupDetailResponse extends GroupListingResponse {
+    inviteLink: string | null;
+}
+
+/** `POST /groups` and `PATCH /groups/:id` (all optional on PATCH). */
+export interface GroupInput {
+    name: string;
+    description?: string | null;
+    access: GroupAccess;
+}
+
+/** What an invite link shows before the person decides to join. */
+export interface JoinPreviewResponse {
+    id: Uuid;
+    name: string;
+    description: string | null;
+    memberCount: number;
+    alreadyMember: boolean;
+}
+
+export interface InviteLinkResponse {
+    inviteLink: string;
+}
+
 export interface GroupMemberResponse {
     user: UserSummary;
     role: GroupRole;

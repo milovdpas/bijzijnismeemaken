@@ -6,6 +6,7 @@ import { AppDataSource } from '../../database/typeorm-db';
 import Group from '../models/Group.entity';
 import GroupMember from '../models/GroupMember.entity';
 import User from '../models/User.entity';
+import GroupPresenter from '../presenters/GroupPresenter';
 import { escapeLike } from '../utils/Database';
 
 import { generateToken } from '../utils/Token';
@@ -68,11 +69,9 @@ export class GroupService {
             order: { joinedAt: 'DESC' },
         });
         const counts = await Group.memberCounts(memberships.map((m) => m.groupId));
-        return memberships.map((m) => ({
-            ...m.group.toDto(),
-            role: m.role,
-            memberCount: counts.get(m.groupId) ?? 0,
-        }));
+        return memberships.map((m) =>
+            GroupPresenter.listing(m.group, m.role, counts.get(m.groupId) ?? 0),
+        );
     }
 
     /** Public groups by name prefix or substring, paginated. */
@@ -89,12 +88,16 @@ export class GroupService {
         });
         const counts = await Group.memberCounts(groups.map((g) => g.id));
         return {
-            items: groups.map((group) => ({
-                ...group.toDto(),
-                memberCount: counts.get(group.id) ?? 0,
-            })),
+            items: groups.map((group) =>
+                GroupPresenter.publicListing(group, counts.get(group.id) ?? 0),
+            ),
             total,
         };
+    }
+
+    /** A public group by id, for joining through the overview. Private ones are not found here. */
+    static findPublic(groupId: string): Promise<Group | null> {
+        return Group.findOneBy({ id: groupId, access: GroupAccess.PUBLIC });
     }
 
     /** By invite token, for the link preview and the join. */

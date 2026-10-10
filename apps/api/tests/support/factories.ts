@@ -56,6 +56,8 @@ export async function seedGroup(owner: User, overrides: DeepPartial<Group> = {})
         ownerId: owner.id,
     });
     Object.assign(group, overrides);
+    // The slug follows whatever name the override chose, as the service would.
+    group.slug = overrides.slug ?? slugify(group.name);
     await group.save();
     await GroupMember.create({ groupId: group.id, userId: owner.id, role: GroupRole.OWNER }).save();
     return group;

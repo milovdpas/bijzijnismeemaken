@@ -144,6 +144,7 @@ export const nl: Dict = {
         EMAIL_NOT_VERIFIED: 'Kijk eerst in je inbox en klik op de verificatielink.',
         TOKEN_INVALID: 'Deze link is niet meer geldig. Vraag een nieuwe aan.',
         OWNER_MUST_TRANSFER: 'Draag eerst het eigenaarschap van je groepen over.',
+        ONBOARDING_REQUIRED: 'Maak eerst je profiel af.',
         WORKER_BUSY: 'Die taak draait nog.',
         PROVIDER_ERROR: 'Een externe dienst werkte niet mee. Probeer het later opnieuw.',
         INTERNAL_ERROR: 'Er ging iets mis aan onze kant.',
