@@ -17,6 +17,7 @@ export function GoogleButton({ returnTo }: { returnTo?: string }) {
             size="lg"
             variant="outline"
             className="w-full"
+            nativeButton={false}
             render={<a href={googleLoginUrl(returnTo)} />}
         >
             <GoogleMark />

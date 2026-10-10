@@ -3,6 +3,7 @@ import type {
     GroupDetailResponse,
     GroupInput,
     GroupListingResponse,
+    InviteLinkResponse,
     JoinPreviewResponse,
     Paginated,
     PublicGroupResponse,
@@ -44,4 +45,26 @@ export function previewInvite(token: string): Promise<JoinPreviewResponse> {
 
 export function joinByToken(token: string): Promise<GroupDetailResponse> {
     return request<GroupDetailResponse>(API_ENDPOINTS.JOIN.BY_TOKEN(token), { method: 'POST' });
+}
+
+export function updateGroup(
+    groupId: string,
+    patch: Partial<GroupInput>,
+): Promise<GroupDetailResponse> {
+    return request<GroupDetailResponse>(API_ENDPOINTS.GROUPS.DETAIL(groupId), {
+        method: 'PATCH',
+        body: patch,
+    });
+}
+
+export function deleteGroup(groupId: string): Promise<void> {
+    return request<void>(API_ENDPOINTS.GROUPS.DETAIL(groupId), { method: 'DELETE' });
+}
+
+export async function regenerateInviteLink(groupId: string): Promise<string> {
+    const result = await request<InviteLinkResponse>(
+        API_ENDPOINTS.GROUPS.REGENERATE_INVITE_LINK(groupId),
+        { method: 'POST' },
+    );
+    return result.inviteLink;
 }

@@ -1,4 +1,4 @@
-import { Settings, Users } from 'lucide-react';
+import { SlidersHorizontal, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 /**
@@ -14,7 +14,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: readonly NavItem[] = [
     { href: '/groups', labelKey: 'nav.groups', icon: Users },
-    { href: '/settings', labelKey: 'nav.settings', icon: Settings },
+    { href: '/settings', labelKey: 'nav.settings', icon: SlidersHorizontal },
 ];
 
 /** Whether a nav item owns the current path, including its sub-pages. */

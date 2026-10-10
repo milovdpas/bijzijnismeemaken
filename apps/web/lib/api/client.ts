@@ -131,10 +131,17 @@ export async function request<T = never>(path: string, options: RequestOptions =
     let response = await send(path, options);
 
     if (response.status === 401 && path !== API_ENDPOINTS.AUTH.REFRESH) {
+        // Only a dead session is worth a refresh. A wrong password or an
+        // unverified address also answers 401, and those must reach the form
+        // as the error they are, not bounce the person through the login page.
+        const error = await ApiError.fromResponse(response.clone());
+        if (error.code !== ERROR_CODES.UNAUTHENTICATED) {
+            throw error;
+        }
         const refreshed = await refreshSession();
         if (!refreshed) {
             onUnauthenticated();
-            throw await ApiError.fromResponse(response);
+            throw error;
         }
         response = await send(path, options);
     }

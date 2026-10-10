@@ -15,8 +15,9 @@ import { cn } from '@/lib/utils';
  * One top bar on every width: logo, name and (from md up) the section links.
  * On phones the sections move to a bottom bar within thumb reach, and the main
  * column reserves `--h-bottomnav` so the last card is never hidden behind it.
- * The active section is a filled ink pill, so it reads at a glance even on a
- * yellow-heavy screen.
+ * On desktop the active section is a filled ink pill. On phones the icon itself
+ * changes state instead (yellow fill, ink stroke, bold label): a pill around
+ * every icon made the bar heavy, and a filled icon is the convention there.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -58,7 +59,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
             </header>
 
-            <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-(--h-bottomnav) pt-6 md:px-6 md:pt-8">
+            <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-[calc(var(--h-bottomnav)_+_2rem)] md:px-6 md:pt-8">
                 {children}
             </main>
 
@@ -72,16 +73,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 href={href}
                                 className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold"
                             >
-                                <span
+                                <Icon
                                     className={cn(
-                                        'flex h-7 w-12 items-center justify-center rounded-full transition-colors',
+                                        'size-6 transition-colors',
                                         active
-                                            ? 'bg-ink text-ink-foreground'
+                                            ? 'fill-brand text-brand-foreground'
                                             : 'text-muted-foreground',
                                     )}
-                                >
-                                    <Icon className="size-5" />
-                                </span>
+                                    strokeWidth={active ? 2.5 : 2}
+                                />
                                 <span className={active ? 'text-ink' : 'text-muted-foreground'}>
                                     {t(labelKey)}
                                 </span>

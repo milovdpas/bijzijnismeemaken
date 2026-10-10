@@ -10,7 +10,8 @@ import { Avatar } from '@/components/common/avatar';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useInviteByHandle, useUserSearch } from '@/hooks/queries/use-invites';
+import { useGroupInvites, useInviteByHandle, useUserSearch } from '@/hooks/queries/use-invites';
+import { useMembers } from '@/hooks/queries/use-members';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { ApiError } from '@/lib/api/client';
 import { errorKey } from '@/lib/api/errors';
@@ -33,6 +34,8 @@ export function InviteByHandle({ groupId, className }: { groupId: string; classN
     const [query, setQuery] = useState('');
     const q = useDebouncedValue(query.trim().replace(/^@/, '').toLowerCase());
     const results = useUserSearch(q);
+    const members = useMembers(groupId);
+    const pending = useGroupInvites(groupId);
     const invite = useInviteByHandle(groupId);
     const [invited, setInvited] = useState<string[]>([]);
 
@@ -43,6 +46,14 @@ export function InviteByHandle({ groupId, className }: { groupId: string; classN
     };
 
     const conflict = conflictKey(invite.error);
+
+    // People already in, or already asked, are not offered again: inviting them
+    // can only fail, and the list should show who is left to ask.
+    const taken = new Set([
+        ...(members.data ?? []).map((member) => member.user.id),
+        ...(pending.data ?? []).map((row) => row.invitedUser.id),
+    ]);
+    const candidates = results.data?.filter((user) => !taken.has(user.id));
 
     return (
         <div className={cn('grid gap-3', className)}>
@@ -61,12 +72,16 @@ export function InviteByHandle({ groupId, className }: { groupId: string; classN
             </div>
             <p className="text-xs text-muted-foreground">{t('invite.searchHelp')}</p>
 
-            {results.data !== undefined && results.data.length === 0 && (
-                <p className="text-sm text-muted-foreground">{t('invite.noResults')}</p>
+            {candidates !== undefined && candidates.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                    {results.data !== undefined && results.data.length > 0
+                        ? t('invite.allTaken')
+                        : t('invite.noResults')}
+                </p>
             )}
-            {results.data !== undefined && results.data.length > 0 && (
+            {candidates !== undefined && candidates.length > 0 && (
                 <ul className="divide-y rounded-xl border">
-                    {results.data.map((user) => {
+                    {candidates.map((user) => {
                         const done = invited.includes(user.id);
                         return (
                             <li key={user.id} className="flex items-center gap-3 px-3 py-2">

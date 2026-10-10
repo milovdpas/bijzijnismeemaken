@@ -6,7 +6,7 @@ import type { GroupTab } from '@/lib/group-navigation';
 
 /**
  * Stands in for a group tab until its task lands (activities 20, availability
- * 24, leaderboards 28, members and settings 16). Keeps the tab row navigable
+ * 24, leaderboards 28). Keeps the tab row navigable
  * now, so the shell can be judged as a whole.
  */
 export function GroupPlaceholder({ tab }: { tab: GroupTab }) {

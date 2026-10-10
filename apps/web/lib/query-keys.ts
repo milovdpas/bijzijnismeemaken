@@ -20,7 +20,12 @@ export const queryKeys = {
         public: (q: string, page: number) => ['groups', 'public', q, page] as const,
         joinPreview: (token: string) => ['groups', 'join-preview', token] as const,
     },
+    members: {
+        list: (groupId: string) => ['members', groupId] as const,
+    },
     invites: {
+        all: ['invites'] as const,
+        mine: ['invites', 'mine'] as const,
         group: (groupId: string) => ['invites', 'group', groupId] as const,
     },
 };

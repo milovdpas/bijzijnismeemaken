@@ -92,7 +92,6 @@ export function DiscoverView() {
                                 key={group.id}
                                 name={group.name}
                                 description={group.description}
-                                access={group.access}
                                 memberCount={group.memberCount}
                                 action={
                                     <Button

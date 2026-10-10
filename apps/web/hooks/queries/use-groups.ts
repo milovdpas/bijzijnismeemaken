@@ -14,12 +14,15 @@ import type {
 import { ApiError } from '@/lib/api/client';
 import {
     createGroup,
+    deleteGroup,
     fetchGroup,
     fetchGroups,
     joinByToken,
     joinGroup,
     previewInvite,
+    regenerateInviteLink,
     searchPublicGroups,
+    updateGroup,
 } from '@/lib/api/groups';
 import { queryKeys } from '@/lib/query-keys';
 
@@ -96,6 +99,43 @@ export function useJoinByToken(): UseMutationResult<GroupDetailResponse, Error, 
         onSuccess: (group) => {
             client.setQueryData(queryKeys.groups.detail(group.id), group);
             void client.invalidateQueries({ queryKey: queryKeys.groups.all });
+        },
+    });
+}
+
+/** Settings changes; the answer is the fresh detail, so it goes straight into the cache. */
+export function useUpdateGroup(
+    groupId: string,
+): UseMutationResult<GroupDetailResponse, Error, Partial<GroupInput>> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (patch: Partial<GroupInput>) => updateGroup(groupId, patch),
+        onSuccess: (group) => {
+            client.setQueryData(queryKeys.groups.detail(group.id), group);
+            void client.invalidateQueries({ queryKey: queryKeys.groups.list });
+        },
+    });
+}
+
+/** Owner only. Everything cached about the group is dropped with it. */
+export function useDeleteGroup(groupId: string): UseMutationResult<void, Error, void> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: () => deleteGroup(groupId),
+        onSuccess: () => {
+            client.removeQueries({ queryKey: queryKeys.groups.detail(groupId) });
+            void client.invalidateQueries({ queryKey: queryKeys.groups.list });
+        },
+    });
+}
+
+/** A new link retires the old one, so the detail (which carries it) is refetched. */
+export function useRegenerateInviteLink(groupId: string): UseMutationResult<string, Error, void> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: () => regenerateInviteLink(groupId),
+        onSuccess: () => {
+            void client.invalidateQueries({ queryKey: queryKeys.groups.detail(groupId) });
         },
     });
 }

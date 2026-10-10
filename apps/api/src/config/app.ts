@@ -93,6 +93,19 @@ type MailDriver = 'console' | 'smtp' | 'brevo';
  * forgot the variable still sends; everywhere else defaults to the log so a
  * developer machine never emails anyone by accident.
  */
+/**
+ * Half a login is the one SMTP mistake that fails late and vaguely ("missing
+ * credentials"), so it is caught here, by name, before the server listens.
+ */
+function smtpPassword(): string {
+    const user = optional('SMTP_USER', '');
+    const password = optional('SMTP_PASSWORD', '');
+    if (user !== '' && password === '') {
+        throw new Error('SMTP_USER is set but SMTP_PASSWORD is empty.');
+    }
+    return password;
+}
+
 function mailDriver(): MailDriver {
     const raw = optional(
         'MAIL_DRIVER',
@@ -170,6 +183,11 @@ export const env = {
         smtp: {
             host: optional('SMTP_HOST', 'localhost'),
             port: port('SMTP_PORT', '1025'),
+            /** Empty for an unauthenticated catcher such as mailpit. */
+            user: optional('SMTP_USER', ''),
+            password: smtpPassword(),
+            /** Implicit TLS from the first byte (port 465). Off means STARTTLS when the server offers it. */
+            secure: optional('SMTP_SECURE', 'false') === 'true',
         },
     },
 

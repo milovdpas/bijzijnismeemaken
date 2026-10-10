@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { EmptyState } from '@/components/common/empty-state';
 import { FormMessage } from '@/components/common/form-message';
+import { InvitesBanner } from '@/components/invites/invites-banner';
 import { PageHeader } from '@/components/common/page-header';
 import { CreateGroupDialog } from '@/components/groups/create-group-dialog';
 import { GroupCard } from '@/components/groups/group-card';
@@ -26,6 +27,8 @@ export function GroupsView() {
                 subtitleKey="groups.subtitle"
                 action={<CreateGroupDialog />}
             />
+
+            <InvitesBanner />
 
             {groups.isPending && (
                 <div className="grid gap-3 md:grid-cols-2">
@@ -50,7 +53,6 @@ export function GroupsView() {
                                 key={group.id}
                                 name={group.name}
                                 description={group.description}
-                                access={group.access}
                                 memberCount={group.memberCount}
                                 role={group.role}
                                 href={groupHref(group.id)}

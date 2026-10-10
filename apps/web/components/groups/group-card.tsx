@@ -1,11 +1,10 @@
 'use client';
 
-import type { GroupAccess, GroupRole } from '@bzim/types';
+import type { GroupRole } from '@bzim/types';
 import Link from 'next/link';
 import { Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { AccessBadge } from '@/components/groups/access-badge';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +16,6 @@ import { cn } from '@/lib/utils';
 export function GroupCard({
     name,
     description,
-    access,
     memberCount,
     role,
     href,
@@ -26,7 +24,6 @@ export function GroupCard({
 }: {
     name: string;
     description: string | null;
-    access: GroupAccess;
     memberCount: number;
     role?: GroupRole;
     href?: string;
@@ -53,7 +50,6 @@ export function GroupCard({
                     <Users className="size-3.5" />
                     {t('groups.members', { count: memberCount })}
                 </span>
-                <AccessBadge access={access} />
                 {action !== undefined && <span className="ml-auto">{action}</span>}
             </div>
         </>
