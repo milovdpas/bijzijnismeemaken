@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 import {
     API_ENDPOINTS,
@@ -93,6 +94,10 @@ describe('creating a tournament', () => {
         );
         expect(asBob.canManage).toBe(false);
         expect((await w.asDirk.get(T.DETAIL(w.group.id, created.id))).status).toBe(404);
+        // Not through a group of his own either: the tournament is looked up in the group in the path.
+        const elsewhere = await seedGroup(w.dirk, { name: 'Anders' });
+        expect((await w.asDirk.get(T.DETAIL(elsewhere.id, created.id))).status).toBe(404);
+        expect((await w.asDirk.post(T.START(elsewhere.id, created.id))).status).toBe(404);
     });
 
     it('ties to a tournament activity of the group, and to nothing else', async () => {
@@ -312,7 +317,7 @@ describe('the list', () => {
         const done = await create(w, { name: 'Klaar' });
         await Tournament.update(done.id, {
             status: TournamentStatus.FINISHED,
-            finishedAt: new Date(),
+            finishedAt: DateTime.utc().toJSDate(),
         });
 
         const on = data<TournamentListingDto[]>(await w.asBob.get(T.LIST(w.group.id)));

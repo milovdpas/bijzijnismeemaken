@@ -9,7 +9,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { MatchStatus } from '@bzim/types';
-import type { MatchSlot, MatchStage } from '@bzim/types';
+import type { MatchSlot, MatchStage, TournamentMatchDto } from '@bzim/types';
 
 import Tournament from './Tournament.entity';
 
@@ -82,4 +82,31 @@ export default class TournamentMatch extends BaseEntity {
 
     @UpdateDateColumn({ name: 'updated_at', type: 'datetime', precision: 3 })
     updatedAt!: Date;
+
+    /** A bye has a winner from the start and only one side. */
+    isBye(): boolean {
+        return (
+            this.winnerEntryId !== null && (this.homeEntryId === null || this.awayEntryId === null)
+        );
+    }
+
+    toDto(): TournamentMatchDto {
+        return {
+            id: this.id,
+            stage: this.stage,
+            groupNo: this.groupNo,
+            round: this.round,
+            position: this.position,
+            homeEntryId: this.homeEntryId,
+            awayEntryId: this.awayEntryId,
+            homeScore: this.homeScore,
+            awayScore: this.awayScore,
+            winnerEntryId: this.winnerEntryId,
+            status: this.status,
+            nextMatchId: this.nextMatchId,
+            nextSlot: this.nextSlot,
+            isBye: this.isBye(),
+            playedAt: this.playedAt?.toISOString() ?? null,
+        };
+    }
 }

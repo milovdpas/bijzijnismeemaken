@@ -845,6 +845,7 @@ export interface TournamentEntryDto {
     /** 1 is the top seed. */
     seed: number;
     groupNo: number | null;
+    /** By name: a team saved at once has no order of its own. */
     members: TournamentMemberDto[];
 }
 
@@ -865,6 +866,10 @@ export interface TournamentMatchDto {
     /** One side empty, the other through without playing. */
     isBye: boolean;
     playedAt: IsoDateTimeString | null;
+}
+
+/** A match as one viewer sees it in the detail. */
+export interface TournamentMatchView extends TournamentMatchDto {
     /** Whether the viewer may enter (or, as organiser or admin, correct) the result now. */
     canReport: boolean;
 }
@@ -889,33 +894,34 @@ export interface TournamentGroupDto {
     standings: TournamentStandingDto[];
 }
 
-/** A tournament in the list: running and drafts on the tab, finished ones in the archive. */
-export interface TournamentListingDto {
+/** A tournament's own fields, with its organiser. */
+export interface TournamentDto extends TournamentSettings {
     id: Uuid;
     groupId: Uuid;
-    name: string;
-    format: TournamentFormat;
-    participantMode: ParticipantMode;
     status: TournamentStatus;
-    entryCount: number;
-    /** The winning entry's name, once finished. */
-    winnerName: string | null;
     activityId: Uuid | null;
+    organiser: UserSummary | null;
     /** The organiser's name, kept when they leave the group. */
     organiserName: string | null;
+    winnerEntryId: Uuid | null;
     createdAt: IsoDateTimeString;
     startedAt: IsoDateTimeString | null;
     finishedAt: IsoDateTimeString | null;
+}
+
+/** A tournament in the list: running and drafts on the tab, finished ones in the archive. */
+export interface TournamentListingDto extends TournamentDto {
+    entryCount: number;
+    /** The winning entry's name, once finished. */
+    winnerName: string | null;
 }
 
 /**
  * `GET …/tournaments/:id`: everything to draw the tournament, plus what the
  * viewer may do with it.
  */
-export interface TournamentDetailDto extends TournamentListingDto, TournamentSettings {
-    organiser: UserSummary | null;
+export interface TournamentDetailDto extends TournamentListingDto {
     activity: { id: Uuid; title: string } | null;
-    winnerEntryId: Uuid | null;
     /** The organiser, or a group admin: settings, entries, draw, start, advance, finish, results. */
     canManage: boolean;
     /** The entries the viewer plays in. */
@@ -927,7 +933,7 @@ export interface TournamentDetailDto extends TournamentListingDto, TournamentSet
     /** The final is played. */
     canFinish: boolean;
     entries: TournamentEntryDto[];
-    matches: TournamentMatchDto[];
+    matches: TournamentMatchView[];
     /** One table per group, for a group stage; empty for a knockout. */
     groups: TournamentGroupDto[];
 }

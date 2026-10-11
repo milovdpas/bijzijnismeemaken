@@ -9,6 +9,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import type { TournamentEntryDto } from '@bzim/types';
 
 import Tournament from './Tournament.entity';
 import TournamentEntryMember from './TournamentEntryMember.entity';
@@ -48,4 +49,17 @@ export default class TournamentEntry extends BaseEntity {
 
     @UpdateDateColumn({ name: 'updated_at', type: 'datetime', precision: 3 })
     updatedAt!: Date;
+
+    /** Needs `members.user` loaded. People by name: a team saved at once has no order of its own. */
+    toDto(): TournamentEntryDto {
+        return {
+            id: this.id,
+            name: this.name,
+            seed: this.seed,
+            groupNo: this.groupNo,
+            members: this.members
+                .map((member) => member.toDto())
+                .sort((a, b) => a.displayName.localeCompare(b.displayName)),
+        };
+    }
 }

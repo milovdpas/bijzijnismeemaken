@@ -1,13 +1,10 @@
-import type { Request, Response } from 'express';
 import type { TournamentDetailDto, TournamentListingDto } from '@bzim/types';
 
 import type { Handler } from '../../interfaces/IHttp';
 import { paramsOf, queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
-import type Tournament from '../models/Tournament.entity';
 import { TournamentPlayService } from '../services/TournamentPlayService';
 import { TournamentService } from '../services/TournamentService';
-import type { TournamentProblem, TournamentResult } from '../services/TournamentService';
 import {
     sendConflict,
     sendForbidden,
@@ -24,30 +21,16 @@ import {
     matchResultSchema,
     tournamentEntryParamSchema,
     tournamentMatchParamSchema,
-    tournamentParamSchema,
     updateEntrySchema,
     updateTournamentSchema,
 } from '../validators/tournamentSchemas';
 
-/** The ones that are about timing (not now, or not any more); the rest are about the input. */
-const CONFLICTS: ReadonlySet<TournamentProblem> = new Set<TournamentProblem>([
-    'NOT_DRAFT',
-    'NOT_RUNNING',
-    'FULL',
-    'ALREADY_IN',
-    'NOT_READY',
-    'LATER_PLAYED',
-    'NOT_GROUPS',
-    'GROUPS_UNFINISHED',
-    'ALREADY_ADVANCED',
-    'FINAL_UNPLAYED',
-]);
-
 /**
  * Tournaments inside a group. `requireGroupRole(MEMBER)` has loaded
- * `req.group` and `req.membership`; creating and viewing are any member's,
- * running one is the organiser's or an admin's, and a result is also its
- * players' while it has none (the service decides that one).
+ * `req.group` and `req.membership`, and on the routes of one tournament
+ * `includeTournament` has loaded `req.tournament`. The services decide who
+ * may do what and answer `FORBIDDEN`; refusals about timing are a 409 and
+ * about the input a 422, both with `details.problem` for the screen.
  */
 export default class TournamentController {
     list: Handler = async (req, res) => {
@@ -85,18 +68,37 @@ export default class TournamentController {
             thirdPlace,
             activityId,
         });
-        TournamentController.respond(req, res, result, 201);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'TEAM_SIZE':
+                case 'GROUPS':
+                case 'POINTS':
+                    sendValidationFailed(res, 'The settings do not agree', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ACTIVITY':
+                    sendValidationFailed(res, 'Not a tournament activity of this group', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+            201,
+        );
     };
 
-    detail: Handler = async (req, res) => {
-        const tournament = await TournamentController.load(req, res);
-        if (tournament === null) return;
-        sendSuccess<TournamentDetailDto>(res, TournamentService.detail(tournament, req.membership));
+    detail: Handler = (req, res) => {
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(req.tournament, req.membership),
+        );
     };
 
     update: Handler<BodyOf<typeof updateTournamentSchema>> = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const {
             name,
             description,
@@ -109,7 +111,7 @@ export default class TournamentController {
             advancePerGroup,
             thirdPlace,
         } = req.body;
-        const result = await TournamentService.update(tournament, {
+        const result = await TournamentService.update(req.tournament, req.membership, {
             name,
             description,
             format,
@@ -121,169 +123,365 @@ export default class TournamentController {
             advancePerGroup,
             thirdPlace,
         });
-        TournamentController.respond(req, res, result);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin changes a tournament');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(
+                        res,
+                        'After the start only the name and description change',
+                        undefined,
+                        {
+                            problem: result.problem,
+                        },
+                    );
+                    return;
+                case 'TEAM_SIZE':
+                case 'GROUPS':
+                case 'POINTS':
+                    sendValidationFailed(res, 'The settings do not agree', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
 
     delete: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
-        await TournamentService.delete(tournament);
+        const result = await TournamentService.delete(req.tournament, req.membership);
+        if (!result.ok) {
+            sendForbidden(res, 'Only the organiser or an admin deletes a tournament');
+            return;
+        }
         sendNoContent(res);
     };
 
     addEntry: Handler<BodyOf<typeof addEntrySchema>> = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const { userId, name, members } = req.body;
-        const result = await TournamentService.addEntry(tournament, req.group, {
+        const result = await TournamentService.addEntry(req.tournament, req.membership, {
             userId,
             name,
             members,
         });
-        TournamentController.respond(req, res, result, 201);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'The entries are fixed once it has started', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'FULL':
+                    sendConflict(res, 'The entry list is full', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ALREADY_IN':
+                    sendConflict(res, 'Somebody plays in an entry already', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'TEAM_SIZE':
+                    sendValidationFailed(res, 'That many people do not fit an entry', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'NOT_A_GROUP_MEMBER':
+                    sendValidationFailed(res, 'Somebody is not in the group or has no profile', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+            201,
+        );
     };
 
     updateEntry: Handler<BodyOf<typeof updateEntrySchema>> = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const { entryId } = paramsOf(req, tournamentEntryParamSchema);
-        const entry = tournament.entries.find((candidate) => candidate.id === entryId);
+        const { name, members, seed, groupNo } = req.body;
+        const entry = req.tournament.entries.find((candidate) => candidate.id === entryId);
         if (entry === undefined) {
             sendNotFound(res, 'Entry');
             return;
         }
-        const { name, members, seed, groupNo } = req.body;
-        const result = await TournamentService.updateEntry(tournament, req.group, entry, {
+        const result = await TournamentService.updateEntry(req.tournament, entry, req.membership, {
             name,
             members,
             seed,
             groupNo,
         });
-        TournamentController.respond(req, res, result);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'The entries are fixed once it has started', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ALREADY_IN':
+                    sendConflict(res, 'Somebody plays in an entry already', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'GROUPS':
+                    sendValidationFailed(res, 'This tournament has no such group', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'TEAM_SIZE':
+                    sendValidationFailed(res, 'That many people do not fit an entry', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'NOT_A_GROUP_MEMBER':
+                    sendValidationFailed(res, 'Somebody is not in the group or has no profile', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
 
     removeEntry: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const { entryId } = paramsOf(req, tournamentEntryParamSchema);
-        const entry = tournament.entries.find((candidate) => candidate.id === entryId);
+        const entry = req.tournament.entries.find((candidate) => candidate.id === entryId);
         if (entry === undefined) {
             sendNotFound(res, 'Entry');
             return;
         }
-        TournamentController.respond(
-            req,
+        const result = await TournamentService.removeEntry(req.tournament, entry, req.membership);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'The entries are fixed once it has started', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
             res,
-            await TournamentService.removeEntry(tournament, entry),
+            TournamentService.detail(result.tournament, req.membership),
         );
     };
 
     draw: Handler<BodyOf<typeof drawSchema>> = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const { teams } = req.body;
-        TournamentController.respond(
-            req,
+        const result = await TournamentService.draw(req.tournament, req.membership, teams ?? false);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin makes the draw');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'The draw is fixed once it has started', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'TOO_FEW_PEOPLE':
+                    sendValidationFailed(res, 'Random teams need people for two teams', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
             res,
-            await TournamentService.draw(tournament, teams ?? false),
+            TournamentService.detail(result.tournament, req.membership),
         );
     };
 
     start: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
-        TournamentController.respond(req, res, await TournamentPlayService.start(tournament));
+        const result = await TournamentPlayService.start(req.tournament, req.membership);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin starts a tournament');
+                    return;
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'This tournament has started already', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'TOO_FEW_ENTRIES':
+                case 'TEAM_SIZE':
+                case 'GROUPS':
+                case 'ADVANCE':
+                    sendValidationFailed(res, 'This draft cannot start yet', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
 
-    /** Not `managed`: a match's own players may enter its result, which the service checks. */
     report: Handler<BodyOf<typeof matchResultSchema>> = async (req, res) => {
-        const tournament = await TournamentController.load(req, res);
-        if (tournament === null) return;
         const { matchId } = paramsOf(req, tournamentMatchParamSchema);
-        const match = tournament.matches.find((candidate) => candidate.id === matchId);
+        const { homeScore, awayScore } = req.body;
+        const match = req.tournament.matches.find((candidate) => candidate.id === matchId);
         if (match === undefined) {
             sendNotFound(res, 'Match');
             return;
         }
-        const { homeScore, awayScore } = req.body;
-        const result = await TournamentPlayService.report(tournament, match, req.membership, {
+        const result = await TournamentPlayService.report(req.tournament, match, req.membership, {
             homeScore,
             awayScore,
         });
-        TournamentController.respond(req, res, result);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only its players, the organiser or an admin enter this');
+                    return;
+                case 'NOT_RUNNING':
+                    sendConflict(res, 'Results go in while the tournament runs', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'NOT_READY':
+                    sendConflict(res, 'This match does not have two sides', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'LATER_PLAYED':
+                    sendConflict(res, 'A later match was played on this result', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'DRAW_IN_KNOCKOUT':
+                    sendValidationFailed(res, 'A knockout match needs a winner', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
 
     clearResult: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
         const { matchId } = paramsOf(req, tournamentMatchParamSchema);
-        const match = tournament.matches.find((candidate) => candidate.id === matchId);
+        const match = req.tournament.matches.find((candidate) => candidate.id === matchId);
         if (match === undefined) {
             sendNotFound(res, 'Match');
             return;
         }
-        TournamentController.respond(
-            req,
+        const result = await TournamentPlayService.clearResult(
+            req.tournament,
+            match,
+            req.membership,
+        );
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin clears a result');
+                    return;
+                case 'NOT_RUNNING':
+                    sendConflict(res, 'Results change while the tournament runs', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'NOT_READY':
+                    sendConflict(res, 'This match does not have two sides', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'LATER_PLAYED':
+                    sendConflict(res, 'A later match was played on this result', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
             res,
-            await TournamentPlayService.clearResult(tournament, match),
+            TournamentService.detail(result.tournament, req.membership),
         );
     };
 
     advance: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
-        TournamentController.respond(req, res, await TournamentPlayService.advance(tournament));
+        const result = await TournamentPlayService.advance(req.tournament, req.membership);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin draws the knockout');
+                    return;
+                case 'NOT_GROUPS':
+                    sendConflict(res, 'Only a group stage advances', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'NOT_RUNNING':
+                    sendConflict(res, 'The tournament is not running', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ALREADY_ADVANCED':
+                    sendConflict(res, 'The knockout is drawn already', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'GROUPS_UNFINISHED':
+                    sendConflict(res, 'Group matches are still to be played', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
 
     finish: Handler = async (req, res) => {
-        const tournament = await TournamentController.managed(req, res);
-        if (tournament === null) return;
-        TournamentController.respond(req, res, await TournamentPlayService.finish(tournament));
+        const result = await TournamentPlayService.finish(req.tournament, req.membership);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'FORBIDDEN':
+                    sendForbidden(res, 'Only the organiser or an admin finishes a tournament');
+                    return;
+                case 'NOT_RUNNING':
+                    sendConflict(res, 'The tournament is not running', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'FINAL_UNPLAYED':
+                    sendConflict(res, 'The final has no result yet', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
     };
-
-    /** The tournament in the path, of this group; a 404 sent when there is none. */
-    private static async load(req: Request, res: Response): Promise<Tournament | null> {
-        const { tournamentId } = paramsOf(req, tournamentParamSchema);
-        const tournament = await TournamentService.findForGroup(req.group, tournamentId);
-        if (tournament === null) sendNotFound(res, 'Tournament');
-        return tournament;
-    }
-
-    /** The same, for the organiser or an admin only; a 403 for anybody else. */
-    private static async managed(req: Request, res: Response): Promise<Tournament | null> {
-        const tournament = await TournamentController.load(req, res);
-        if (tournament === null) return null;
-        if (!TournamentService.canManage(tournament, req.membership)) {
-            sendForbidden(res, 'Only the organiser or an admin runs a tournament');
-            return null;
-        }
-        return tournament;
-    }
-
-    /** The tournament as it now is, or why not: timing is a 409, the input a 422, rights a 403. */
-    private static respond(
-        req: Request,
-        res: Response,
-        result: TournamentResult,
-        status: 200 | 201 = 200,
-    ): void {
-        if (result.ok) {
-            sendSuccess<TournamentDetailDto>(
-                res,
-                TournamentService.detail(result.tournament, req.membership),
-                status,
-            );
-            return;
-        }
-        const { problem } = result;
-        if (problem === 'FORBIDDEN') {
-            sendForbidden(res, 'Only the organiser or an admin changes this result');
-        } else if (CONFLICTS.has(problem)) {
-            sendConflict(res, 'Not possible at this point of the tournament', undefined, {
-                problem,
-            });
-        } else {
-            sendValidationFailed(res, 'That does not fit this tournament', { problem });
-        }
-    }
 }

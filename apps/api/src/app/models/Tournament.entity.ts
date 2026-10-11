@@ -10,7 +10,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { TournamentStatus } from '@bzim/types';
-import type { ParticipantMode, TournamentFormat } from '@bzim/types';
+import type { ParticipantMode, TournamentDto, TournamentFormat } from '@bzim/types';
 
 import Activity from './Activity.entity';
 import Group from './Group.entity';
@@ -112,5 +112,35 @@ export default class Tournament extends BaseEntity {
     /** The organiser: whoever made it. */
     isCreatedBy(userId: string): boolean {
         return this.createdById === userId;
+    }
+
+    /** Needs `createdBy` loaded; the organiser's name outlives their leaving through the snapshot. */
+    toDto(): TournamentDto {
+        if (this.createdBy === undefined) {
+            throw new Error(`Tournament ${this.id} was loaded without its organiser`);
+        }
+        const organiser = this.createdBy?.toSummary() ?? null;
+        return {
+            id: this.id,
+            groupId: this.groupId,
+            name: this.name,
+            description: this.description,
+            format: this.format,
+            participantMode: this.participantMode,
+            teamSize: this.teamSize,
+            winPoints: this.winPoints,
+            drawPoints: this.drawPoints,
+            groupCount: this.groupCount,
+            advancePerGroup: this.advancePerGroup,
+            thirdPlace: this.thirdPlace,
+            status: this.status,
+            activityId: this.activityId,
+            organiser,
+            organiserName: organiser?.displayName ?? this.creatorNameSnapshot,
+            winnerEntryId: this.winnerEntryId,
+            createdAt: this.createdAt.toISOString(),
+            startedAt: this.startedAt?.toISOString() ?? null,
+            finishedAt: this.finishedAt?.toISOString() ?? null,
+        };
     }
 }

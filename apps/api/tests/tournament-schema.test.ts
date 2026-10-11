@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 import { ActivityCategory, MatchSlot, MatchStage, MatchStatus } from '@bzim/types';
 
@@ -45,7 +46,7 @@ async function bracket() {
         nextMatchId: null,
         nextSlot: null,
         reportedById: anna.id,
-        playedAt: new Date(),
+        playedAt: DateTime.utc().toJSDate(),
     }).save();
     // A match before it that feeds the final, to have the self-reference filled.
     const semi = await TournamentMatch.create({

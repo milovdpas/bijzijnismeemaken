@@ -133,7 +133,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | POST | `…/advance` | Group stage complete → knockout from the standings | C, A |
 | POST | `…/finish` | Final played → status `finished`, winner set (an unplayed third-place match does not hold it up) | C, A |
 
-Tournament refusals carry `details.problem`: 409 for timing (`NOT_DRAFT`, `NOT_RUNNING`, `FULL`, `ALREADY_IN`, `NOT_READY`, `LATER_PLAYED`, `NOT_GROUPS`, `GROUPS_UNFINISHED`, `ALREADY_ADVANCED`, `FINAL_UNPLAYED`), 422 for input (`TEAM_SIZE`, `GROUPS`, `POINTS`, `ACTIVITY`, `NOT_A_GROUP_MEMBER`, `TOO_FEW_ENTRIES`, `ADVANCE`, `TOO_FEW_PEOPLE`, `DRAW_IN_KNOCKOUT`), 403 for a result somebody may not touch.
+Tournament refusals carry `details.problem`: 409 for timing (`NOT_DRAFT`, `NOT_RUNNING`, `FULL`, `ALREADY_IN`, `NOT_READY`, `LATER_PLAYED`, `NOT_GROUPS`, `GROUPS_UNFINISHED`, `ALREADY_ADVANCED`, `FINAL_UNPLAYED`), 422 for input (`TEAM_SIZE`, `GROUPS`, `POINTS`, `ACTIVITY`, `NOT_A_GROUP_MEMBER`, `TOO_FEW_ENTRIES`, `ADVANCE`, `TOO_FEW_PEOPLE`, `DRAW_IN_KNOCKOUT`), 403 `FORBIDDEN` when somebody other than the organiser or an admin changes, runs or deletes a tournament, or enters a result that is not theirs to enter. Another group's tournament is a 404, like an unknown one.
 
 ## Worker (cron) & internal
 | Method | Path | Purpose | Perm |

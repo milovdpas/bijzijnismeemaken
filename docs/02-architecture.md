@@ -59,7 +59,7 @@ src/
   app/controllers/*Controller.ts            (+ one per route group)
   app/services/*Service.ts                  (+ Auth, User, Group, Membership, Invite, Activity, Occurrence, Availability, Suggestion, Calendar, CalendarSync, IgnoreRule, Leaderboard, Score, ScoreQuery, Notification, Job)
   app/models/*.entity.ts                    (+ all new)
-  app/middleware/{+UserAuth, +RequireGroupRole, ValidateRequest, ErrorHandler, NotFound, RateLimit, ApiLimits, +OriginCheck, WorkerAuth(renamed MonitorAuth)}.ts
+  app/middleware/{+UserAuth, +RequireGroupRole, +IncludeTournament, ValidateRequest, ErrorHandler, NotFound, RateLimit, ApiLimits, +OriginCheck, WorkerAuth(renamed MonitorAuth)}.ts
   app/validators/{commonSchemas, +*Schemas}.ts
   +app/modules/calendar/{CalendarProvider.ts,GoogleCalendarProvider.ts,CalendarProviderFactory.ts}
   +app/modules/mail/{Mailer.ts,BrevoMailer.ts,ConsoleMailer.ts,templates/{nl,en}.ts}

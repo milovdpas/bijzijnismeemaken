@@ -7,7 +7,7 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import type { AvatarKey } from '@bzim/types';
+import type { AvatarKey, TournamentMemberDto } from '@bzim/types';
 
 import TournamentEntry from './TournamentEntry.entity';
 import User from './User.entity';
@@ -45,4 +45,18 @@ export default class TournamentEntryMember extends BaseEntity {
 
     @CreateDateColumn({ name: 'created_at', type: 'datetime', precision: 3 })
     createdAt!: Date;
+
+    /** The live name and avatar while the person is around, the snapshots for a guest or a leaver. Needs `user` loaded. */
+    toDto(): TournamentMemberDto {
+        if (this.user === undefined) {
+            throw new Error(`Tournament member ${this.id} was loaded without its user`);
+        }
+        const user = this.user?.toSummary() ?? null;
+        return {
+            id: this.id,
+            user,
+            displayName: user?.displayName ?? this.displayNameSnapshot,
+            avatarKey: user?.avatarKey ?? this.avatarKeySnapshot,
+        };
+    }
 }

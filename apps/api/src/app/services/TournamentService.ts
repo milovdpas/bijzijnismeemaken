@@ -1,4 +1,3 @@
-import { randomInt } from 'node:crypto';
 import { In } from 'typeorm';
 import type { EntityManager, FindOptionsRelations } from 'typeorm';
 import {
@@ -30,9 +29,14 @@ import TournamentEntryMember from '../models/TournamentEntryMember.entity';
 import type User from '../models/User.entity';
 import { snakeGroups } from '../modules/tournaments/round-robin';
 import TournamentPresenter from '../presenters/TournamentPresenter';
+import { shuffle } from '../utils/Random';
 import { TournamentPlayService } from './TournamentPlayService';
 
-/** Why a tournament action is refused; the controller turns each into a status. */
+/**
+ * Every reason a tournament action is refused. Each method returns only the
+ * ones it can produce (`TournamentResult<'FORBIDDEN' | 'NOT_DRAFT'>`), so a
+ * handler's switch lists real cases only.
+ */
 export type TournamentProblem =
     /** Settings, entries, the draw and the start need a draft. */
     | 'NOT_DRAFT'
@@ -62,7 +66,7 @@ export type TournamentProblem =
     | 'NOT_READY'
     /** A knockout match needs a winner. */
     | 'DRAW_IN_KNOCKOUT'
-    /** Somebody who may not do this (a result already in, or not their match). */
+    /** Not the organiser or an admin; for a result, also not a side's player while it has none. */
     | 'FORBIDDEN'
     /** A later match was played on this result; that one has to be cleared first. */
     | 'LATER_PLAYED'
@@ -75,8 +79,14 @@ export type TournamentProblem =
     /** The final has no result yet. */
     | 'FINAL_UNPLAYED';
 
-export type TournamentResult =
-    { ok: true; tournament: Tournament } | { ok: false; problem: TournamentProblem };
+export type TournamentResult<P extends TournamentProblem> =
+    { ok: true; tournament: Tournament } | { ok: false; problem: P };
+
+/** Settings that do not fit together, from `create` and `update` alike. */
+type SettingsProblem = 'TEAM_SIZE' | 'GROUPS' | 'POINTS';
+
+/** People who cannot go into an entry. */
+type PeopleProblem = 'ALREADY_IN' | 'NOT_A_GROUP_MEMBER';
 
 interface Person {
     userId: string | null;
@@ -84,7 +94,7 @@ interface Person {
     avatarKey: AvatarKey | null;
 }
 
-type PeopleResult = { ok: true; people: Person[] } | { ok: false; problem: TournamentProblem };
+type PeopleResult = { ok: true; people: Person[] } | { ok: false; problem: PeopleProblem };
 
 const RELATIONS: FindOptionsRelations<Tournament> = {
     createdBy: true,
@@ -98,16 +108,17 @@ const SEED_OFFSET = 1000;
 
 /**
  * Tournaments before they start (docs/01 §1.5c): settings, entries, the
- * draw; and finding, listing and deleting them. Who may do what is
- * `canManage` (the organiser, or a group admin); playing is
- * `TournamentPlayService`.
+ * draw; and finding, listing and deleting them. Any member creates one;
+ * changing it is the organiser's or an admin's (`canManage`), which every
+ * method checks against the acting member and answers with `FORBIDDEN`.
+ * Playing is `TournamentPlayService`.
  */
 export class TournamentService {
     static async create(
         group: Group,
         creator: User,
         input: TournamentInput,
-    ): Promise<TournamentResult> {
+    ): Promise<TournamentResult<SettingsProblem | 'ACTIVITY'>> {
         const settings = TournamentService.normalise({
             name: input.name,
             description: input.description ?? null,
@@ -157,8 +168,12 @@ export class TournamentService {
      */
     static async update(
         tournament: Tournament,
+        actor: GroupMember,
         patch: Partial<TournamentSettings>,
-    ): Promise<TournamentResult> {
+    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | SettingsProblem>> {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
         const structural = Object.entries(patch).some(
             ([key, value]) => value !== undefined && key !== 'name' && key !== 'description',
         );
@@ -166,7 +181,16 @@ export class TournamentService {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
         const settings = TournamentService.normalise({
-            ...TournamentService.settingsOf(tournament),
+            name: tournament.name,
+            description: tournament.description,
+            format: tournament.format,
+            participantMode: tournament.participantMode,
+            teamSize: tournament.teamSize,
+            winPoints: tournament.winPoints,
+            drawPoints: tournament.drawPoints,
+            groupCount: tournament.groupCount,
+            advancePerGroup: tournament.advancePerGroup,
+            thirdPlace: tournament.thirdPlace,
             ...Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined)),
         });
         const problem = TournamentService.settingsProblem(settings);
@@ -187,8 +211,15 @@ export class TournamentService {
         return { ok: true, tournament: await TournamentService.reload(tournament.id) };
     }
 
-    static async delete(tournament: Tournament): Promise<void> {
+    static async delete(
+        tournament: Tournament,
+        actor: GroupMember,
+    ): Promise<{ ok: true } | { ok: false; problem: 'FORBIDDEN' }> {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
         await Tournament.delete({ id: tournament.id });
+        return { ok: true };
     }
 
     /**
@@ -199,11 +230,15 @@ export class TournamentService {
      */
     static async addEntry(
         tournament: Tournament,
-        group: Group,
+        actor: GroupMember,
         input: TournamentEntryInput,
-    ): Promise<TournamentResult> {
-        if (tournament.status !== TournamentStatus.DRAFT)
+    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'FULL' | 'TEAM_SIZE' | PeopleProblem>> {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
+        if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
+        }
         if (tournament.entries.length >= TOURNAMENT.MAX_ENTRIES) {
             return { ok: false, problem: 'FULL' };
         }
@@ -213,7 +248,7 @@ export class TournamentService {
         if (!TournamentService.fits(tournament, wanted.length)) {
             return { ok: false, problem: 'TEAM_SIZE' };
         }
-        const resolved = await TournamentService.resolvePeople(tournament, group, wanted, null);
+        const resolved = await TournamentService.resolvePeople(tournament, wanted, null);
         if (!resolved.ok) return resolved;
 
         const seed = tournament.entries.length + 1;
@@ -241,12 +276,18 @@ export class TournamentService {
      */
     static async updateEntry(
         tournament: Tournament,
-        group: Group,
         entry: TournamentEntry,
+        actor: GroupMember,
         patch: TournamentEntryPatch,
-    ): Promise<TournamentResult> {
-        if (tournament.status !== TournamentStatus.DRAFT)
+    ): Promise<
+        TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'GROUPS' | 'TEAM_SIZE' | PeopleProblem>
+    > {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
+        if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
+        }
         if (
             patch.groupNo !== undefined &&
             (tournament.format !== TournamentFormat.GROUPS_KNOCKOUT ||
@@ -261,7 +302,6 @@ export class TournamentService {
             }
             const resolved = await TournamentService.resolvePeople(
                 tournament,
-                group,
                 patch.members,
                 entry.id,
             );
@@ -298,9 +338,14 @@ export class TournamentService {
     static async removeEntry(
         tournament: Tournament,
         entry: TournamentEntry,
-    ): Promise<TournamentResult> {
-        if (tournament.status !== TournamentStatus.DRAFT)
+        actor: GroupMember,
+    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT'>> {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
+        if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
+        }
         await AppDataSource.transaction(async (manager) => {
             await manager.delete(TournamentEntry, { id: entry.id });
             await TournamentService.renumber(
@@ -320,9 +365,17 @@ export class TournamentService {
      * dealt into random teams, as even as they come out: as many teams as
      * the team size needs, sizes differing by one at most.
      */
-    static async draw(tournament: Tournament, teams: boolean): Promise<TournamentResult> {
-        if (tournament.status !== TournamentStatus.DRAFT)
+    static async draw(
+        tournament: Tournament,
+        actor: GroupMember,
+        teams: boolean,
+    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'TOO_FEW_PEOPLE'>> {
+        if (!TournamentService.canManage(tournament, actor)) {
+            return { ok: false, problem: 'FORBIDDEN' };
+        }
+        if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
+        }
         const randomTeams = teams && tournament.participantMode === ParticipantMode.TEAMS;
         const people = tournament.entries.flatMap((entry) =>
             entry.members.map((member) => ({
@@ -438,7 +491,6 @@ export class TournamentService {
      */
     private static async resolvePeople(
         tournament: Tournament,
-        group: Group,
         wanted: TournamentPersonInput[],
         exceptEntryId: string | null,
     ): Promise<PeopleResult> {
@@ -456,7 +508,7 @@ export class TournamentService {
             userIds.length === 0
                 ? []
                 : await GroupMember.find({
-                      where: { groupId: group.id, userId: In(userIds) },
+                      where: { groupId: tournament.groupId, userId: In(userIds) },
                       relations: { user: true },
                   });
         const people: Person[] = [];
@@ -533,21 +585,6 @@ export class TournamentService {
         }
     }
 
-    private static settingsOf(tournament: Tournament): TournamentSettings {
-        return {
-            name: tournament.name,
-            description: tournament.description,
-            format: tournament.format,
-            participantMode: tournament.participantMode,
-            teamSize: tournament.teamSize,
-            winPoints: tournament.winPoints,
-            drawPoints: tournament.drawPoints,
-            groupCount: tournament.groupCount,
-            advancePerGroup: tournament.advancePerGroup,
-            thirdPlace: tournament.thirdPlace,
-        };
-    }
-
     /** Settings that do not apply are cleared rather than refused: players have no team size. */
     private static normalise(settings: TournamentSettings): TournamentSettings {
         const groups = settings.format === TournamentFormat.GROUPS_KNOCKOUT;
@@ -559,7 +596,7 @@ export class TournamentService {
         };
     }
 
-    private static settingsProblem(settings: TournamentSettings): TournamentProblem | null {
+    private static settingsProblem(settings: TournamentSettings): SettingsProblem | null {
         if (settings.participantMode === ParticipantMode.TEAMS && settings.teamSize === null) {
             return 'TEAM_SIZE';
         }
@@ -572,18 +609,4 @@ export class TournamentService {
         if (settings.drawPoints > settings.winPoints) return 'POINTS';
         return null;
     }
-}
-
-/** A fair shuffle, from the crypto generator. */
-function shuffle<T>(items: readonly T[]): T[] {
-    const result = [...items];
-    for (let index = result.length - 1; index > 0; index -= 1) {
-        const other = randomInt(index + 1);
-        const here = result[index];
-        const there = result[other];
-        if (here === undefined || there === undefined) continue;
-        result[index] = there;
-        result[other] = here;
-    }
-    return result;
 }

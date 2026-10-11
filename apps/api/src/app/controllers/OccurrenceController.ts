@@ -1,4 +1,3 @@
-import type { Response } from 'express';
 import { DateTime } from 'luxon';
 import type { GroupOccurrenceDto, OccurrenceDto } from '@bzim/types';
 
@@ -7,7 +6,6 @@ import { paramsOf, queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
 import { ActivityService } from '../services/ActivityService';
 import { OccurrenceService } from '../services/OccurrenceService';
-import type { OccurrenceProblem } from '../services/OccurrenceService';
 import {
     sendCalendar,
     sendConflict,
@@ -56,8 +54,18 @@ export default class OccurrenceController {
             participantIds,
         });
         if (!result.ok) {
-            sendProblem(res, result.problem);
-            return;
+            switch (result.problem) {
+                case 'PARTICIPANT_NOT_MEMBER':
+                    sendValidationFailed(res, 'Every participant must be a member', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ALREADY_OPEN':
+                    sendConflict(res, 'This activity is already planned', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
         }
         sendSuccess<OccurrenceDto>(res, result.occurrence.toDto(), 201);
     };
@@ -88,8 +96,18 @@ export default class OccurrenceController {
             status,
         });
         if (!result.ok) {
-            sendProblem(res, result.problem);
-            return;
+            switch (result.problem) {
+                case 'PARTICIPANT_NOT_MEMBER':
+                    sendValidationFailed(res, 'Every participant must be a member', {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'ALREADY_OPEN':
+                    sendConflict(res, 'This activity is already planned', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
         }
         sendSuccess<OccurrenceDto>(res, result.occurrence.toDto());
     };
@@ -140,16 +158,4 @@ export default class OccurrenceController {
             icsFor(event, DateTime.utc()),
         );
     };
-}
-
-/** Planning and editing refuse for the same reasons, with the same answers. */
-function sendProblem(res: Response, problem: OccurrenceProblem): void {
-    switch (problem) {
-        case 'PARTICIPANT_NOT_MEMBER':
-            sendValidationFailed(res, 'Every participant must be a member', { problem });
-            return;
-        case 'ALREADY_OPEN':
-            sendConflict(res, 'This activity is already planned', undefined, { problem });
-            return;
-    }
 }

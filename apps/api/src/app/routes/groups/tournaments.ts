@@ -3,6 +3,7 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import TournamentController from '../../controllers/TournamentController';
+import { includeTournament } from '../../middleware/IncludeTournament';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
@@ -20,7 +21,10 @@ import {
     updateTournamentSchema,
 } from '../../validators/tournamentSchemas';
 
-/** Tournaments (M4). Every route is a group member's; who may run one is the controller's. */
+/**
+ * Tournaments (M4). Every route is a group member's, and the routes of one
+ * tournament load it with `includeTournament`; who may run one is the services'.
+ */
 export default class TournamentRoutes implements IRoute {
     private readonly controller = new TournamentController();
 
@@ -50,6 +54,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             one,
             member,
+            includeTournament,
             this.controller.detail,
         );
         router.patch(
@@ -57,6 +62,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentParamSchema, body: updateTournamentSchema }),
             member,
+            includeTournament,
             this.controller.update,
         );
         router.delete(
@@ -64,6 +70,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             one,
             member,
+            includeTournament,
             this.controller.delete,
         );
         router.post(
@@ -71,6 +78,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentParamSchema, body: addEntrySchema }),
             member,
+            includeTournament,
             this.controller.addEntry,
         );
         router.patch(
@@ -78,6 +86,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentEntryParamSchema, body: updateEntrySchema }),
             member,
+            includeTournament,
             this.controller.updateEntry,
         );
         router.delete(
@@ -85,6 +94,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentEntryParamSchema }),
             member,
+            includeTournament,
             this.controller.removeEntry,
         );
         router.post(
@@ -92,6 +102,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentParamSchema, body: drawSchema }),
             member,
+            includeTournament,
             this.controller.draw,
         );
         router.post(
@@ -99,6 +110,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             one,
             member,
+            includeTournament,
             this.controller.start,
         );
         router.post(
@@ -106,6 +118,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             one,
             member,
+            includeTournament,
             this.controller.advance,
         );
         router.post(
@@ -113,6 +126,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             one,
             member,
+            includeTournament,
             this.controller.finish,
         );
         router.put(
@@ -120,6 +134,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentMatchParamSchema, body: matchResultSchema }),
             member,
+            includeTournament,
             this.controller.report,
         );
         router.delete(
@@ -127,6 +142,7 @@ export default class TournamentRoutes implements IRoute {
             userAuth,
             validate({ params: tournamentMatchParamSchema }),
             member,
+            includeTournament,
             this.controller.clearResult,
         );
 
