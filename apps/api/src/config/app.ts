@@ -104,6 +104,23 @@ function calendarTokenKey(): Buffer | null {
     return key;
 }
 
+/**
+ * The VAPID pair that signs web pushes (`modules/push`). Both or neither:
+ * one without the other is a typo, and silently falling back to the console
+ * sender would hide it. Generate with `npx web-push generate-vapid-keys`.
+ */
+function vapidKeys(): { publicKey: string | null; privateKey: string | null } {
+    const publicKey = optional('VAPID_PUBLIC_KEY', '');
+    const privateKey = optional('VAPID_PRIVATE_KEY', '');
+    if ((publicKey === '') !== (privateKey === '')) {
+        throw new Error('VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together.');
+    }
+    return {
+        publicKey: publicKey === '' ? null : publicKey,
+        privateKey: privateKey === '' ? null : privateKey,
+    };
+}
+
 type MailDriver = 'console' | 'smtp' | 'brevo';
 
 /**
@@ -215,6 +232,16 @@ export const env = {
             /** Implicit TLS from the first byte (port 465). Off means STARTTLS when the server offers it. */
             secure: optional('SMTP_SECURE', 'false') === 'true',
         },
+    },
+
+    push: {
+        /** The VAPID pair; null until set, and then the console sender stands in. */
+        ...vapidKeys(),
+        /** Who the push services may contact about this sender: a mailto or https URL. */
+        subject: optional(
+            'VAPID_SUBJECT',
+            `mailto:${optional('MAIL_FROM_EMAIL', 'noreply@localhost')}`,
+        ),
     },
 
     auth: {

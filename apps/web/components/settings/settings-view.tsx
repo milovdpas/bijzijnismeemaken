@@ -11,6 +11,7 @@ import { CalendarCard } from '@/components/settings/calendar-card';
 import { DeleteAccountCard } from '@/components/settings/delete-account-card';
 import { InstallAppCard } from '@/components/settings/install-app-card';
 import { LanguageCard } from '@/components/settings/language-card';
+import { NotificationsCard } from '@/components/settings/notifications-card';
 import { PasswordCard } from '@/components/settings/password-card';
 import { ProfileCard } from '@/components/settings/profile-card';
 import { useMe } from '@/hooks/queries/use-me';
@@ -35,6 +36,7 @@ export function SettingsView() {
                             <AccountCard me={me.data} />
                             <PasswordCard me={me.data} />
                             <CalendarCard />
+                            <NotificationsCard />
                         </>
                     )}
                     <AppearanceCard />

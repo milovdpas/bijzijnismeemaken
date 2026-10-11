@@ -11,6 +11,7 @@ import InviteRoutes from './groups/invites';
 import LeaderboardRoutes from './groups/leaderboards';
 import WidgetRoutes from './groups/widgets';
 import OccurrenceRoutes from './groups/occurrences';
+import PushRoutes from './groups/push';
 import MemberRoutes from './groups/members';
 import UserRoutes from './groups/users';
 import WorkerRoutes from './groups/worker';
@@ -28,6 +29,7 @@ export default class Api implements IRoute {
     private readonly groups: IRoute[] = [
         new AuthRoutes(),
         new UserRoutes(),
+        new PushRoutes(),
         new GroupRoutes(),
         new MemberRoutes(),
         new InviteRoutes(),

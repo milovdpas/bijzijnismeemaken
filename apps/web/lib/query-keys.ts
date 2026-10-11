@@ -52,6 +52,10 @@ export const queryKeys = {
         group: (groupId: string, from: string, to: string) =>
             ['occurrences', groupId, from, to] as const,
     },
+    notifications: {
+        settings: ['notifications', 'settings'] as const,
+        push: ['notifications', 'push'] as const,
+    },
     widgets: (groupId: string) => ['widgets', groupId] as const,
     leaderboards: {
         list: (groupId: string) => ['leaderboards', groupId, 'list'] as const,

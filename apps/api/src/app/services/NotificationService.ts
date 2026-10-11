@@ -1,4 +1,5 @@
 import { NotificationChannel, NotificationType } from '@bzim/types';
+import type { Locale } from '@bzim/types';
 
 import { env } from '../../config/app';
 import { deliver } from '../modules/mail';
@@ -12,6 +13,8 @@ import {
     renderGroupInvite,
 } from '../modules/mail/templates';
 import type { OccurrenceMailValues } from '../modules/mail/templates';
+import type { PushMessage } from '../modules/push';
+import { pushActivityCreated, pushGroupInvite, pushOccurrence } from '../modules/push/templates';
 import type Activity from '../models/Activity.entity';
 import type ActivityOccurrence from '../models/ActivityOccurrence.entity';
 import type Group from '../models/Group.entity';
@@ -22,6 +25,7 @@ import type User from '../models/User.entity';
 import { googleCalendarUrl } from '../utils/CalendarLinks';
 import { NotificationSettingService } from './NotificationSettingService';
 import { OccurrenceService } from './OccurrenceService';
+import { PushService } from './PushService';
 
 /**
  * Who gets told about what, and through which channel.
@@ -29,22 +33,22 @@ import { OccurrenceService } from './OccurrenceService';
  * Stateless: there is no notifications table. Each event resolves its
  * recipients, drops the ones who switched that type off for the channel,
  * renders the email in the recipient's language and hands it to the mailer.
- * Push (phase 3) becomes a second channel inside `dispatch`, not a second
- * service.
+ * Push is the second channel inside `dispatch`: the same recipients, the
+ * same settings check, a shorter text.
  */
 export class NotificationService {
     /** The invitee hears about a new invitation. */
     static async groupInvited(invite: GroupInvite): Promise<void> {
-        const inviter = invite.invitedBy?.displayName ?? invite.group.name;
+        const values = {
+            inviter: invite.invitedBy?.displayName ?? invite.group.name,
+            group: invite.group.name,
+            link: `${env.appUrl}/invites`,
+        };
         await NotificationService.dispatch(
             NotificationType.GROUP_INVITE,
             [invite.invitedUser],
-            (user) =>
-                renderGroupInvite(user.locale, user.email, {
-                    inviter,
-                    group: invite.group.name,
-                    link: `${env.appUrl}/invites`,
-                }),
+            (user) => renderGroupInvite(user.locale, user.email, values),
+            (locale) => pushGroupInvite(locale, values),
         );
     }
 
@@ -57,13 +61,17 @@ export class NotificationService {
         const others = members
             .map((member) => member.user)
             .filter((user) => user.id !== creator.id);
-        await NotificationService.dispatch(NotificationType.ACTIVITY_CREATED, others, (user) =>
-            renderActivityCreated(user.locale, user.email, {
-                creator: creator.displayName ?? creator.handle ?? group.name,
-                group: group.name,
-                title: activity.title,
-                link: OccurrenceService.activityLink(activity),
-            }),
+        const values = {
+            creator: creator.displayName ?? creator.handle ?? group.name,
+            group: group.name,
+            title: activity.title,
+            link: OccurrenceService.activityLink(activity),
+        };
+        await NotificationService.dispatch(
+            NotificationType.ACTIVITY_CREATED,
+            others,
+            (user) => renderActivityCreated(user.locale, user.email, values),
+            (locale) => pushActivityCreated(locale, { ...values, activityId: activity.id }),
         );
     }
 
@@ -90,6 +98,12 @@ export class NotificationService {
                         user,
                     ),
                 ),
+            (locale) =>
+                pushOccurrence(
+                    'planned',
+                    locale,
+                    NotificationService.occurrencePushValues(activity, occurrence, locale),
+                ),
         );
     }
 
@@ -109,6 +123,12 @@ export class NotificationService {
                     user.locale,
                     user.email,
                     NotificationService.occurrenceValues(group, activity, occurrence, editor, user),
+                ),
+            (locale) =>
+                pushOccurrence(
+                    'rescheduled',
+                    locale,
+                    NotificationService.occurrencePushValues(activity, occurrence, locale),
                 ),
         );
     }
@@ -135,7 +155,27 @@ export class NotificationService {
                     ),
                     link: OccurrenceService.activityLink(activity),
                 }),
+            (locale) =>
+                pushOccurrence(
+                    'cancelled',
+                    locale,
+                    NotificationService.occurrencePushValues(activity, occurrence, locale),
+                ),
         );
+    }
+
+    /** What a push about a planned moment says: the title, the moment, where to tap to. */
+    private static occurrencePushValues(
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        locale: Locale,
+    ): { title: string; when: string; link: string; occurrenceId: string } {
+        return {
+            title: activity.title,
+            when: describeWhen(locale, occurrence.date, occurrence.daypart, occurrence.startTime),
+            link: OccurrenceService.activityLink(activity),
+            occurrenceId: occurrence.id,
+        };
     }
 
     /** The facts the planned and rescheduled emails share, in the recipient's language. */
@@ -163,19 +203,21 @@ export class NotificationService {
     }
 
     /**
-     * One pass over the recipients: settings check, render, deliver. The
-     * sends run together; a failure for one person never blocks another.
+     * One pass over the recipients: settings check, render, deliver, on both
+     * channels. The sends run together; a failure for one person never
+     * blocks another. A push is rendered per language, not per person: it
+     * carries nothing personal.
      */
     private static async dispatch(
         type: NotificationType,
         recipients: User[],
         render: (user: User) => MailMessage,
+        renderPush: (locale: Locale) => PushMessage,
     ): Promise<void> {
-        const byEmail = await NotificationSettingService.subscribers(
-            recipients,
-            type,
-            NotificationChannel.EMAIL,
-        );
-        await Promise.all(byEmail.map((user) => deliver(render(user))));
+        const channels = await NotificationSettingService.split(recipients, type);
+        await Promise.all([
+            ...channels[NotificationChannel.EMAIL].map((user) => deliver(render(user))),
+            PushService.send(channels[NotificationChannel.PUSH], (user) => renderPush(user.locale)),
+        ]);
     }
 }

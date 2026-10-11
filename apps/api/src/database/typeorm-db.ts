@@ -25,6 +25,7 @@ import CalendarSource from '../app/models/CalendarSource.entity';
 import ManualUnavailability from '../app/models/ManualUnavailability.entity';
 import OAuthState from '../app/models/OAuthState.entity';
 import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
+import PushSubscription from '../app/models/PushSubscription.entity';
 import RefreshToken from '../app/models/RefreshToken.entity';
 import User from '../app/models/User.entity';
 import WeeklyUnavailabilityRule from '../app/models/WeeklyUnavailabilityRule.entity';
@@ -67,6 +68,7 @@ export const AppDataSource = new DataSource({
         GroupWidget,
         GroupInvite,
         NotificationSetting,
+        PushSubscription,
         Activity,
         ActivityInterest,
         ActivityOccurrence,

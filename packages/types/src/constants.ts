@@ -224,6 +224,8 @@ export const API_ENDPOINTS = {
         NOTIFICATION_SETTINGS: `${V1}/me/notification-settings`,
         NOTIFICATION_SETTING: (type: string) => `${V1}/me/notification-settings/${type}`,
         PUSH_SUBSCRIPTIONS: `${V1}/me/push-subscriptions`,
+        PUSH_SUBSCRIPTION: (subscriptionId: string) =>
+            `${V1}/me/push-subscriptions/${subscriptionId}`,
     },
 
     IMAGES: {

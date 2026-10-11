@@ -58,6 +58,7 @@ openssl rand -base64 48                                                         
 openssl rand -hex 32                                                                  # WORKER_TOKEN
 node -e "console.log('base64:'+require('crypto').randomBytes(32).toString('base64'))" # APP_KEY
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"           # CALENDAR_TOKEN_KEY
+npx web-push generate-vapid-keys                                                      # VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY
 ```
 
 Secrets:
@@ -77,12 +78,14 @@ Secrets:
 | `BREVO_API_KEY` | from step 6 |
 | `UNSPLASH_ACCESS_KEY` | the Access Key of a free Unsplash developer app (unsplash.com/developers, demo tier: 50 searches an hour) for the photo search in the activity form. Optional: without it the search answers "not available" and pasting a link still works |
 | `CALENDAR_TOKEN_KEY` | generated above. Not read until the calendar milestone, but setting it now means no second round later |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | generated above (task 40, web push). Both or neither: the API refuses to boot with one. Without them push is off and the settings page says so. Never rotate casually: every device has to subscribe again |
 
 Variables (not secrets):
 
 | Name | Value |
 |---|---|
 | `APP_URL` | `https://bijzijnismeemaken.milovanderpas.nl` |
+| `VAPID_SUBJECT` | `mailto:vanderpasmilo@gmail.com`: who the push services may contact about this sender. Optional, defaults to `mailto:<MAIL_FROM_EMAIL>` |
 | `API_URL` | `https://bijzijnismeemaken-api.milovanderpas.nl` |
 | `COOKIE_DOMAIN` | leave empty (see the top of this page) |
 | `TRUST_PROXY_HOPS` | `1` (one nginx in front) |

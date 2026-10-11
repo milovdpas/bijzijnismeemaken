@@ -128,6 +128,30 @@ export interface UpdateNotificationSettingRequest {
     push: boolean;
 }
 
+/** One browser that gets push notifications. The keys stay on the server. */
+export interface PushSubscriptionDto {
+    id: string;
+    endpoint: string;
+    userAgent: string | null;
+    createdAt: IsoDateTimeString;
+    lastUsedAt: IsoDateTimeString | null;
+}
+
+/**
+ * `GET /me/push-subscriptions`. `publicKey` is the VAPID key the browser
+ * subscribes with; null means this server cannot push and the UI says so.
+ */
+export interface PushSubscriptionsResponse {
+    publicKey: string | null;
+    subscriptions: PushSubscriptionDto[];
+}
+
+/** `POST /me/push-subscriptions`: `PushSubscription.toJSON()` from the browser. */
+export interface CreatePushSubscriptionRequest {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+}
+
 /** `PATCH /me/password`. `currentPassword` is required when the account already has one. */
 export interface ChangePasswordRequest {
     currentPassword?: string;

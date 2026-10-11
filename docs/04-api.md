@@ -140,6 +140,8 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | POST | `/worker/cleanup` | Nightly cleanup (old events, tokens, states, blocks) | `X-Worker-Token` |
 | POST | `/worker/occurrence-reminders` | Day-before reminders (M3) | `X-Worker-Token` |
 | GET | `/health` | DB check | public |
-| (phase 3) POST/DELETE | `/me/push-subscriptions` | Web push | S |
+| GET | `/me/push-subscriptions` | `{ publicKey, subscriptions }`: the VAPID public key (null when the server has none) and this person's devices | S |
+| POST | `/me/push-subscriptions` | `{ endpoint, keys: { p256dh, auth } }` from `PushSubscription.toJSON()`; upsert by endpoint, a shared browser moves to whoever subscribed last | S |
+| DELETE | `/me/push-subscriptions/:subscriptionId` | Forget a device (own only) | S |
 
 Pagination contract: every list endpoint shown with `page=` accepts `page` (1-based) and `pageSize` (default 50, max 100); response `{ items, page, pageSize, total, hasMore }`. Leaderboard scores: `total = min(count, 500)`, pages beyond 500 return empty, and the body adds `me: { rank, score } | null`, where `rank` is a string: the position, or `"500+"` when more than `RANK_LIMIT` rows order ahead (the count stops there). Range endpoints (`from`/`to`) are capped at 93 days (422 beyond).

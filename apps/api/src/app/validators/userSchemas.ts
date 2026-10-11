@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { AUTH, AVATAR_KEYS, Locale, NotificationType, PROFILE } from '@bzim/types';
+
+import { normalizeHandle } from '../utils/Normalize';
 
 export const setupStepParamSchema = z.object({
     step: z.enum(['calendar', 'availability']),
 });
-import { AUTH, AVATAR_KEYS, Locale, NotificationType, PROFILE } from '@bzim/types';
-
-import { normalizeHandle } from '../utils/Normalize';
 
 /** Normalised before the pattern runs, so `Milo` and `milo` are the same handle. */
 export const handleSchema = z
