@@ -53,7 +53,7 @@ export function LeaderboardCard({
             {leaderboard.top.length === 0 ? (
                 <span className="text-sm text-muted-foreground">{t('leaderboards.noScores')}</span>
             ) : (
-                <ol className="grid gap-1.5">
+                <ol className="grid gap-2">
                     {leaderboard.top.map((entry) => (
                         <li key={entry.member.id} className="flex items-center gap-2 text-sm">
                             <span
