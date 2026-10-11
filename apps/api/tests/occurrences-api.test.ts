@@ -188,6 +188,28 @@ describe('PATCH …/occurrences/:id', () => {
         expect(sent.find((m) => m.to === anna.email)?.subject).toBe(
             'Kaartavond on Friday 6 November is cancelled',
         );
+
+        // Back on after a cancellation: everyone hears it is planned again.
+        sent.length = 0;
+        const back = await asAnna.patch(one(occurrence.id), { status: OccurrenceStatus.PLANNED });
+        expect(back.status).toBe(200);
+        expect(sent.map((m) => m.to).sort()).toEqual([anna.email, bob.email].sort());
+        expect(sent.find((m) => m.to === anna.email)?.subject).toContain('is on');
+    });
+
+    it('will not reopen a one-off next to another planned occurrence', async () => {
+        outbox();
+        const { anna, asAnna, plan, one } = await setup();
+        const first = data<OccurrenceDto>(
+            await asAnna.post(plan, { date: '2026-11-06', participantIds: [anna.id] }),
+        );
+        await asAnna.patch(one(first.id), { status: OccurrenceStatus.CANCELLED });
+        await asAnna.post(plan, { date: '2026-11-13', participantIds: [anna.id] });
+
+        const reopened = await asAnna.patch(one(first.id), { status: OccurrenceStatus.PLANNED });
+
+        expect(reopened.status).toBe(409);
+        expect(error(reopened).details).toEqual({ problem: 'ALREADY_OPEN' });
     });
 });
 

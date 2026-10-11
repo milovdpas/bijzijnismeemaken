@@ -176,6 +176,10 @@ describe('detail, update and delete', () => {
 
         expect((await asMember.patch(url, {})).status).toBe(422);
         expect((await asMember.patch(url, { dateMode: DateMode.SPECIFIC })).status).toBe(422);
+        // Links are web links: a script scheme is not one.
+        expect((await asMember.patch(url, { externalUrl: 'javascript:alert(1)' })).status).toBe(
+            422,
+        );
 
         expect((await asOther.delete(url)).status).toBe(403);
         expect((await asOwner.delete(url)).status).toBe(204);

@@ -4,6 +4,8 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { safeReturnTo } from '@/lib/return-to';
+
 import { GoogleButton } from '@/components/auth/google-button';
 import { RegisterForm } from '@/components/auth/register-form';
 import { SignInForm } from '@/components/auth/sign-in-form';
@@ -60,10 +62,4 @@ export function LoginView() {
             </Tabs>
         </div>
     );
-}
-
-/** Only an in-app path; anything else could bounce the person off the site. */
-export function safeReturnTo(value: string | null): string | undefined {
-    if (value === null || !value.startsWith('/') || value.startsWith('//')) return undefined;
-    return value;
 }

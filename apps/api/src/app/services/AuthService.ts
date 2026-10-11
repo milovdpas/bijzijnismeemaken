@@ -34,8 +34,10 @@ export type TokenResult = { ok: true; user: User } | { ok: false; problem: 'TOKE
  * establishes the user.
  */
 export class AuthService {
-    /** The URL to send the browser to. `returnTo` is already validated. */
-    static async startGoogleLogin(returnTo: string | null): Promise<string> {
+    /** The URL to send the browser to, and the state the browser must bring back. `returnTo` is already validated. */
+    static async startGoogleLogin(
+        returnTo: string | null,
+    ): Promise<{ url: string; state: string }> {
         const state = generateToken();
         await OAuthState.create({
             state,
@@ -44,7 +46,7 @@ export class AuthService {
             returnTo,
             expiresAt: DateTime.utc().plus({ minutes: OAUTH_STATE_MINUTES }).toJSDate(),
         }).save();
-        return GoogleAuthModule.authUrl(state);
+        return { url: GoogleAuthModule.authUrl(state), state };
     }
 
     /**

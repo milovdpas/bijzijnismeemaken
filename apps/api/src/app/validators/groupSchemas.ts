@@ -13,7 +13,10 @@ const description = z
     .nullable()
     .transform((value) => (value === '' ? null : value));
 
-const optionalUrl = z.url().max(GROUP.URL_MAX_LENGTH).nullable();
+const optionalUrl = z
+    .url({ protocol: /^https?$/ })
+    .max(GROUP.URL_MAX_LENGTH)
+    .nullable();
 const creditName = z
     .string()
     .trim()

@@ -11,7 +11,7 @@ import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import { seedGroup, seedUser } from './support/factories';
 
-const ENDPOINT = 'https://push.example.test/send/abc';
+const ENDPOINT = 'https://fcm.googleapis.com/fcm/send/abc';
 const KEYS = { p256dh: 'BPublicKeyOfTheBrowser', auth: 'AuthSecret' };
 
 /** Every push that would have gone out, oldest first. */
@@ -95,6 +95,25 @@ describe('/me/push-subscriptions', () => {
                 })
             ).status,
         ).toBe(422);
+        // Only the browsers' push services: the API posts to whatever it stores.
+        for (const endpoint of [
+            'https://10.0.0.5:8443/admin',
+            'https://evil.example/fcm.googleapis.com',
+            'http://fcm.googleapis.com/fcm/send/abc',
+        ]) {
+            expect(
+                (await asBob.post(API_ENDPOINTS.ME.PUSH_SUBSCRIPTIONS, { endpoint, keys: KEYS }))
+                    .status,
+            ).toBe(422);
+        }
+        expect(
+            (
+                await asBob.post(API_ENDPOINTS.ME.PUSH_SUBSCRIPTIONS, {
+                    endpoint: 'https://web.push.apple.com/QAbc',
+                    keys: KEYS,
+                })
+            ).status,
+        ).toBe(201);
     });
 
     it('goes with the account', async () => {

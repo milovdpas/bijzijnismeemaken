@@ -3,13 +3,16 @@ import { GroupAccess, GroupRole, PAGINATION, slugify } from '@bzim/types';
 import type { GroupInput, GroupListingResponse, PublicGroupResponse } from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
+import Activity from '../models/Activity.entity';
 import Group from '../models/Group.entity';
+import GroupInvite from '../models/GroupInvite.entity';
 import GroupMember from '../models/GroupMember.entity';
 import User from '../models/User.entity';
 import GroupPresenter from '../presenters/GroupPresenter';
 import { escapeLike } from '../utils/Database';
 
 import { generateToken } from '../utils/Token';
+import { OccurrenceService } from './OccurrenceService';
 import { WidgetService } from './WidgetService';
 
 export interface PublicPage {
@@ -118,6 +121,8 @@ export class GroupService {
             userId: user.id,
             role: GroupRole.MEMBER,
         }).save();
+        // An invite that was waiting for this person is answered by the join.
+        await GroupInvite.delete({ groupId: group.id, invitedUserId: user.id });
         return { ok: true, membership };
     }
 
@@ -150,7 +155,12 @@ export class GroupService {
     }
 
     /** Everything under the group cascades in the database. */
+    /** Every planned moment in the group is cancelled first; the rows then cascade with the group. */
     static async delete(group: Group): Promise<void> {
+        const activities = await Activity.findBy({ groupId: group.id });
+        for (const activity of activities) {
+            await OccurrenceService.cancelAllPlanned(group, activity);
+        }
         await group.remove();
     }
 }

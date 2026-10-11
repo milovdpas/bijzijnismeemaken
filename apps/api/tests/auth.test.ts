@@ -1,6 +1,8 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import supertest from 'supertest';
+import { DateTime } from 'luxon';
+import { IsNull, Not } from 'typeorm';
 import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 
@@ -103,7 +105,36 @@ describe('POST /auth/refresh', () => {
         expect(rows[1]?.familyId).toBe(rows[0]?.familyId);
     });
 
-    it('revokes the whole family when a rotated token is presented again', async () => {
+    it('lets a second tab refresh with the old token moments after the first', async () => {
+        const user = await seedUser();
+        const { refreshToken: first } = await sessionFor(user);
+
+        const tabA = await api
+            .post(API_ENDPOINTS.AUTH.REFRESH)
+            .set('Cookie', cookieHeader(undefined, first))
+            .set('Origin', env.appUrl);
+        const tabB = await api
+            .post(API_ENDPOINTS.AUTH.REFRESH)
+            .set('Cookie', cookieHeader(undefined, first))
+            .set('Origin', env.appUrl);
+
+        expect(tabA.status).toBe(204);
+        expect(tabB.status).toBe(204);
+        const a = setCookies(tabA.headers).refresh_token ?? '';
+        const b = setCookies(tabB.headers).refresh_token ?? '';
+        expect(a).not.toBe(b);
+        // Both go on from here.
+        for (const token of [a, b]) {
+            const next = await api
+                .post(API_ENDPOINTS.AUTH.REFRESH)
+                .set('Cookie', cookieHeader(undefined, token))
+                .set('Origin', env.appUrl);
+            expect(next.status).toBe(204);
+        }
+        expect(new Set((await RefreshToken.find()).map((row) => row.familyId)).size).toBe(1);
+    });
+
+    it('revokes the whole family when a rotated token is presented again later', async () => {
         const user = await seedUser();
         const { refreshToken: first } = await sessionFor(user);
 
@@ -112,6 +143,11 @@ describe('POST /auth/refresh', () => {
             .set('Cookie', cookieHeader(undefined, first))
             .set('Origin', env.appUrl);
         const second = setCookies(rotated.headers).refresh_token ?? '';
+        // Well past the grace window.
+        await RefreshToken.update(
+            { revokedAt: Not(IsNull()) },
+            { revokedAt: DateTime.utc().minus({ minutes: 5 }).toJSDate() },
+        );
 
         // The old token, used again: somebody else has a copy.
         const reuse = await api

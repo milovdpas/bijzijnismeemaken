@@ -7,5 +7,5 @@ export const imageSearchQuerySchema = z.object({
 });
 
 export const imageUsedSchema = z.object({
-    useToken: z.url().max(500),
+    useToken: z.url({ protocol: /^https$/ }).max(500),
 });

@@ -32,7 +32,7 @@ import {
     useUpdateCalendarSource,
 } from '@/hooks/queries/use-calendar';
 import { useMe, useUpdateMe } from '@/hooks/queries/use-me';
-import { calendarConnectUrl } from '@/lib/api/calendar';
+import { goToCalendarConnect } from '@/lib/api/calendar';
 import { errorKey } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format-date';
 
@@ -50,7 +50,7 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
     // the callback switches the setting on once the grant is in.
     const toggleAutoAdd = (on: boolean) => {
         if (on && !connection.hasWriteScope) {
-            window.location.assign(calendarConnectUrl('readwrite'));
+            void goToCalendarConnect('readwrite');
             return;
         }
         updateMe.mutate({ autoAddToCalendar: on });
@@ -104,14 +104,17 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
                 {needsReauth && (
                     <FormMessage tone="error">
                         {t('calendarSettings.reauthHelp')}{' '}
-                        <a
+                        <button
+                            type="button"
                             className="underline"
-                            href={calendarConnectUrl(
-                                connection.hasWriteScope ? 'readwrite' : 'read',
-                            )}
+                            onClick={() =>
+                                void goToCalendarConnect(
+                                    connection.hasWriteScope ? 'readwrite' : 'read',
+                                )
+                            }
                         >
                             {t('calendarSettings.reconnect')}
-                        </a>
+                        </button>
                     </FormMessage>
                 )}
                 {connection.lastError !== null && (
@@ -255,10 +258,7 @@ export function CalendarSettingsView() {
                         <p>{t('calendarSettings.freeHint')}</p>
                     </CardContent>
                     <CardFooter className="justify-end">
-                        <Button
-                            nativeButton={false}
-                            render={<a href={calendarConnectUrl('read')} />}
-                        >
+                        <Button onClick={() => void goToCalendarConnect('read')}>
                             {t('calendarSettings.connectGoogle')}
                         </Button>
                     </CardFooter>

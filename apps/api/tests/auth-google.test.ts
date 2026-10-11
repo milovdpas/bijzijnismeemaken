@@ -28,16 +28,23 @@ function googleFails() {
     return vi.spyOn(GoogleAuthModule, 'exchangeCode').mockRejectedValue(new Error('invalid_grant'));
 }
 
+/** The state cookie the last start set: the browser that began the login carries it back. */
+let stateCookie = '';
+
 /** Starts a login and returns the state Google would hand back. */
 async function startedState(returnTo?: string): Promise<string> {
     const response = await api.get(API_ENDPOINTS.AUTH.GOOGLE).query(returnTo ? { returnTo } : {});
     expect(response.status).toBe(302);
+    stateCookie = setCookies(response.headers).oauth_state ?? '';
     const location = new URL(response.headers.location ?? '');
     return location.searchParams.get('state') ?? '';
 }
 
 function callback(state: string, code = 'code-123') {
-    return api.get(API_ENDPOINTS.AUTH.GOOGLE_CALLBACK).query({ state, code });
+    return api
+        .get(API_ENDPOINTS.AUTH.GOOGLE_CALLBACK)
+        .set('Cookie', `oauth_state=${stateCookie}`)
+        .query({ state, code });
 }
 
 afterEach(() => {
@@ -135,6 +142,23 @@ describe('GET /auth/google/callback', () => {
         expect(taken.googleSub).toBe('google-sub-9');
         expect(taken.emailVerified()).toBe(true);
         expect(taken.passwordHash).toBeNull();
+    });
+
+    it('refuses a callback from a browser other than the one that started', async () => {
+        googleAnswers();
+        const state = await startedState();
+
+        // The attacker's own state, pasted into a victim's browser: no cookie there.
+        const elsewhere = await api.get(API_ENDPOINTS.AUTH.GOOGLE_CALLBACK).query({
+            state,
+            code: 'code-123',
+        });
+
+        expect(elsewhere.headers.location).toBe(`${env.appUrl}/login?error=google_state`);
+        expect(setCookies(elsewhere.headers).access_token).toBeUndefined();
+        expect(await User.count()).toBe(0);
+        // The browser that started can still finish.
+        expect((await callback(state)).headers.location).toBe(`${env.appUrl}/onboarding`);
     });
 
     it('refuses an unknown, replayed or expired state', async () => {

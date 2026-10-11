@@ -125,7 +125,10 @@ describe('POST /worker/occurrence-reminders', () => {
         await row.save();
         await PushService.subscribe(
             anna,
-            { endpoint: 'https://push.example.test/anna', keys: { p256dh: 'p', auth: 'a' } },
+            {
+                endpoint: 'https://fcm.googleapis.com/fcm/send/anna',
+                keys: { p256dh: 'p', auth: 'a' },
+            },
             null,
         );
 

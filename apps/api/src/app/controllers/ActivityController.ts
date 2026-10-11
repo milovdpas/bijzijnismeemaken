@@ -193,7 +193,7 @@ export default class ActivityController {
             sendForbidden(res, 'Only the creator or an admin deletes an activity');
             return;
         }
-        await ActivityService.delete(activity);
+        await ActivityService.delete(req.group, activity);
         sendNoContent(res);
     };
 

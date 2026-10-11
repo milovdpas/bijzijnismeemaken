@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { In } from 'typeorm';
 import { CalendarConnectionStatus, CalendarProviderKey } from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
@@ -6,12 +7,14 @@ import CalendarConnection from '../models/CalendarConnection.entity';
 import CalendarEvent from '../models/CalendarEvent.entity';
 import CalendarSource from '../models/CalendarSource.entity';
 import OAuthState, { OAuthPurpose } from '../models/OAuthState.entity';
+import OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
 import type User from '../models/User.entity';
 import { ProviderError } from '../modules/calendar/CalendarProvider';
 import type { CalendarProvider, CalendarScope } from '../modules/calendar/CalendarProvider';
 import { CalendarProviderFactory } from '../modules/calendar/CalendarProviderFactory';
 import Crypt from '../utils/Crypt';
 import { generateToken } from '../utils/Token';
+import { CalendarWriteService } from './CalendarWriteService';
 
 /** How long the Google round trip may take before the state is stale. */
 const OAUTH_STATE_MINUTES = 10;
@@ -105,7 +108,21 @@ export class CalendarService {
         }
 
         const previous = await CalendarService.find(user);
-        if (previous !== null) {
+        // The same Google account again (a reconnect, or asking for the write
+        // scope): its calendar still holds the events written so far, so they
+        // follow to the new connection instead of being written twice. Another
+        // account: those events come out while the old grant still works, and
+        // the grant is revoked. A same-account grant is left alone, since
+        // Google revokes per account, not per token.
+        const sameAccount =
+            previous !== null &&
+            previous.accountEmailHash === Crypt.searchHash(tokens.accountEmail);
+        const written =
+            previous === null
+                ? []
+                : await OccurrenceParticipant.findBy({ calendarConnectionId: previous.id });
+        if (previous !== null && !sameAccount) {
+            await CalendarWriteService.remove(written);
             await CalendarService.revokeQuietly(provider, previous);
         }
         const connection = await AppDataSource.transaction(async (manager) => {
@@ -138,6 +155,13 @@ export class CalendarService {
                     }),
                 ),
             );
+            if (sameAccount && written.length > 0) {
+                await manager.update(
+                    OccurrenceParticipant,
+                    { id: In(written.map((row) => row.id)) },
+                    { calendarConnectionId: created.id },
+                );
+            }
             return created;
         });
         // Asking for the write scope is asking for auto-add: the setting follows the grant.

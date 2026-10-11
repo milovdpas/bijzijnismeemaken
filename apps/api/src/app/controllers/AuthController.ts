@@ -9,7 +9,15 @@ import type User from '../models/User.entity';
 import { AuthService, safeReturnTo } from '../services/AuthService';
 import { SessionService } from '../services/SessionService';
 import { sendConflict, sendError, sendNoContent, sendUnauthenticated } from '../utils/ApiResponses';
-import { REFRESH_COOKIE, clearAuthCookies, cookieOf, setAuthCookies } from '../utils/Cookies';
+import {
+    OAUTH_COOKIE,
+    REFRESH_COOKIE,
+    clearAuthCookies,
+    clearOAuthCookie,
+    cookieOf,
+    setAuthCookies,
+    setOAuthCookie,
+} from '../utils/Cookies';
 import {
     emailOnlySchema,
     googleCallbackQuerySchema,
@@ -31,7 +39,8 @@ import {
 export default class AuthController {
     googleStart: Handler = async (req, res) => {
         const { returnTo } = queryOf(req, googleStartQuerySchema);
-        const url = await AuthService.startGoogleLogin(safeReturnTo(returnTo));
+        const { url, state } = await AuthService.startGoogleLogin(safeReturnTo(returnTo));
+        setOAuthCookie(res, state);
         res.redirect(302, url);
     };
 
@@ -42,8 +51,17 @@ export default class AuthController {
      */
     googleCallback: Handler = async (req, res) => {
         const { state, code, error } = queryOf(req, googleCallbackQuerySchema);
+        const started = cookieOf(req, OAUTH_COOKIE);
+        clearOAuthCookie(res);
         if (error !== undefined || code === undefined) {
             res.redirect(302, `${env.appUrl}/login?error=google_cancelled`);
+            return;
+        }
+        // A callback URL carried over from another browser would sign this one
+        // into somebody else's account; the state has to match the one this
+        // browser was given when it started.
+        if (started !== state) {
+            res.redirect(302, `${env.appUrl}/login?error=google_state`);
             return;
         }
 

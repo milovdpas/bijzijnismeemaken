@@ -8,12 +8,25 @@ import type {
 } from '@bzim/types';
 
 import { API_URL } from '@/lib/site';
-import { request } from './client';
+import { refreshSession, request } from './client';
 
 /** Where the browser goes to connect: the API starts the provider's OAuth and redirects back to settings. */
 export function calendarConnectUrl(scope: 'read' | 'readwrite', returnTo?: string): string {
     const query = new URLSearchParams({ scope, ...(returnTo === undefined ? {} : { returnTo }) });
     return `${API_URL}${API_ENDPOINTS.ME.CALENDAR_CONNECT}?${query.toString()}`;
+}
+
+/**
+ * Leaves for the connect page. A navigation carries only the cookies, and
+ * the access one lives fifteen minutes, so it is renewed first; a session
+ * that cannot be renewed lands on the API's 401 just as it would have.
+ */
+export async function goToCalendarConnect(
+    scope: 'read' | 'readwrite',
+    returnTo?: string,
+): Promise<void> {
+    await refreshSession();
+    window.location.assign(calendarConnectUrl(scope, returnTo));
 }
 
 export function fetchCalendar(): Promise<CalendarConnectionDto | null> {

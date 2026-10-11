@@ -4,6 +4,9 @@ import { env } from '../../config/app';
 
 export const ACCESS_COOKIE = 'access_token';
 export const REFRESH_COOKIE = 'refresh_token';
+/** The Google login's state, so only the browser that started the login can finish it. */
+export const OAUTH_COOKIE = 'oauth_state';
+const OAUTH_COOKIE_MINUTES = 10;
 
 /**
  * Both tokens travel as httpOnly cookies, so no script in the browser can read
@@ -41,6 +44,14 @@ export function setAuthCookies(
 export function clearAuthCookies(res: Response): void {
     res.clearCookie(ACCESS_COOKIE, baseOptions());
     res.clearCookie(REFRESH_COOKIE, baseOptions());
+}
+
+export function setOAuthCookie(res: Response, state: string): void {
+    res.cookie(OAUTH_COOKIE, state, { ...baseOptions(), maxAge: OAUTH_COOKIE_MINUTES * 60 * 1000 });
+}
+
+export function clearOAuthCookie(res: Response): void {
+    res.clearCookie(OAUTH_COOKIE, baseOptions());
 }
 
 /** A cookie value, as cookie-parser left it. */

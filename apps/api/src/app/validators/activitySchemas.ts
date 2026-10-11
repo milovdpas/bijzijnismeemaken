@@ -26,7 +26,10 @@ const optionalText = (max: number) =>
         .nullable()
         .transform((value) => (value === '' ? null : value));
 
-const optionalUrl = z.url().max(ACTIVITY.URL_MAX_LENGTH).nullable();
+const optionalUrl = z
+    .url({ protocol: /^https?$/ })
+    .max(ACTIVITY.URL_MAX_LENGTH)
+    .nullable();
 const optionalTime = z
     .string()
     .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:mm')

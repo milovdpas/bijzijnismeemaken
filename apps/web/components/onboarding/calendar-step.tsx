@@ -9,7 +9,7 @@ import { StepShell } from '@/components/onboarding/step-shell';
 import { Button } from '@/components/ui/button';
 import { useCalendar } from '@/hooks/queries/use-calendar';
 import { useMarkSetup } from '@/hooks/queries/use-me';
-import { calendarConnectUrl } from '@/lib/api/calendar';
+import { goToCalendarConnect } from '@/lib/api/calendar';
 import { errorKey } from '@/lib/api/errors';
 
 const NEXT = '/welcome/availability';
@@ -58,10 +58,7 @@ export function CalendarStep() {
                         {connected ? t('welcome.next') : t('welcome.skip')}
                     </Button>
                     {!connected && (
-                        <Button
-                            nativeButton={false}
-                            render={<a href={calendarConnectUrl('read', NEXT)} />}
-                        >
+                        <Button onClick={() => void goToCalendarConnect('read', NEXT)}>
                             {t('calendarSettings.connectGoogle')}
                         </Button>
                     )}

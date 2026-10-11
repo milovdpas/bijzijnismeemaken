@@ -24,6 +24,20 @@ describe('eventCells', () => {
         ).toEqual([]);
     });
 
+    it('reads the dayparts on the clock-change day by wall-clock time', () => {
+        // 25 October 2026 is CET (UTC+1) by late morning. 11:30 to 12:30: morning and afternoon.
+        expect(
+            eventCells(at('2026-10-25T10:30:00Z'), at('2026-10-25T11:30:00Z'), false, null, null),
+        ).toEqual([
+            ['2026-10-25', Daypart.MORNING],
+            ['2026-10-25', Daypart.AFTERNOON],
+        ]);
+        // 29 March 2026 is CEST (UTC+2) by late morning. 07:30 to 08:30: morning only.
+        expect(
+            eventCells(at('2026-03-29T05:30:00Z'), at('2026-03-29T06:30:00Z'), false, null, null),
+        ).toEqual([['2026-03-29', Daypart.MORNING]]);
+    });
+
     it('lands a window across midnight on both days', () => {
         // 22:00 to 01:00 Amsterdam: the evening, then nothing on the next day before 08:00.
         expect(

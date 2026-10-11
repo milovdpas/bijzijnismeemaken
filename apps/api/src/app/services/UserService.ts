@@ -10,6 +10,7 @@ import User from '../models/User.entity';
 import { escapeLike } from '../utils/Database';
 import { normalizeHandle } from '../utils/Normalize';
 import { hashPassword, verifyPassword } from '../utils/Password';
+import { CalendarService } from './CalendarService';
 import { CalendarWriteService } from './CalendarWriteService';
 import { DepartureService } from './DepartureService';
 import type { Departure } from './DepartureService';
@@ -126,6 +127,13 @@ export class UserService {
      */
     static async deleteAccount(user: User): Promise<void> {
         await SessionService.revokeAllForUser(user.id);
+        // Their own calendar first, while the grant still works: the events
+        // that were written come out, and Google forgets the app.
+        await CalendarWriteService.removeAllFor(user);
+        const connection = await CalendarService.find(user);
+        if (connection !== null) {
+            await CalendarService.disconnect(connection);
+        }
         const memberships = await GroupMember.find({
             where: { userId: user.id },
             relations: { group: true },

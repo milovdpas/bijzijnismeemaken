@@ -18,6 +18,20 @@ describe('calendarSpan', () => {
         expect(summer.end?.toUTC().toISO()).toBe('2026-06-15T10:00:00.000Z');
         expect(calendarSpan('2026-06-15', null, null, null).start).toBeNull();
     });
+
+    it('keeps wall-clock time on the days the clocks change', () => {
+        // 25 October 2026: the clocks go back at 03:00. Eight in the evening is CET.
+        const autumn = calendarSpan('2026-10-25', null, '20:00', 60);
+        expect(autumn.start?.toUTC().toISO()).toBe('2026-10-25T19:00:00.000Z');
+        expect(autumn.end?.toUTC().toISO()).toBe('2026-10-25T20:00:00.000Z');
+        // 29 March 2026: forward at 02:00. The evening daypart is CEST, and ends at midnight.
+        const spring = calendarSpan('2026-03-29', Daypart.EVENING, null, null);
+        expect(spring.start?.toUTC().toISO()).toBe('2026-03-29T16:00:00.000Z');
+        expect(spring.end?.toUTC().toISO()).toBe('2026-03-29T22:00:00.000Z');
+        // A late start runs into the next day.
+        const late = calendarSpan('2026-10-25', null, '23:30', 90);
+        expect(late.end?.toUTC().toISO()).toBe('2026-10-26T00:00:00.000Z');
+    });
 });
 
 describe('icsFor', () => {
@@ -60,6 +74,25 @@ describe('icsFor', () => {
         const summary = ics.split('\r\n').find((line) => line.startsWith('SUMMARY'));
         expect(summary?.length).toBeLessThanOrEqual(75);
         expect(ics).toContain('\r\n x');
+    });
+
+    it('never folds in the middle of an emoji', () => {
+        const ics = icsFor(
+            {
+                uid: 'abc@bijzijn',
+                title: `${'a'.repeat(60)}🎉🎉🎉🎉 feest`,
+                description: null,
+                location: null,
+                url: 'https://example.test/a',
+                span: calendarSpan('2026-12-31', null, null, null),
+            },
+            now,
+        );
+        expect(Buffer.from(ics, 'utf8').toString('utf8')).toBe(ics);
+        for (const line of ics.split('\r\n')) {
+            expect(Buffer.byteLength(line, 'utf8')).toBeLessThanOrEqual(75);
+        }
+        expect(ics.replace(/\r\n /g, '')).toContain('🎉🎉🎉🎉 feest');
     });
 });
 

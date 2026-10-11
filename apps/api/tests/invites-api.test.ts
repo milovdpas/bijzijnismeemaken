@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_ENDPOINTS, ERROR_CODES, GroupRole, Locale, NotificationType } from '@bzim/types';
+import {
+    API_ENDPOINTS,
+    ERROR_CODES,
+    GroupAccess,
+    GroupRole,
+    Locale,
+    NotificationType,
+} from '@bzim/types';
 import type { GroupDetailResponse, GroupInviteDto } from '@bzim/types';
 
 import GroupInvite from '../src/app/models/GroupInvite.entity';
@@ -166,6 +173,33 @@ describe('the invitee', () => {
         expect(await GroupMember.existsBy({ groupId: group.id, userId: invitee.id })).toBe(true);
         expect(await GroupInvite.countBy({ id: invite.id })).toBe(0);
         expect((await asInvitee.post(API_ENDPOINTS.INVITES.ACCEPT(invite.id))).status).toBe(404);
+    });
+
+    it('is answered by joining another way, and accepting as a member is no error', async () => {
+        outbox();
+        const owner = await seedUser();
+        const group = await seedGroup(owner, { access: GroupAccess.PUBLIC });
+        const anna = await seedUser({ handle: 'anna' });
+        const asOwner = asUser((await sessionFor(owner)).accessToken);
+        const asAnna = asUser((await sessionFor(anna)).accessToken);
+        const invite = data<GroupInviteDto>(
+            await asOwner.post(API_ENDPOINTS.GROUPS.INVITES(group.id), { handle: 'anna' }),
+        );
+
+        // Anna finds the group herself and joins: the invite is answered.
+        expect((await asAnna.post(API_ENDPOINTS.GROUPS.JOIN(group.id))).status).toBe(201);
+        expect(await GroupInvite.countBy({ id: invite.id })).toBe(0);
+        expect(data<GroupInviteDto[]>(await asAnna.get(API_ENDPOINTS.INVITES.LIST))).toEqual([]);
+
+        // An invite that somehow outlived the membership still accepts cleanly.
+        const stale = await GroupInvite.create({
+            groupId: group.id,
+            invitedUserId: anna.id,
+            invitedById: owner.id,
+        }).save();
+        expect((await asAnna.post(API_ENDPOINTS.INVITES.ACCEPT(stale.id))).status).toBe(201);
+        expect(await GroupInvite.countBy({ id: stale.id })).toBe(0);
+        expect(await GroupMember.countBy({ groupId: group.id, userId: anna.id })).toBe(1);
     });
 
     it('can decline, and nobody else can answer their invite', async () => {

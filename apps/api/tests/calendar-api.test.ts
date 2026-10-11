@@ -20,13 +20,21 @@ import type {
 import CalendarConnection from '../src/app/models/CalendarConnection.entity';
 import CalendarEvent from '../src/app/models/CalendarEvent.entity';
 import OAuthState from '../src/app/models/OAuthState.entity';
+import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
 import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
 import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
 import type { ProviderEvent } from '../src/app/modules/calendar/CalendarProvider';
 import { env } from '../src/config/app';
 import { sessionFor } from './support/auth';
 import { api, asUser, asWorker, data } from './support/client';
-import { seedGroup, seedMember, seedUser } from './support/factories';
+import {
+    seedActivity,
+    seedGroup,
+    seedMember,
+    seedOccurrence,
+    seedParticipant,
+    seedUser,
+} from './support/factories';
 
 function install(): FixtureCalendarProvider {
     const fixture = new FixtureCalendarProvider();
@@ -127,7 +135,18 @@ describe('calendar connection', () => {
         ]);
         expect(await OAuthState.count()).toBe(0);
 
-        // Connecting again replaces: one row, the old grant revoked.
+        // An event written through this connection follows it to the next one.
+        const group = await seedGroup(user);
+        const activity = await seedActivity(group, user);
+        const occurrence = await seedOccurrence(activity, user);
+        const row = await seedParticipant(occurrence, user);
+        await OccurrenceParticipant.update(row.id, {
+            calendarEventId: 'evt-1',
+            calendarConnectionId: connection.id,
+        });
+
+        // Connecting the same account again replaces: one row, the grant kept
+        // (Google revokes per account, which would kill the new tokens too).
         fixture.exchanged = {
             ...fixture.exchanged,
             refreshToken: 'second',
@@ -139,11 +158,29 @@ describe('calendar connection', () => {
         const again = await connect(asMe, 'readwrite');
         expect(again.hasWriteScope).toBe(true);
         expect(await CalendarConnection.countBy({ userId: user.id })).toBe(1);
-        // The step's connection and the first one were each revoked on replacement.
-        expect(fixture.revoked).toEqual(['fixture-refresh', 'fixture-refresh']);
+        expect(fixture.revoked).toEqual([]);
         expect((await CalendarConnection.findOneByOrFail({ userId: user.id })).refreshToken).toBe(
             'second',
         );
+        expect(await OccurrenceParticipant.findOneByOrFail({ id: row.id })).toMatchObject({
+            calendarEventId: 'evt-1',
+            calendarConnectionId: again.id,
+        });
+
+        // Another Google account: the old event comes out of the old calendar, the old grant goes.
+        fixture.exchanged = {
+            ...fixture.exchanged,
+            accountEmail: 'werk@example.test',
+            refreshToken: 'third',
+        };
+        const other = await connect(asMe);
+        expect(other.accountEmail).toBe('werk@example.test');
+        expect(fixture.revoked).toEqual(['second']);
+        expect(fixture.deleted).toEqual([{ calendarId: 'primary', eventId: 'evt-1' }]);
+        expect(await OccurrenceParticipant.findOneByOrFail({ id: row.id })).toMatchObject({
+            calendarEventId: null,
+            calendarConnectionId: null,
+        });
     });
 
     it('refuses a callback for another person, a stale state, and a provider failure', async () => {

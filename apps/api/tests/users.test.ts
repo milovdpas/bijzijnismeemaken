@@ -1,13 +1,19 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 import type { HandleAvailableResponse, MeResponse, UserSummary } from '@bzim/types';
 
 import { env } from '../src/config/app';
 import User from '../src/app/models/User.entity';
+import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
+import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
 import { hashPassword, verifyPassword } from '../src/app/utils/Password';
 import { cookieHeader, sessionFor, setCookies } from './support/auth';
 import { api, asUser, data, error } from './support/client';
-import { seedUser } from './support/factories';
+import { seedCalendarConnection, seedUser } from './support/factories';
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 describe('GET /me', () => {
     it('answers the account with its sign-in methods and onboarding state', async () => {
@@ -221,6 +227,10 @@ describe('DELETE /me', () => {
     it('removes the account, its sessions, and clears the cookies', async () => {
         const user = await seedUser();
         const { cookie, refreshToken } = await sessionFor(user);
+        // A connected calendar: the grant is given back to Google on the way out.
+        const fixture = new FixtureCalendarProvider();
+        vi.spyOn(CalendarProviderFactory, 'for').mockReturnValue(fixture);
+        await seedCalendarConnection(user, { refreshToken: 'their-grant' });
 
         const response = await api
             .delete(API_ENDPOINTS.ME.ROOT)
@@ -230,6 +240,7 @@ describe('DELETE /me', () => {
         expect(response.status).toBe(204);
         expect(setCookies(response.headers)).toEqual({ access_token: '', refresh_token: '' });
         expect(await User.countBy({ id: user.id })).toBe(0);
+        expect(fixture.revoked).toEqual(['their-grant']);
 
         const refresh = await api
             .post(API_ENDPOINTS.AUTH.REFRESH)

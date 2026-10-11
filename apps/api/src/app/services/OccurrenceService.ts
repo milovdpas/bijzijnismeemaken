@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import { Between, In } from 'typeorm';
+import { Between, In, Not } from 'typeorm';
 import type { FindOptionsRelations } from 'typeorm';
 import { API_ENDPOINTS, OccurrenceStatus, occurrenceWindow, windowsOverlap } from '@bzim/types';
 import type { GroupOccurrenceDto, OccurrenceInput, OccurrenceUpdateInput } from '@bzim/types';
@@ -106,6 +106,19 @@ export class OccurrenceService {
             return { ok: false, problem: 'PARTICIPANT_NOT_MEMBER' };
         }
         const wasPlanned = occurrence.status === OccurrenceStatus.PLANNED;
+        const wasCancelled = occurrence.status === OccurrenceStatus.CANCELLED;
+        const reopening = patch.status === OccurrenceStatus.PLANNED && !wasPlanned;
+        if (
+            reopening &&
+            !activity.isRecurring &&
+            (await ActivityOccurrence.existsBy({
+                activityId: activity.id,
+                status: OccurrenceStatus.PLANNED,
+                id: Not(occurrence.id),
+            }))
+        ) {
+            return { ok: false, problem: 'ALREADY_OPEN' };
+        }
 
         if (patch.date !== undefined) occurrence.date = patch.date;
         if (patch.daypart !== undefined) occurrence.daypart = patch.daypart;
@@ -113,6 +126,14 @@ export class OccurrenceService {
         if (patch.notes !== undefined) occurrence.notes = patch.notes;
         if (patch.status !== undefined) occurrence.status = patch.status;
         await occurrence.save();
+        if (reopening && occurrence.status === OccurrenceStatus.PLANNED && wasCancelled) {
+            // Back on after a cancellation: everyone was told it was off, so
+            // everyone is told again as if it were planned afresh.
+            await OccurrenceParticipant.update(
+                { occurrenceId: occurrence.id },
+                { notifiedAt: null, remindedAt: null },
+            );
+        }
 
         if (patch.participantIds !== undefined) {
             const wanted = new Set(patch.participantIds);
@@ -146,6 +167,22 @@ export class OccurrenceService {
         }
         await CalendarWriteService.sync(group, activity, fresh);
         return { ok: true, occurrence: await OccurrenceService.reload(occurrence.id) };
+    }
+
+    /**
+     * The activity (or its group) is going: every planned occurrence is
+     * cancelled first, so the people who were told hear it is off and the
+     * calendars that were written empty out. The rows themselves cascade.
+     */
+    static async cancelAllPlanned(group: Group, activity: Activity): Promise<void> {
+        const open = await ActivityOccurrence.find({
+            where: { activityId: activity.id, status: OccurrenceStatus.PLANNED },
+            relations: RELATIONS,
+        });
+        for (const occurrence of open) {
+            await OccurrenceService.tellCancelled(group, activity, occurrence);
+            await CalendarWriteService.remove(occurrence.participants);
+        }
     }
 
     /** Gone for good. People who had been told it was on are told it is off. */

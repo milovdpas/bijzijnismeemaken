@@ -27,9 +27,21 @@ export function calendarSpan(
     const midnight = DateTime.fromISO(date, { zone: TIME_ZONE }).startOf('day');
     return {
         date,
-        start: midnight.plus({ minutes: window.startMinute }),
-        end: midnight.plus({ minutes: window.endMinute }),
+        start: atMinute(midnight, window.startMinute),
+        end: atMinute(midnight, window.endMinute),
     };
+}
+
+/**
+ * Minutes after midnight as wall-clock time. `set`, never `plus`: on the day
+ * the clocks change, midnight plus twenty hours is 19:00 or 21:00, and a
+ * plan for eight in the evening means eight in the evening. Minute 1440 and
+ * beyond roll into the next day.
+ */
+export function atMinute(midnight: DateTime, minute: number): DateTime {
+    return midnight
+        .plus({ days: Math.floor(minute / 1440) })
+        .set({ hour: Math.floor((minute % 1440) / 60), minute: minute % 60 });
 }
 
 export interface CalendarEvent {
@@ -69,6 +81,8 @@ function fold(line: string): string {
     while (Buffer.byteLength(rest, 'utf8') > 75) {
         let cut = 75;
         while (Buffer.byteLength(rest.slice(0, cut), 'utf8') > 75) cut -= 1;
+        // Never between the two halves of an emoji: that is not UTF-8 any more.
+        if (/[\uD800-\uDBFF]/.test(rest.charAt(cut - 1))) cut -= 1;
         parts.push(rest.slice(0, cut));
         rest = ` ${rest.slice(cut)}`;
     }

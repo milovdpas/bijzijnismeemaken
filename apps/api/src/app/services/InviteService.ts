@@ -82,9 +82,21 @@ export class InviteService {
         });
     }
 
-    /** Membership and removal of the invite happen together, or not at all. */
+    /**
+     * Membership and removal of the invite happen together, or not at all.
+     * Somebody who got in another way meanwhile (a link, a public join) is
+     * simply a member already; the invite goes just the same.
+     */
     static async accept(invite: GroupInvite): Promise<GroupMember> {
         return AppDataSource.transaction(async (manager) => {
+            const existing = await manager.findOneBy(GroupMember, {
+                groupId: invite.groupId,
+                userId: invite.invitedUserId,
+            });
+            if (existing !== null) {
+                await manager.remove(invite);
+                return existing;
+            }
             const membership = await manager.save(
                 manager.create(GroupMember, {
                     groupId: invite.groupId,

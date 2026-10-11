@@ -27,6 +27,9 @@ export type RefreshResult =
  * issued in the same family, so a token that is presented twice is one that
  * leaked, and the whole family goes with it.
  */
+/** How long after a rotation the old token still refreshes: long enough for a second tab, short enough for a thief to be late. */
+const ROTATION_GRACE_SECONDS = 30;
+
 export class SessionService {
     /** A fresh family: a login, or a verification link. */
     static async issue(user: User, userAgent: string | null): Promise<IssuedSession> {
@@ -45,19 +48,30 @@ export class SessionService {
         }
 
         const now = DateTime.utc();
+        const user = await User.findOneBy({ id: row.userId });
+        if (user === null) {
+            return { ok: false, problem: 'INVALID' };
+        }
         if (row.revokedAt !== null) {
-            // Already rotated away, and presented again: somebody holds a
+            // Just rotated and presented again within moments: two tabs that
+            // refreshed together, the second one still holding the old token.
+            // It gets its own pair in the same family; the first one keeps its.
+            const grace = DateTime.fromJSDate(row.revokedAt).plus({
+                seconds: ROTATION_GRACE_SECONDS,
+            });
+            if (row.replacedById !== null && now <= grace) {
+                return {
+                    ok: true,
+                    session: await SessionService.mint(user, row.familyId, userAgent),
+                };
+            }
+            // Rotated away a while ago, and presented again: somebody holds a
             // copy. Nothing issued from this login can be trusted any more.
             await SessionService.revokeFamily(row.familyId, now);
             return { ok: false, problem: 'REUSED' };
         }
         if (!row.isUsable(now)) {
             return { ok: false, problem: 'EXPIRED' };
-        }
-
-        const user = await User.findOneBy({ id: row.userId });
-        if (user === null) {
-            return { ok: false, problem: 'INVALID' };
         }
 
         const session = await SessionService.mint(user, row.familyId, userAgent);

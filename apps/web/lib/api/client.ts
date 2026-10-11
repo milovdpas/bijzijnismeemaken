@@ -88,7 +88,12 @@ export function setUnauthenticatedHandler(handler: () => void): void {
  */
 let refreshing: Promise<boolean> | null = null;
 
-async function refreshSession(): Promise<boolean> {
+/**
+ * Exported for the few places that leave the app by a plain navigation to
+ * the API (the calendar connect): those carry only the cookies, so the
+ * access cookie is renewed first rather than landing on a 401 page.
+ */
+export async function refreshSession(): Promise<boolean> {
     refreshing ??= fetch(buildUrl(API_ENDPOINTS.AUTH.REFRESH), {
         method: 'POST',
         credentials: 'include',

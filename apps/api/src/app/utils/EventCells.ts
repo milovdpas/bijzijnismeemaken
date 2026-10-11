@@ -2,6 +2,8 @@ import { DateTime } from 'luxon';
 import { DAYPARTS, DAYPART_ORDER, TIME_ZONE } from '@bzim/types';
 import type { Daypart, IsoDateString } from '@bzim/types';
 
+import { atMinute } from './CalendarLinks';
+
 /** A day and a daypart an event makes busy. */
 export type EventCell = [IsoDateString, Daypart];
 
@@ -38,8 +40,8 @@ export function eventCells(
     for (let day = start.startOf('day'); day <= lastDay; day = day.plus({ days: 1 })) {
         for (const daypart of DAYPART_ORDER) {
             const range = DAYPARTS[daypart];
-            const from = day.plus({ hours: range.startHour });
-            const to = day.plus({ hours: range.endHour });
+            const from = atMinute(day, range.startHour * 60);
+            const to = atMinute(day, range.endHour * 60);
             if (start < to && end > from) cells.push([day.toISODate() ?? '', daypart]);
         }
     }

@@ -214,7 +214,7 @@ describe('schema', () => {
         expect(orphan.toDto().creator).toBeNull();
         expect(await ActivityOccurrence.countBy({ activityId: activity.id })).toBe(1);
 
-        await ActivityService.delete(orphan);
+        await ActivityService.delete(group, orphan);
         expect(await ActivityInterest.count()).toBe(0);
         expect(await ActivityOccurrence.count()).toBe(0);
         expect(await OccurrenceParticipant.count()).toBe(0);
