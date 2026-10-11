@@ -2,8 +2,8 @@ import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 
-import User from '../src/app/models/User.entity';
-import { hashPassword, verifyPassword } from '../src/app/utils/Password';
+import User from '../src/app/domain/models/User.entity';
+import { hashPassword, verifyPassword } from '../src/app/infrastructure/utils/Password';
 import { setCookies } from './support/auth';
 import { api, error } from './support/client';
 import { seedUser } from './support/factories';

@@ -10,8 +10,8 @@ import {
 } from '@bzim/types';
 import type { TournamentDetailDto, TournamentListingDto } from '@bzim/types';
 
-import Tournament from '../src/app/models/Tournament.entity';
-import TournamentEntryMember from '../src/app/models/TournamentEntryMember.entity';
+import Tournament from '../src/app/domain/models/Tournament.entity';
+import TournamentEntryMember from '../src/app/domain/models/TournamentEntryMember.entity';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedActivity, seedGroup, seedMember, seedUser } from './support/factories';

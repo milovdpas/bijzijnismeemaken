@@ -17,13 +17,13 @@ import type {
     WorkerJobResponse,
 } from '@bzim/types';
 
-import CalendarConnection from '../src/app/models/CalendarConnection.entity';
-import CalendarEvent from '../src/app/models/CalendarEvent.entity';
-import OAuthState from '../src/app/models/OAuthState.entity';
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
-import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
-import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
-import type { ProviderEvent } from '../src/app/modules/calendar/CalendarProvider';
+import CalendarConnection from '../src/app/domain/models/CalendarConnection.entity';
+import CalendarEvent from '../src/app/domain/models/CalendarEvent.entity';
+import OAuthState from '../src/app/domain/models/OAuthState.entity';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
+import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
+import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
+import type { ProviderEvent } from '../src/app/infrastructure/modules/calendar/CalendarProvider';
 import { env } from '../src/config/app';
 import { sessionFor } from './support/auth';
 import { api, asUser, asWorker, data } from './support/client';

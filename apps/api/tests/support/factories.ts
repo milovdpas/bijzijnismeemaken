@@ -22,25 +22,25 @@ import {
     slugify,
 } from '@bzim/types';
 
-import Activity from '../../src/app/models/Activity.entity';
-import CalendarConnection from '../../src/app/models/CalendarConnection.entity';
-import CalendarSource from '../../src/app/models/CalendarSource.entity';
-import Crypt from '../../src/app/utils/Crypt';
-import ActivityInterest from '../../src/app/models/ActivityInterest.entity';
-import ActivityOccurrence from '../../src/app/models/ActivityOccurrence.entity';
-import Group from '../../src/app/models/Group.entity';
-import GroupMember from '../../src/app/models/GroupMember.entity';
-import Leaderboard from '../../src/app/models/Leaderboard.entity';
-import LeaderboardMember from '../../src/app/models/LeaderboardMember.entity';
-import ManualUnavailability from '../../src/app/models/ManualUnavailability.entity';
-import OccurrenceParticipant from '../../src/app/models/OccurrenceParticipant.entity';
-import Tournament from '../../src/app/models/Tournament.entity';
-import TournamentEntry from '../../src/app/models/TournamentEntry.entity';
-import TournamentEntryMember from '../../src/app/models/TournamentEntryMember.entity';
-import User from '../../src/app/models/User.entity';
-import WeeklyUnavailabilityRule from '../../src/app/models/WeeklyUnavailabilityRule.entity';
+import Activity from '../../src/app/domain/models/Activity.entity';
+import CalendarConnection from '../../src/app/domain/models/CalendarConnection.entity';
+import CalendarSource from '../../src/app/domain/models/CalendarSource.entity';
+import Crypt from '../../src/app/infrastructure/utils/Crypt';
+import ActivityInterest from '../../src/app/domain/models/ActivityInterest.entity';
+import ActivityOccurrence from '../../src/app/domain/models/ActivityOccurrence.entity';
+import Group from '../../src/app/domain/models/Group.entity';
+import GroupMember from '../../src/app/domain/models/GroupMember.entity';
+import Leaderboard from '../../src/app/domain/models/Leaderboard.entity';
+import LeaderboardMember from '../../src/app/domain/models/LeaderboardMember.entity';
+import ManualUnavailability from '../../src/app/domain/models/ManualUnavailability.entity';
+import OccurrenceParticipant from '../../src/app/domain/models/OccurrenceParticipant.entity';
+import Tournament from '../../src/app/domain/models/Tournament.entity';
+import TournamentEntry from '../../src/app/domain/models/TournamentEntry.entity';
+import TournamentEntryMember from '../../src/app/domain/models/TournamentEntryMember.entity';
+import User from '../../src/app/domain/models/User.entity';
+import WeeklyUnavailabilityRule from '../../src/app/domain/models/WeeklyUnavailabilityRule.entity';
 
-import { generateToken } from '../../src/app/utils/Token';
+import { generateToken } from '../../src/app/infrastructure/utils/Token';
 
 /**
  * Seed helpers, written through the entities rather than raw SQL.

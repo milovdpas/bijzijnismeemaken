@@ -2,12 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, Daypart, GroupRole, Locale, OccurrenceStatus } from '@bzim/types';
 import type { GroupOccurrenceDto, OccurrenceDto } from '@bzim/types';
 
-import ActivityInterest from '../src/app/models/ActivityInterest.entity';
-import ActivityOccurrence from '../src/app/models/ActivityOccurrence.entity';
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
-import { signOccurrenceToken } from '../src/app/utils/SignedLink';
+import ActivityInterest from '../src/app/domain/models/ActivityInterest.entity';
+import ActivityOccurrence from '../src/app/domain/models/ActivityOccurrence.entity';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
+import { signOccurrenceToken } from '../src/app/infrastructure/utils/SignedLink';
 import { sessionFor } from './support/auth';
 import { api, asUser, data, error } from './support/client';
 import {

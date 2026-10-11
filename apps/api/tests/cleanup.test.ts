@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, Daypart } from '@bzim/types';
 import type { WorkerJobResponse } from '@bzim/types';
 
-import ManualUnavailability from '../src/app/models/ManualUnavailability.entity';
-import OAuthState, { OAuthPurpose } from '../src/app/models/OAuthState.entity';
-import RefreshToken from '../src/app/models/RefreshToken.entity';
+import ManualUnavailability from '../src/app/domain/models/ManualUnavailability.entity';
+import OAuthState, { OAuthPurpose } from '../src/app/domain/models/OAuthState.entity';
+import RefreshToken from '../src/app/domain/models/RefreshToken.entity';
 import { env } from '../src/config/app';
 import { asWorker, data } from './support/client';
 import { seedBlock, seedUser } from './support/factories';

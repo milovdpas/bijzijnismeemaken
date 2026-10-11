@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, DateMode, Weekday } from '@bzim/types';
 
-import { mailer } from '../src/app/modules/mail';
+import { mailer } from '../src/app/infrastructure/modules/mail';
 import { sessionFor } from './support/auth';
 import { asUser, error } from './support/client';
 import { seedActivity, seedGroup, seedUser } from './support/factories';

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 
-import { resetRateLimits } from '../src/app/middleware/RateLimit';
+import { resetRateLimits } from '../src/app/http/middleware/RateLimit';
 import { AppDataSource, connectDatabase } from '../src/database/typeorm-db';
 import { truncateAll } from './support/database';
 

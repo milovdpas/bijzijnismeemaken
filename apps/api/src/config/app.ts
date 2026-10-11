@@ -87,7 +87,7 @@ function appKey(): Buffer {
 }
 
 /**
- * The key for provider tokens at rest (`utils/TokenCrypto.ts`): 32 bytes in
+ * The key for provider tokens at rest (`infrastructure/utils/TokenCrypto.ts`): 32 bytes in
  * base64, like APP_KEY. Optional, so an API without calendars still boots;
  * the first connection fails loudly instead.
  */
@@ -105,7 +105,7 @@ function calendarTokenKey(): Buffer | null {
 }
 
 /**
- * The VAPID pair that signs web pushes (`modules/push`). Both or neither:
+ * The VAPID pair that signs web pushes (`infrastructure/modules/push`). Both or neither:
  * one without the other is a typo, and silently falling back to the console
  * sender would hide it. Generate with `npx web-push generate-vapid-keys`.
  */
@@ -196,14 +196,14 @@ export const env = {
     jwtSecret: () => required('JWT_SECRET'),
 
     /**
-     * Encrypts columns at rest (`utils/Crypt.ts`). 32 bytes, base64, with an
+     * Encrypts columns at rest (`infrastructure/utils/Crypt.ts`). 32 bytes, base64, with an
      * optional `base64:` prefix as the other projects write it. Eager, not
      * lazy: the users table is unreadable without it, so an API that boots
      * without it would only serve errors.
      */
     appKey: appKey(),
 
-    /** Encrypts calendar provider tokens (`utils/TokenCrypto.ts`); null until set. */
+    /** Encrypts calendar provider tokens (`infrastructure/utils/TokenCrypto.ts`); null until set. */
     calendarTokenKey: calendarTokenKey(),
 
     /** The Google OAuth client for sign-in. Lazy, like the JWT secret. */
@@ -218,7 +218,7 @@ export const env = {
     },
 
     mail: {
-        /** `console`, `smtp` (local catcher) or `brevo`. See `modules/mail`. */
+        /** `console`, `smtp` (local catcher) or `brevo`. See `infrastructure/modules/mail`. */
         driver: mailDriver(),
         fromEmail: optional('MAIL_FROM_EMAIL', 'noreply@localhost'),
         fromName: optional('MAIL_FROM_NAME', 'Bij zijn is meemaken'),

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES, Locale } from '@bzim/types';
 import type { ImageSearchResponse } from '@bzim/types';
 
-import { UnsplashClient } from '../src/app/modules/images/UnsplashClient';
+import { UnsplashClient } from '../src/app/infrastructure/modules/images/UnsplashClient';
 import { sessionFor } from './support/auth';
 import { api, asUser, data, error } from './support/client';
 import { seedUser } from './support/factories';

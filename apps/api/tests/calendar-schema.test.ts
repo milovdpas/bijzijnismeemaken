@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { CalendarEventType, CalendarIgnoreRuleKind } from '@bzim/types';
 
-import CalendarConnection from '../src/app/models/CalendarConnection.entity';
-import CalendarEvent from '../src/app/models/CalendarEvent.entity';
-import CalendarIgnoreRule from '../src/app/models/CalendarIgnoreRule.entity';
-import CalendarSource from '../src/app/models/CalendarSource.entity';
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
+import CalendarConnection from '../src/app/domain/models/CalendarConnection.entity';
+import CalendarEvent from '../src/app/domain/models/CalendarEvent.entity';
+import CalendarIgnoreRule from '../src/app/domain/models/CalendarIgnoreRule.entity';
+import CalendarSource from '../src/app/domain/models/CalendarSource.entity';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
 import { AppDataSource } from '../src/database/typeorm-db';
 import {
     seedActivity,

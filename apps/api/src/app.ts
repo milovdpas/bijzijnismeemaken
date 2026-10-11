@@ -3,11 +3,11 @@ import cors from 'cors';
 import express from 'express';
 import type { Express, NextFunction, Request, Response } from 'express';
 
-import registerRoutes from './app/routes/index';
+import registerRoutes from './app/http/routes/index';
 import { env } from './config/app';
-import { errorHandler } from './app/middleware/ErrorHandler';
-import { notFound } from './app/middleware/NotFound';
-import { originCheck } from './app/middleware/OriginCheck';
+import { errorHandler } from './app/http/middleware/ErrorHandler';
+import { notFound } from './app/http/middleware/NotFound';
+import { originCheck } from './app/http/middleware/OriginCheck';
 
 /**
  * Builds the app without starting it.

@@ -32,4 +32,27 @@ export default [
             'no-console': 'off',
         },
     },
+    {
+        /**
+         * The layers depend inward only.
+         *
+         * `http` (routes, controllers, middleware, validators, response helpers)
+         * uses the domain and the infrastructure; neither of those reaches back
+         * into it, so a service never learns about requests or responses.
+         */
+        files: ['src/app/domain/**/*.ts', 'src/app/infrastructure/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: ['**/http/**'],
+                            message: 'The domain and infrastructure do not import from http.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
 ];

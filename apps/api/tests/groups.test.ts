@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { GroupAccess, GroupRole, slugify } from '@bzim/types';
 
-import Group from '../src/app/models/Group.entity';
-import GroupInvite from '../src/app/models/GroupInvite.entity';
-import GroupMember from '../src/app/models/GroupMember.entity';
-import { GroupService } from '../src/app/services/GroupService';
+import Group from '../src/app/domain/models/Group.entity';
+import GroupInvite from '../src/app/domain/models/GroupInvite.entity';
+import GroupMember from '../src/app/domain/models/GroupMember.entity';
+import { GroupService } from '../src/app/domain/services/GroupService';
 
 import { seedGroup, seedMember, seedUser } from './support/factories';
 

@@ -1,6 +1,6 @@
-import type User from '../../src/app/models/User.entity';
-import { SessionService } from '../../src/app/services/SessionService';
-import { ACCESS_COOKIE, REFRESH_COOKIE } from '../../src/app/utils/Cookies';
+import type User from '../../src/app/domain/models/User.entity';
+import { SessionService } from '../../src/app/domain/services/SessionService';
+import { ACCESS_COOKIE, REFRESH_COOKIE } from '../../src/app/http/utils/Cookies';
 
 export interface TestSession {
     accessToken: string;

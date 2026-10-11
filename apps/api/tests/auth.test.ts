@@ -7,9 +7,9 @@ import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import { userAuth } from '../src/app/middleware/UserAuth';
-import RefreshToken from '../src/app/models/RefreshToken.entity';
-import JWT from '../src/app/utils/JWT';
+import { userAuth } from '../src/app/http/middleware/UserAuth';
+import RefreshToken from '../src/app/domain/models/RefreshToken.entity';
+import JWT from '../src/app/infrastructure/utils/JWT';
 import { cookieHeader, sessionFor, setCookies } from './support/auth';
 import { api, error } from './support/client';
 import { seedUser } from './support/factories';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import Crypt from '../src/app/utils/Crypt';
-import User from '../src/app/models/User.entity';
+import Crypt from '../src/app/infrastructure/utils/Crypt';
+import User from '../src/app/domain/models/User.entity';
 import { AppDataSource } from '../src/database/typeorm-db';
 import { seedUser } from './support/factories';
 

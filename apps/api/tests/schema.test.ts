@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 
-import EmailToken, { EmailTokenPurpose } from '../src/app/models/EmailToken.entity';
-import OAuthState, { OAuthPurpose } from '../src/app/models/OAuthState.entity';
-import RefreshToken from '../src/app/models/RefreshToken.entity';
-import User from '../src/app/models/User.entity';
-import { hashToken } from '../src/app/utils/Token';
+import EmailToken, { EmailTokenPurpose } from '../src/app/domain/models/EmailToken.entity';
+import OAuthState, { OAuthPurpose } from '../src/app/domain/models/OAuthState.entity';
+import RefreshToken from '../src/app/domain/models/RefreshToken.entity';
+import User from '../src/app/domain/models/User.entity';
+import { hashToken } from '../src/app/infrastructure/utils/Token';
 import { seedUser } from './support/factories';
 
 /**

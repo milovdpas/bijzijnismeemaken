@@ -10,14 +10,14 @@ import {
 } from '@bzim/types';
 import type { WorkerJobResponse } from '@bzim/types';
 
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
-import { pushSender } from '../src/app/modules/push';
-import type { PushMessage } from '../src/app/modules/push';
-import { NotificationSettingService } from '../src/app/services/NotificationSettingService';
-import { OccurrenceService } from '../src/app/services/OccurrenceService';
-import { PushService } from '../src/app/services/PushService';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
+import { pushSender } from '../src/app/infrastructure/modules/push';
+import type { PushMessage } from '../src/app/infrastructure/modules/push';
+import { NotificationSettingService } from '../src/app/domain/services/NotificationSettingService';
+import { OccurrenceService } from '../src/app/domain/services/OccurrenceService';
+import { PushService } from '../src/app/domain/services/PushService';
 import { env } from '../src/config/app';
 import { asWorker, data } from './support/client';
 import {

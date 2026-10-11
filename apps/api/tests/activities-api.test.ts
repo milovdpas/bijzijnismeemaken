@@ -11,11 +11,11 @@ import {
 } from '@bzim/types';
 import type { ActivityDetailDto, ActivityListingDto } from '@bzim/types';
 
-import Activity from '../src/app/models/Activity.entity';
-import ActivityInterest from '../src/app/models/ActivityInterest.entity';
-import NotificationSetting from '../src/app/models/NotificationSetting.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
+import Activity from '../src/app/domain/models/Activity.entity';
+import ActivityInterest from '../src/app/domain/models/ActivityInterest.entity';
+import NotificationSetting from '../src/app/domain/models/NotificationSetting.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedActivity, seedGroup, seedMember, seedOccurrence, seedUser } from './support/factories';

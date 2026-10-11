@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES, GroupRole } from '@bzim/types';
 import type { GroupMemberResponse } from '@bzim/types';
 
-import Group from '../src/app/models/Group.entity';
-import GroupMember from '../src/app/models/GroupMember.entity';
-import User from '../src/app/models/User.entity';
+import Group from '../src/app/domain/models/Group.entity';
+import GroupMember from '../src/app/domain/models/GroupMember.entity';
+import User from '../src/app/domain/models/User.entity';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedGroup, seedMember, seedUser } from './support/factories';

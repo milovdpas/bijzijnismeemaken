@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, Locale, OccurrenceStatus } from '@bzim/types';
 
-import ActivityOccurrence from '../src/app/models/ActivityOccurrence.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
-import { CalendarWriteService } from '../src/app/services/CalendarWriteService';
+import ActivityOccurrence from '../src/app/domain/models/ActivityOccurrence.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
+import { CalendarWriteService } from '../src/app/domain/services/CalendarWriteService';
 import { sessionFor } from './support/auth';
 import { asUser } from './support/client';
 import {

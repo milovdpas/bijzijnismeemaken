@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 import { Daypart } from '@bzim/types';
 
-import { calendarSpan, googleCalendarUrl, icsFor } from '../src/app/utils/CalendarLinks';
+import { calendarSpan, googleCalendarUrl, icsFor } from '../src/app/domain/utils/CalendarLinks';
 
 const now = DateTime.fromISO('2026-10-10T10:00:00Z');
 

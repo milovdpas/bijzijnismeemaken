@@ -9,7 +9,7 @@ import {
 } from '@bzim/types';
 import type { GroupDetailResponse, GroupWidgetDto } from '@bzim/types';
 
-import GroupWidget from '../src/app/models/GroupWidget.entity';
+import GroupWidget from '../src/app/domain/models/GroupWidget.entity';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import {

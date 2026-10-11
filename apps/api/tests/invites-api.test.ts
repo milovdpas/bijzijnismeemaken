@@ -9,11 +9,11 @@ import {
 } from '@bzim/types';
 import type { GroupDetailResponse, GroupInviteDto } from '@bzim/types';
 
-import GroupInvite from '../src/app/models/GroupInvite.entity';
-import GroupMember from '../src/app/models/GroupMember.entity';
-import NotificationSetting from '../src/app/models/NotificationSetting.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
+import GroupInvite from '../src/app/domain/models/GroupInvite.entity';
+import GroupMember from '../src/app/domain/models/GroupMember.entity';
+import NotificationSetting from '../src/app/domain/models/NotificationSetting.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedGroup, seedMember, seedUser } from './support/factories';

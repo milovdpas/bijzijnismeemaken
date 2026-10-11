@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { API_ENDPOINTS, NotificationChannel, NotificationType } from '@bzim/types';
 import type { NotificationSettingDto } from '@bzim/types';
 
-import NotificationSetting from '../src/app/models/NotificationSetting.entity';
-import { NotificationSettingService } from '../src/app/services/NotificationSettingService';
+import NotificationSetting from '../src/app/domain/models/NotificationSetting.entity';
+import { NotificationSettingService } from '../src/app/domain/services/NotificationSettingService';
 import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import { seedUser } from './support/factories';

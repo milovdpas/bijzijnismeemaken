@@ -8,11 +8,11 @@ import {
     knockoutPlan,
     nextOf,
     thirdPlaceSlot,
-} from '../src/app/modules/tournaments/bracket';
-import type { KnockoutEntrant, PlannedMatch } from '../src/app/modules/tournaments/bracket';
-import { roundRobinPlan, snakeGroups } from '../src/app/modules/tournaments/round-robin';
-import { qualifiers, standings } from '../src/app/modules/tournaments/standings';
-import type { PlayedMatch } from '../src/app/modules/tournaments/standings';
+} from '../src/app/domain/tournaments/bracket';
+import type { KnockoutEntrant, PlannedMatch } from '../src/app/domain/tournaments/bracket';
+import { roundRobinPlan, snakeGroups } from '../src/app/domain/tournaments/round-robin';
+import { qualifiers, standings } from '../src/app/domain/tournaments/standings';
+import type { PlayedMatch } from '../src/app/domain/tournaments/standings';
 
 /** Entrants `e1` to `eN`, in seed order, from no group. */
 function seeds(count: number, group: (index: number) => number | null = () => null) {

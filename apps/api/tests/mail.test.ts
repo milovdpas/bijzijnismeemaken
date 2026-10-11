@@ -2,8 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Locale } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import BrevoMailer from '../src/app/modules/mail/BrevoMailer';
-import { renderResetPassword, renderVerifyEmail } from '../src/app/modules/mail/templates';
+import BrevoMailer from '../src/app/infrastructure/modules/mail/BrevoMailer';
+import {
+    renderResetPassword,
+    renderVerifyEmail,
+} from '../src/app/infrastructure/modules/mail/templates';
 
 afterEach(() => {
     vi.restoreAllMocks();

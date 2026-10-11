@@ -10,11 +10,11 @@ import type {
     ScoresResponse,
 } from '@bzim/types';
 
-import LeaderboardScoreHistory from '../src/app/models/LeaderboardScoreHistory.entity';
-import LeaderboardScoreMonthly from '../src/app/models/LeaderboardScoreMonthly.entity';
-import LeaderboardScoreTotal from '../src/app/models/LeaderboardScoreTotal.entity';
-import LeaderboardScoreYearly from '../src/app/models/LeaderboardScoreYearly.entity';
-import { ScoreService } from '../src/app/services/ScoreService';
+import LeaderboardScoreHistory from '../src/app/domain/models/LeaderboardScoreHistory.entity';
+import LeaderboardScoreMonthly from '../src/app/domain/models/LeaderboardScoreMonthly.entity';
+import LeaderboardScoreTotal from '../src/app/domain/models/LeaderboardScoreTotal.entity';
+import LeaderboardScoreYearly from '../src/app/domain/models/LeaderboardScoreYearly.entity';
+import { ScoreService } from '../src/app/domain/services/ScoreService';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import {

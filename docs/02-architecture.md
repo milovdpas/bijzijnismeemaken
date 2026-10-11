@@ -22,10 +22,10 @@ Package scope name: `@bzim/*` (bij zijn is meemaken). Shared package built with 
 ## 2.2 Conventions carried over from `dynamic_alarm/apps/api`
 - `createApp()` separate from `index.ts`; connect DB before listen; graceful shutdown; `/api/v1/health` does a real `SELECT 1`.
 - Route group classes implementing `IRoute`; one line per route: path constant from `API_ENDPOINTS`, auth middleware, rate limit, `validate({ params, query, body })`, controller arrow handler typed `Handler<BodyOf<schema>, Params>`.
-- zod v4 schemas in `app/validators/*Schemas.ts`; `validate()` reports all issues → 422 `VALIDATION_FAILED`; parsed query/params on `req.validatedQuery` / `req.validatedParams`.
+- zod v4 schemas in `app/http/validators/*Schemas.ts`; `validate()` reports all issues → 422 `VALIDATION_FAILED`; parsed query/params on `req.validatedQuery` / `req.validatedParams`.
 - Controllers render; services never touch `res`. Services return `Entity | null` or result unions `{ ok: true, … } | { ok: false, problem: '…' }`; controller maps problems via exhaustive switch.
 - Responses: bare resource / bare array (lists with pagination use `{ items, page, pageSize, total, hasMore }`); errors flat `{ code, message, details? }` with `code` from `ERROR_CODES`. 404 for resources the caller may not see, 403 only for known-but-forbidden group actions.
-- `utils/ApiResponses.ts` helpers (`sendSuccess<T>`, `sendNotFound`, `sendForbidden`, `sendConflict`, `sendValidationFailed`), one last-resort `ErrorHandler`.
+- `http/utils/ApiResponses.ts` helpers (`sendSuccess<T>`, `sendNotFound`, `sendForbidden`, `sendConflict`, `sendValidationFailed`), one last-resort `ErrorHandler`.
 - TypeORM active-record entities `*.entity.ts` with explicit entity list, `synchronize: false`, UUID PKs generated in app, `datetime(3)` UTC, `decimalTransformer`; `toDto()` per entity.
 - Knex migrations in `database/migrations/YYYYMMDDHHMMSS_name.ts` run via `tools/migrate.ts` (latest/rollback/status); migrations are the source of truth for indexes/uniques.
 - Config: dotenv + `required()/optional()/integer()/flag()` helpers in `config/app.ts`, fail fast; `.env.example`, `.env.test.example`, `.env.dist` committed.
@@ -48,25 +48,35 @@ Copy verbatim from `C:\Users\milov\PersonalProjects\dynamic_alarm` (then adjust 
 - Rename: `@alarm/*` → `@bzim/*`, `alarm`/`dynamic_alarm` identifiers and DB names → `bzim`, `MONITOR_TOKEN`/`monitorAuth` → `WORKER_TOKEN`/`workerAuth`, `monitor/tick` → `worker/<job>`, `req.device` → `req.user`.
 - Improve only after it runs: first make the copied skeleton boot, migrate an empty DB, pass `health.test.ts`, lint and type-check; then apply improvements (cookie-parser, cors, jsonwebtoken, Logger wrapper, worker routes) as part of the tasks that need them.
 
-Resulting structure (new files marked with `+`, everything else is copied/renamed):
+Structure today (split into layers on 2026-10-11; docs/10 has the rules):
 ```
 src/
   index.ts, app.ts
-  config/{app,database,security,dayparts}.ts
+  config/{app,database}.ts
   database/{typeorm-db,knexfile}.ts, database/migrations/
-  interfaces/{IHttp,IRouter}.ts
-  app/routes/index.ts, api.ts, groups/{health, +auth, +users, +groups, +invites, +activities, +occurrences, +availability, +calendar, +leaderboards, worker(renamed monitor)}.ts
-  app/controllers/*Controller.ts            (+ one per route group)
-  app/services/*Service.ts                  (+ Auth, User, Group, Membership, Invite, Activity, Occurrence, Availability, Suggestion, Calendar, CalendarSync, IgnoreRule, Leaderboard, Score, ScoreQuery, Notification, Job)
-  app/models/*.entity.ts                    (+ all new)
-  app/middleware/{+UserAuth, +RequireGroupRole, +IncludeTournament, +IncludeActivity, +IncludeLeaderboard, +RequireTournamentManager, +RequireActivityManager, +RequireLeaderboardManager, +RequireLeaderboardEditor, ValidateRequest, ErrorHandler, NotFound, RateLimit, ApiLimits, +OriginCheck, WorkerAuth(renamed MonitorAuth)}.ts
-  app/validators/{commonSchemas, +*Schemas}.ts
-  +app/modules/calendar/{CalendarProvider.ts,GoogleCalendarProvider.ts,CalendarProviderFactory.ts}
-  +app/modules/mail/{Mailer.ts,BrevoMailer.ts,ConsoleMailer.ts,templates/{nl,en}.ts}
-  +app/presenters/*Presenter.ts            (composed response shapes; entities keep toDto for their own columns)
-  app/utils/{ApiResponses, ColumnTransformers, Token, +JWT, +Crypt, +Normalize, +Database, +Pagination}.ts
-  tools/migrate.ts, src/tools/worker.ts (renamed monitorTick; under src so it compiles into dist/tools for the Ofelia label)
-tests/ (copied globalSetup/setup/support; flat *.test.ts per feature added with each task)
+  tools/worker.ts                      (compiles into dist/tools for the Ofelia label)
+  app/
+    domain/
+      models/*.entity.ts
+      services/*Service.ts
+      presenters/*Presenter.ts         (composed response shapes; entities keep toDto for their own columns)
+      tournaments/{bracket,round-robin,standings}.ts   (pure logic)
+      utils/{ActivityLabel,CalendarLinks,Dates,EventCells,Normalize}.ts
+    http/
+      routes/index.ts, api.ts, groups/<resource>.ts
+      controllers/*Controller.ts
+      middleware/{UserAuth, RequireOnboarded, RequireGroupRole, IncludeTournament, IncludeActivity,
+                  IncludeLeaderboard, RequireTournamentManager, RequireActivityManager,
+                  RequireLeaderboardManager, RequireLeaderboardEditor, ValidateRequest, ErrorHandler,
+                  NotFound, RateLimit, ApiLimits, OriginCheck, WorkerAuth}.ts
+      validators/{commonSchemas, *Schemas}.ts
+      interfaces/{IHttp,IRouter}.ts
+      utils/{ApiResponses,Cookies,Pagination}.ts
+    infrastructure/
+      modules/{calendar,google,images,mail,push}/
+      utils/{ColumnTransformers,Crypt,Database,JWT,Log,Password,Random,SignedLink,Token,TokenCrypto}.ts
+tools/migrate.ts
+tests/ (globalSetup, setup, support/; flat *.test.ts per feature)
 ```
 
 ## 2.4 apps/web structure (Next.js App Router, conventions from marathon_schema)
@@ -125,18 +135,18 @@ interface CalendarProvider {
 
 ## 2.7 Scheduled jobs (worker endpoints + Ofelia)
 - There is **no jobs folder**. Cron work is exposed as worker endpoints on a `WorkerController` (carrefour pattern): `POST /api/v1/worker/calendar-sync` (daily 00:05 Amsterdam), `POST /api/v1/worker/cleanup` (daily 00:30), `POST /api/v1/worker/occurrence-reminders` (daily 17:00 UTC, the evening before: `ReminderService.run()` tells every participant of tomorrow's planned occurrences once, `occurrence_participants.reminded_at`, cleared when the moment moves). The controller only orchestrates; the logic lives in the normal services (`CalendarSyncService.syncAll()`, `CleanupService.run()`).
-- Worker routes live in `app/routes/groups/worker.ts` behind `WorkerAuth` (`X-Worker-Token` shared secret, `timingSafeEqual`, 503 if unset). A static in-process "running" flag per endpoint prevents overlap (409 `WORKER_BUSY` while running). Each answers `{ job, durationMs, stats }`.
+- Worker routes live in `app/http/routes/groups/worker.ts` behind `WorkerAuth` (`X-Worker-Token` shared secret, `timingSafeEqual`, 503 if unset). A static in-process "running" flag per endpoint prevents overlap (409 `WORKER_BUSY` while running). Each answers `{ job, durationMs, stats }`.
 - `tools/worker.ts <job>` is the small fetch client Ofelia executes inside the container (dynamic_alarm `monitorTick` renamed): labels on the `api` service in `docker-compose.prod.yml`:
   `ofelia.job-exec.bzim-calendar-sync.schedule: "0 5 23 * * *"`, `…command: "node dist/tools/worker.js calendar-sync"`. Schedules are in the scheduler container's timezone (UTC on the VPS) → write them in UTC and document the DST offset (midnight Amsterdam = 22:00/23:00 UTC); simplest: run at `0 5 23 * * *` UTC (00:05 or 01:05 Amsterdam) and let the job compute "today" in Amsterdam time.
 - Runbook note: after a deploy that adds/changes labels, `docker restart scheduler` and verify `job registered` lines.
 - Cleanup: delete `calendar_events` with `end_at < now - 1d`; expired/revoked `refresh_tokens` older than 30 d; `oauth_states` older than 1 h; manual one-off blocks older than 90 d.
 
 ## 2.8 Notification flow
-`NotificationService.notify(userIds, type, payload)` is a stateless dispatcher (no notifications table): it asks `NotificationSettingService` which recipients take that type on each channel (`notification_settings` rows, default email on / push off) and, for each, calls `Mailer.send(templateKey, locale, data)`. Per-recipient "already sent" state lives on the domain row that needs it (`occurrence_participants.notified_*`); invites and new-activity mails are sent exactly once at creation. `BrevoMailer` (HTTP API, `BREVO_API_KEY`, sender `noreply@milovanderpas.nl`), `ConsoleMailer` in dev/tests. Templates are TS functions returning `{ subject, html, text }` per locale. Sending is awaited but failures are logged, never fail the request (fire-and-forget with `void` + catch). Push is the second channel inside the same `dispatch` (task 40): `NotificationSettingService.split` answers both channel lists in one query, `PushService.send` loads the recipients' `push_subscriptions` and hands each to `modules/push` (`WebPushSender` with the VAPID pair from `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`, `ConsolePushSender` when unset). Push texts live in `modules/push/templates.ts`, one line per type per language; a 404/410 from the push service deletes the row.
+`NotificationService.notify(userIds, type, payload)` is a stateless dispatcher (no notifications table): it asks `NotificationSettingService` which recipients take that type on each channel (`notification_settings` rows, default email on / push off) and, for each, calls `Mailer.send(templateKey, locale, data)`. Per-recipient "already sent" state lives on the domain row that needs it (`occurrence_participants.notified_*`); invites and new-activity mails are sent exactly once at creation. `BrevoMailer` (HTTP API, `BREVO_API_KEY`, sender `noreply@milovanderpas.nl`), `ConsoleMailer` in dev/tests. Templates are TS functions returning `{ subject, html, text }` per locale. Sending is awaited but failures are logged, never fail the request (fire-and-forget with `void` + catch). Push is the second channel inside the same `dispatch` (task 40): `NotificationSettingService.split` answers both channel lists in one query, `PushService.send` loads the recipients' `push_subscriptions` and hands each to `infrastructure/modules/push` (`WebPushSender` with the VAPID pair from `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`, `ConsolePushSender` when unset). Push texts live in `infrastructure/modules/push/templates.ts`, one line per type per language; a 404/410 from the push service deletes the row.
 
 ## 2.9 i18n
 - Web: i18next + react-i18next as marathon_schema; `lib/i18n/locales/en.ts` is the typed source (`Dict`), `nl.ts: Dict`; key-existence test; locale = user profile (synced to server) with browser detection fallback and `document.documentElement.lang`.
-- API: error responses carry codes only; FE translates. Emails use `user.locale` with `apps/api/src/app/modules/mail/templates/{nl,en}.ts`.
+- API: error responses carry codes only; FE translates. Emails use `user.locale` with `apps/api/src/app/infrastructure/modules/mail/templates/{nl,en}.ts`.
 - Dates: Luxon with `Settings.defaultZone = Europe/Amsterdam` and the active locale, set by `I18nProvider`; daypart labels translated.
 
 ## 2.10 PWA

@@ -4,12 +4,12 @@ import supertest from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { GroupAccess, GroupRole } from '@bzim/types';
 
-import { requireGroupRole } from '../src/app/middleware/RequireGroupRole';
-import { userAuth } from '../src/app/middleware/UserAuth';
-import Group from '../src/app/models/Group.entity';
-import GroupInvite from '../src/app/models/GroupInvite.entity';
-import GroupMember from '../src/app/models/GroupMember.entity';
-import { MembershipService } from '../src/app/services/MembershipService';
+import { requireGroupRole } from '../src/app/http/middleware/RequireGroupRole';
+import { userAuth } from '../src/app/http/middleware/UserAuth';
+import Group from '../src/app/domain/models/Group.entity';
+import GroupInvite from '../src/app/domain/models/GroupInvite.entity';
+import GroupMember from '../src/app/domain/models/GroupMember.entity';
+import { MembershipService } from '../src/app/domain/services/MembershipService';
 import { sessionFor } from './support/auth';
 import { seedGroup, seedMember, seedUser } from './support/factories';
 

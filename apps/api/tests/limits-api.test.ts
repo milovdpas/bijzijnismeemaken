@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, ActivityCategory, DateMode, ERROR_CODES } from '@bzim/types';
 
-import { mailer } from '../src/app/modules/mail';
+import { mailer } from '../src/app/infrastructure/modules/mail';
 import { sessionFor } from './support/auth';
 import { asUser, error } from './support/client';
 import { seedGroup, seedUser } from './support/factories';

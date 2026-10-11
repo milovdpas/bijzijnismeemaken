@@ -3,11 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import EmailToken, { EmailTokenPurpose } from '../src/app/models/EmailToken.entity';
-import User from '../src/app/models/User.entity';
-import { mailer } from '../src/app/modules/mail';
-import type { MailMessage } from '../src/app/modules/mail';
-import { hashPassword, verifyPassword } from '../src/app/utils/Password';
+import EmailToken, { EmailTokenPurpose } from '../src/app/domain/models/EmailToken.entity';
+import User from '../src/app/domain/models/User.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import type { MailMessage } from '../src/app/infrastructure/modules/mail';
+import { hashPassword, verifyPassword } from '../src/app/infrastructure/utils/Password';
 import { cookieHeader, sessionFor, setCookies } from './support/auth';
 import { api, error } from './support/client';
 import { seedUser } from './support/factories';

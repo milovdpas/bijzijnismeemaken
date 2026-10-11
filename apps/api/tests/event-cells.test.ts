@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Daypart } from '@bzim/types';
 
-import { eventCells } from '../src/app/utils/EventCells';
+import { eventCells } from '../src/app/domain/utils/EventCells';
 
 const at = (iso: string) => new Date(iso);
 

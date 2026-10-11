@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS, Locale, NotificationType } from '@bzim/types';
 import type { PushSubscriptionDto, PushSubscriptionsResponse } from '@bzim/types';
 
-import PushSubscription from '../src/app/models/PushSubscription.entity';
-import { mailer } from '../src/app/modules/mail';
-import { PushGone, pushSender } from '../src/app/modules/push';
-import type { PushMessage, PushTarget } from '../src/app/modules/push';
-import { NotificationSettingService } from '../src/app/services/NotificationSettingService';
+import PushSubscription from '../src/app/domain/models/PushSubscription.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import { PushGone, pushSender } from '../src/app/infrastructure/modules/push';
+import type { PushMessage, PushTarget } from '../src/app/infrastructure/modules/push';
+import { NotificationSettingService } from '../src/app/domain/services/NotificationSettingService';
 import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import { seedGroup, seedUser } from './support/factories';

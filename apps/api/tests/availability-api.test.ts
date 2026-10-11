@@ -7,9 +7,9 @@ import type {
     UnavailabilityRuleDto,
 } from '@bzim/types';
 
-import ManualUnavailability from '../src/app/models/ManualUnavailability.entity';
-import WeeklyUnavailabilityRule from '../src/app/models/WeeklyUnavailabilityRule.entity';
-import { AvailabilityService } from '../src/app/services/AvailabilityService';
+import ManualUnavailability from '../src/app/domain/models/ManualUnavailability.entity';
+import WeeklyUnavailabilityRule from '../src/app/domain/models/WeeklyUnavailabilityRule.entity';
+import { AvailabilityService } from '../src/app/domain/services/AvailabilityService';
 import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import {

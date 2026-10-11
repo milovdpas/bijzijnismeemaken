@@ -4,10 +4,10 @@ import type { MeResponse, OccurrenceDto } from '@bzim/types';
 
 import { IsNull } from 'typeorm';
 
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
-import { mailer } from '../src/app/modules/mail';
-import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
-import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
+import { mailer } from '../src/app/infrastructure/modules/mail';
+import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
+import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
 import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import { seedActivity, seedGroup, seedMember, seedUser } from './support/factories';

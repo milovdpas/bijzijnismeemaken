@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CalendarEventType, CalendarProviderKey } from '@bzim/types';
 
-import { ProviderError } from '../src/app/modules/calendar/CalendarProvider';
-import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
-import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
+import { ProviderError } from '../src/app/infrastructure/modules/calendar/CalendarProvider';
+import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
+import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
 import {
     GoogleCalendarProvider,
     mapGoogleEvent,
     toGoogleEvent,
-} from '../src/app/modules/calendar/GoogleCalendarProvider';
+} from '../src/app/infrastructure/modules/calendar/GoogleCalendarProvider';
 
 describe('mapGoogleEvent', () => {
     it('turns a timed event into a UTC window and keeps what availability needs', () => {

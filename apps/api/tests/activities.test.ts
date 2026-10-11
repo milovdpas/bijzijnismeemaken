@@ -9,11 +9,11 @@ import {
     Weekday,
 } from '@bzim/types';
 
-import Activity from '../src/app/models/Activity.entity';
-import ActivityInterest from '../src/app/models/ActivityInterest.entity';
-import ActivityOccurrence from '../src/app/models/ActivityOccurrence.entity';
-import OccurrenceParticipant from '../src/app/models/OccurrenceParticipant.entity';
-import { ActivityService } from '../src/app/services/ActivityService';
+import Activity from '../src/app/domain/models/Activity.entity';
+import ActivityInterest from '../src/app/domain/models/ActivityInterest.entity';
+import ActivityOccurrence from '../src/app/domain/models/ActivityOccurrence.entity';
+import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipant.entity';
+import { ActivityService } from '../src/app/domain/services/ActivityService';
 import {
     seedActivity,
     seedGroup,

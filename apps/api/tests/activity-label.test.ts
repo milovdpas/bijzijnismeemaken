@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ActivityLabel, DateMode, OccurrenceStatus, activityRuleProblem } from '@bzim/types';
 
-import { deriveActivityLabel } from '../src/app/utils/ActivityLabel';
+import { deriveActivityLabel } from '../src/app/domain/utils/ActivityLabel';
 
 const { PLANNED, DONE, CANCELLED } = OccurrenceStatus;
 

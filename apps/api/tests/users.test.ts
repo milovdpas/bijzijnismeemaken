@@ -3,10 +3,10 @@ import { API_ENDPOINTS, ERROR_CODES } from '@bzim/types';
 import type { HandleAvailableResponse, MeResponse, UserSummary } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import User from '../src/app/models/User.entity';
-import { CalendarProviderFactory } from '../src/app/modules/calendar/CalendarProviderFactory';
-import { FixtureCalendarProvider } from '../src/app/modules/calendar/FixtureCalendarProvider';
-import { hashPassword, verifyPassword } from '../src/app/utils/Password';
+import User from '../src/app/domain/models/User.entity';
+import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
+import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
+import { hashPassword, verifyPassword } from '../src/app/infrastructure/utils/Password';
 import { cookieHeader, sessionFor, setCookies } from './support/auth';
 import { api, asUser, data, error } from './support/client';
 import { seedCalendarConnection, seedUser } from './support/factories';

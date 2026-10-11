@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { maskEmail, shortEndpoint } from '../src/app/utils/Log';
+import { maskEmail, shortEndpoint } from '../src/app/infrastructure/utils/Log';
 
 describe('maskEmail', () => {
     it('keeps the first letter and the domain', () => {

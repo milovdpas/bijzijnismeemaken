@@ -2,13 +2,13 @@ import { DateTime } from 'luxon';
 import { describe, expect, it } from 'vitest';
 import { ActivityCategory, MatchSlot, MatchStage, MatchStatus } from '@bzim/types';
 
-import Activity from '../src/app/models/Activity.entity';
-import Group from '../src/app/models/Group.entity';
-import Tournament from '../src/app/models/Tournament.entity';
-import TournamentEntry from '../src/app/models/TournamentEntry.entity';
-import TournamentEntryMember from '../src/app/models/TournamentEntryMember.entity';
-import TournamentMatch from '../src/app/models/TournamentMatch.entity';
-import User from '../src/app/models/User.entity';
+import Activity from '../src/app/domain/models/Activity.entity';
+import Group from '../src/app/domain/models/Group.entity';
+import Tournament from '../src/app/domain/models/Tournament.entity';
+import TournamentEntry from '../src/app/domain/models/TournamentEntry.entity';
+import TournamentEntryMember from '../src/app/domain/models/TournamentEntryMember.entity';
+import TournamentMatch from '../src/app/domain/models/TournamentMatch.entity';
+import User from '../src/app/domain/models/User.entity';
 import {
     seedActivity,
     seedGroup,

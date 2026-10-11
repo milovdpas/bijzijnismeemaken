@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import TokenCrypto from '../src/app/utils/TokenCrypto';
+import TokenCrypto from '../src/app/infrastructure/utils/TokenCrypto';
 
 describe('TokenCrypto', () => {
     it('round-trips a token into bytes that differ every time and never contain it', () => {

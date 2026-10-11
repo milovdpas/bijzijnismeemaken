@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { EditMode, GroupRole, ScoreType, SortOrder } from '@bzim/types';
 
-import Leaderboard from '../src/app/models/Leaderboard.entity';
-import LeaderboardEditor from '../src/app/models/LeaderboardEditor.entity';
-import LeaderboardMember from '../src/app/models/LeaderboardMember.entity';
-import LeaderboardScoreHistory from '../src/app/models/LeaderboardScoreHistory.entity';
-import LeaderboardScoreTotal from '../src/app/models/LeaderboardScoreTotal.entity';
-import { LeaderboardService } from '../src/app/services/LeaderboardService';
+import Leaderboard from '../src/app/domain/models/Leaderboard.entity';
+import LeaderboardEditor from '../src/app/domain/models/LeaderboardEditor.entity';
+import LeaderboardMember from '../src/app/domain/models/LeaderboardMember.entity';
+import LeaderboardScoreHistory from '../src/app/domain/models/LeaderboardScoreHistory.entity';
+import LeaderboardScoreTotal from '../src/app/domain/models/LeaderboardScoreTotal.entity';
+import { LeaderboardService } from '../src/app/domain/services/LeaderboardService';
 import {
     seedGroup,
     seedLeaderboard,

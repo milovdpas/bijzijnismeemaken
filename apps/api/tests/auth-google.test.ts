@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { API_ENDPOINTS } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import GoogleAuthModule from '../src/app/modules/google/GoogleAuthModule';
-import type { GoogleProfile } from '../src/app/modules/google/GoogleAuthModule';
-import OAuthState from '../src/app/models/OAuthState.entity';
-import User from '../src/app/models/User.entity';
+import GoogleAuthModule from '../src/app/infrastructure/modules/google/GoogleAuthModule';
+import type { GoogleProfile } from '../src/app/infrastructure/modules/google/GoogleAuthModule';
+import OAuthState from '../src/app/domain/models/OAuthState.entity';
+import User from '../src/app/domain/models/User.entity';
 import { setCookies } from './support/auth';
 import { api } from './support/client';
 import { seedUser } from './support/factories';

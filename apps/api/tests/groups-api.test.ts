@@ -10,9 +10,9 @@ import type {
 } from '@bzim/types';
 
 import { env } from '../src/config/app';
-import Group from '../src/app/models/Group.entity';
-import GroupMember from '../src/app/models/GroupMember.entity';
-import { GroupService } from '../src/app/services/GroupService';
+import Group from '../src/app/domain/models/Group.entity';
+import GroupMember from '../src/app/domain/models/GroupMember.entity';
+import { GroupService } from '../src/app/domain/services/GroupService';
 import { sessionFor } from './support/auth';
 import { asUser, data, error } from './support/client';
 import { seedGroup, seedMember, seedUser } from './support/factories';
