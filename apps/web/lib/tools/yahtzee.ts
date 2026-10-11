@@ -4,8 +4,10 @@ import type { ToolPlayer } from './players';
 
 /**
  * The Yahtzee score sheet (task 44): the thirteen boxes per player, the
- * upper bonus and the totals. The dice stay on the table; this only knows
- * which scores a box can hold, so a typo is caught before it is added up.
+ * upper bonus, the Yahtzee bonus and the totals. The dice stay on the table;
+ * this only knows which scores a box can hold, so a typo is caught before it
+ * is added up. A game finishes when every box is filled, or earlier when the
+ * players end it; the totals as they stand then decide.
  */
 
 export const YAHTZEE_MAX_PLAYERS = 8;
@@ -29,6 +31,10 @@ export const CATEGORIES: readonly YahtzeeCategory[] = [...UPPER_CATEGORIES, ...L
 /** Three of each face in the upper section adds up to exactly this. */
 export const BONUS_THRESHOLD = 63;
 export const UPPER_BONUS = 35;
+/** Every Yahtzee thrown after a 50 in the Yahtzee box. */
+export const YAHTZEE_BONUS = 100;
+/** Thirteen turns, one of them for the first Yahtzee. */
+export const MAX_EXTRA_YAHTZEES = 12;
 
 const FACE: Readonly<Record<UpperCategory, number>> = {
     ones: 1,
@@ -50,13 +56,25 @@ export type YahtzeeSheet = Partial<Record<YahtzeeCategory, number>>;
 
 export interface YahtzeeState {
     v: 1;
-    phase: 'setup' | 'playing';
+    phase: 'setup' | 'playing' | 'finished';
     players: ToolPlayer[];
     /** Per player id, the boxes filled so far. */
     sheets: Record<string, YahtzeeSheet>;
+    /**
+     * Per player id, the Yahtzees thrown after a 50 in the Yahtzee box, 100
+     * each. Only players with some are listed. An extra Yahtzee also fills a
+     * box under the joker rule; the boxes already accept those scores.
+     */
+    extraYahtzees: Record<string, number>;
 }
 
-export const emptyYahtzee: YahtzeeState = { v: 1, phase: 'setup', players: [], sheets: {} };
+export const emptyYahtzee: YahtzeeState = {
+    v: 1,
+    phase: 'setup',
+    players: [],
+    sheets: {},
+    extraYahtzees: {},
+};
 
 function isUpper(category: YahtzeeCategory): category is UpperCategory {
     return (UPPER_CATEGORIES as readonly string[]).includes(category);
@@ -88,6 +106,36 @@ export function isValidScore(category: YahtzeeCategory, value: number): boolean 
     return isIntegerIn(value, 5, 30) || (value === 0 && category !== 'chance');
 }
 
+/** The bonus is only earned on top of a 50 in the Yahtzee box; a scratched box earns none. */
+export function earnsYahtzeeBonus(sheet: YahtzeeSheet): boolean {
+    return sheet.yahtzee === 50;
+}
+
+function withCount(
+    counts: Record<string, number>,
+    playerId: string,
+    count: number,
+): Record<string, number> {
+    const next = { ...counts };
+    if (count === 0) delete next[playerId];
+    else next[playerId] = count;
+    return next;
+}
+
+function filledCount(sheet: YahtzeeSheet): number {
+    return CATEGORIES.filter((category) => sheet[category] !== undefined).length;
+}
+
+/** A game whose every box is filled is over, whether or not anybody said so. */
+function settle(state: YahtzeeState): YahtzeeState {
+    const full =
+        state.players.length > 0 &&
+        state.players.every(
+            (player) => filledCount(state.sheets[player.id] ?? {}) === CATEGORIES.length,
+        );
+    return state.phase === 'playing' && full ? { ...state, phase: 'finished' } : state;
+}
+
 export function setYahtzeePlayers(state: YahtzeeState, players: ToolPlayer[]): YahtzeeState {
     return state.phase === 'setup' ? { ...state, players } : state;
 }
@@ -99,15 +147,25 @@ export function startYahtzee(state: YahtzeeState): YahtzeeState {
         ...state,
         phase: 'playing',
         sheets: Object.fromEntries(state.players.map((player) => [player.id, {}])),
+        extraYahtzees: {},
     };
 }
 
-/** Back to choosing players; the sheets go. */
+/** Back to choosing players; the sheets go. Also how a game is cancelled. */
 export function yahtzeeToSetup(state: YahtzeeState): YahtzeeState {
-    return { ...state, phase: 'setup', sheets: {} };
+    return { ...state, phase: 'setup', sheets: {}, extraYahtzees: {} };
 }
 
-/** Fills a box, or empties it again with null to correct a mistake. */
+/** Ends the game now: the totals as they stand decide. */
+export function endYahtzee(state: YahtzeeState): YahtzeeState {
+    return state.phase === 'playing' ? { ...state, phase: 'finished' } : state;
+}
+
+/**
+ * Fills a box, or empties it again with null to correct a mistake; a
+ * finished game can still be corrected. A Yahtzee box that no longer holds
+ * 50 takes the extra Yahtzees with it.
+ */
 export function setScore(
     state: YahtzeeState,
     playerId: string,
@@ -115,30 +173,64 @@ export function setScore(
     value: number | null,
 ): YahtzeeState {
     const sheet = state.sheets[playerId];
-    if (state.phase !== 'playing' || sheet === undefined) return state;
+    if (state.phase === 'setup' || sheet === undefined) return state;
     if (value !== null && !isValidScore(category, value)) return state;
     const next: YahtzeeSheet = { ...sheet };
     if (value === null) delete next[category];
     else next[category] = value;
-    return { ...state, sheets: { ...state.sheets, [playerId]: next } };
+    return settle({
+        ...state,
+        sheets: { ...state.sheets, [playerId]: next },
+        extraYahtzees: earnsYahtzeeBonus(next)
+            ? state.extraYahtzees
+            : withCount(state.extraYahtzees, playerId, 0),
+    });
+}
+
+/** How many extra Yahtzees a player threw; refused while their Yahtzee box holds no 50. */
+export function setExtraYahtzees(
+    state: YahtzeeState,
+    playerId: string,
+    count: number,
+): YahtzeeState {
+    const sheet = state.sheets[playerId];
+    if (state.phase === 'setup' || sheet === undefined) return state;
+    if (!isIntegerIn(count, 0, MAX_EXTRA_YAHTZEES)) return state;
+    if (count > 0 && !earnsYahtzeeBonus(sheet)) return state;
+    return { ...state, extraYahtzees: withCount(state.extraYahtzees, playerId, count) };
 }
 
 export interface SheetTotals {
     upper: number;
+    /** The upper bonus: 35 from 63. */
     bonus: number;
+    /** 100 per extra Yahtzee; part of `lower`, as on the printed sheet. */
+    yahtzeeBonus: number;
     lower: number;
     total: number;
     filled: number;
 }
 
-export function sheetTotals(sheet: YahtzeeSheet): SheetTotals {
+export function sheetTotals(sheet: YahtzeeSheet, extraYahtzees = 0): SheetTotals {
     const sum = (categories: readonly YahtzeeCategory[]) =>
         categories.reduce((total, category) => total + (sheet[category] ?? 0), 0);
     const upper = sum(UPPER_CATEGORIES);
-    const lower = sum(LOWER_CATEGORIES);
     const bonus = upper >= BONUS_THRESHOLD ? UPPER_BONUS : 0;
-    const filled = CATEGORIES.filter((category) => sheet[category] !== undefined).length;
-    return { upper, bonus, lower, total: upper + bonus + lower, filled };
+    const yahtzeeBonus = earnsYahtzeeBonus(sheet) ? extraYahtzees * YAHTZEE_BONUS : 0;
+    const lower = sum(LOWER_CATEGORIES) + yahtzeeBonus;
+    return {
+        upper,
+        bonus,
+        yahtzeeBonus,
+        lower,
+        total: upper + bonus + lower,
+        filled: filledCount(sheet),
+    };
+}
+
+/** One player's totals in a game, the extra Yahtzees included. */
+export function playerTotals(state: YahtzeeState, playerId: string): SheetTotals {
+    return sheetTotals(state.sheets[playerId] ?? {}, state.extraYahtzees[playerId] ?? 0);
 }
 
 /**
@@ -153,13 +245,13 @@ export function bonusPace(sheet: YahtzeeSheet): number {
     }, 0);
 }
 
-/** Whose turn it is: the first player with the fewest boxes filled; null once every sheet is full. */
+/** Whose turn it is: the first player with the fewest boxes filled; nobody's once it is over. */
 export function nextPlayer(state: YahtzeeState): ToolPlayer | null {
     if (state.phase !== 'playing') return null;
     let next: ToolPlayer | null = null;
     let fewest = CATEGORIES.length;
     for (const player of state.players) {
-        const filled = sheetTotals(state.sheets[player.id] ?? {}).filled;
+        const filled = filledCount(state.sheets[player.id] ?? {});
         if (filled < fewest) {
             fewest = filled;
             next = player;
@@ -169,21 +261,24 @@ export function nextPlayer(state: YahtzeeState): ToolPlayer | null {
 }
 
 export function isFinished(state: YahtzeeState): boolean {
-    return state.phase === 'playing' && state.players.length > 0 && nextPlayer(state) === null;
+    return state.phase === 'finished';
 }
 
-/** Everybody with the highest total, once every box is filled. */
+/** Everybody with the highest total once the game is over; nobody when nothing was scored. */
 export function yahtzeeWinners(state: YahtzeeState): ToolPlayer[] {
     if (!isFinished(state)) return [];
-    const totalOf = (player: ToolPlayer) => sheetTotals(state.sheets[player.id] ?? {}).total;
-    const best = Math.max(...state.players.map(totalOf));
-    return state.players.filter((player) => totalOf(player) === best);
+    const totals = new Map(
+        state.players.map((player) => [player.id, playerTotals(state, player.id)]),
+    );
+    if ([...totals.values()].every((entry) => entry.filled === 0)) return [];
+    const best = Math.max(...[...totals.values()].map((entry) => entry.total));
+    return state.players.filter((player) => totals.get(player.id)?.total === best);
 }
 
 export function parseYahtzeeState(raw: unknown): YahtzeeState | null {
     if (!isRecord(raw) || raw.v !== 1 || !isRecord(raw.sheets)) return null;
     const { phase } = raw;
-    if (phase !== 'setup' && phase !== 'playing') return null;
+    if (phase !== 'setup' && phase !== 'playing' && phase !== 'finished') return null;
     const players = parsePlayers(raw.players, YAHTZEE_MAX_PLAYERS);
     if (players === null) return null;
     const ids = new Set(players.map((player) => player.id));
@@ -198,8 +293,18 @@ export function parseYahtzeeState(raw: unknown): YahtzeeState | null {
         }
         sheets[playerId] = sheet;
     }
-    if (phase === 'playing' && players.some((player) => sheets[player.id] === undefined)) {
+    if (phase !== 'setup' && players.some((player) => sheets[player.id] === undefined)) {
         return null;
     }
-    return { v: 1, phase, players, sheets };
+    // Absent in games stored before the Yahtzee bonus existed.
+    const rawExtras = raw.extraYahtzees ?? {};
+    if (!isRecord(rawExtras)) return null;
+    const extraYahtzees: Record<string, number> = {};
+    for (const [playerId, count] of Object.entries(rawExtras)) {
+        const sheet = sheets[playerId];
+        if (sheet === undefined || !earnsYahtzeeBonus(sheet)) return null;
+        if (!isIntegerIn(count, 1, MAX_EXTRA_YAHTZEES)) return null;
+        extraYahtzees[playerId] = count;
+    }
+    return settle({ v: 1, phase, players, sheets, extraYahtzees });
 }

@@ -36,7 +36,7 @@ export interface DartsTurn {
 
 export interface DartsState {
     v: 1;
-    phase: 'setup' | 'playing';
+    phase: 'setup' | 'playing' | 'finished';
     players: ToolPlayer[];
     settings: DartsSettings;
     /** Who threw first this leg, as an index into `players`; it moves on every leg. */
@@ -393,9 +393,26 @@ export function nextLeg(state: DartsState): DartsState {
     };
 }
 
-/** Back to choosing players and settings; the scores of this game go. */
+/** Back to choosing players and settings; the scores of this game go. Also how a game is cancelled. */
 export function toSetup(state: DartsState): DartsState {
     return { ...state, phase: 'setup', starter: 0, turns: [], wins: [] };
+}
+
+/**
+ * Ends the game: a leg just won still counts, a leg half thrown does not.
+ * The legs won decide.
+ */
+export function endDarts(state: DartsState): DartsState {
+    if (state.phase !== 'playing') return state;
+    const counted = legWinner(state) === null ? state : nextLeg(state);
+    return { ...counted, phase: 'finished', turns: [] };
+}
+
+/** Whoever won the most legs, once the game is over; nobody if no leg was finished. */
+export function matchWinners(state: DartsState): ToolPlayer[] {
+    if (state.phase !== 'finished' || state.wins.length === 0) return [];
+    const most = Math.max(...state.players.map((player) => winsOf(state, player.id)));
+    return state.players.filter((player) => winsOf(state, player.id) === most);
 }
 
 /* ---------------------------------------------------------------------------
@@ -417,7 +434,7 @@ export function parseDartsState(raw: unknown): DartsState | null {
     const settings = parseSettings(raw.settings);
     const { phase, starter, turns, wins } = raw;
     if (players === null || settings === null) return null;
-    if (phase !== 'setup' && phase !== 'playing') return null;
+    if (phase !== 'setup' && phase !== 'playing' && phase !== 'finished') return null;
     if (!isIntegerIn(starter, 0, Math.max(0, players.length - 1))) return null;
     if (!Array.isArray(turns) || !Array.isArray(wins)) return null;
     const ids = new Set(players.map((player) => player.id));

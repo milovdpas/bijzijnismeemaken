@@ -9,7 +9,9 @@ import {
     emptyScore,
     historyLines,
     leaders,
-    newRound,
+    endScore,
+    restartScore,
+    scoreWinners,
     parseAmount,
     parseScoreState,
     removeEntry,
@@ -80,14 +82,31 @@ describe('score tracker', () => {
         expect(totals(state)).toEqual({ p1: -2 });
     });
 
-    it('starts a new round with the same players, and drops entries of a player who left', () => {
+    it('starts over with the same players, and drops entries of a player who left', () => {
         let state = withPlayers('Anna', 'Bob');
         state = addEntry(addEntry(state, 'p1', 10, 1), 'p2', 5, 2);
-        expect(newRound(state)).toEqual({ ...state, entries: [] });
+        expect(restartScore(state)).toEqual({ ...state, entries: [] });
         const [anna] = state.players;
         if (anna === undefined) throw new Error('no players');
         const left = setScorePlayers(state, [anna]);
         expect(left.entries.map((entry) => entry.playerId)).toEqual(['p1']);
+    });
+
+    it('ends with the totals as the result, and takes nothing more', () => {
+        let state = withPlayers('Anna', 'Bob', 'Cas');
+        expect(endScore(state)).toBe(state);
+        state = addEntry(addEntry(state, 'p1', 10, 1), 'p3', 10, 2);
+        expect(scoreWinners(state)).toEqual([]);
+        const ended = endScore(state);
+        expect(ended.finished).toBe(true);
+        expect(scoreWinners(ended).map((player) => player.name)).toEqual(['Anna', 'Cas']);
+        expect(addEntry(ended, 'p2', 5, 3)).toBe(ended);
+        expect(correctEntry(ended, 'e1', 4)).toBe(ended);
+        expect(removeEntry(ended, 'e1')).toBe(ended);
+        const again = restartScore(ended);
+        expect(again.finished).toBe(false);
+        expect(again.entries).toEqual([]);
+        expect(again.players).toEqual(ended.players);
     });
 
     it('reads the amount field: digits only, never zero', () => {
@@ -116,5 +135,9 @@ describe('score tracker', () => {
             }),
         ).toBeNull();
         expect(parseScoreState(null)).toBeNull();
+        // Stored before a game could be ended: still playing.
+        const { finished: _dropped, ...older } = state;
+        expect(parseScoreState(older)?.finished).toBe(false);
+        expect(parseScoreState({ ...state, finished: 'yes' })).toBeNull();
     });
 });

@@ -1,19 +1,23 @@
 'use client';
 
-import { RotateCcw, Undo2 } from 'lucide-react';
-import { useState } from 'react';
+import { Undo2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { DartsHistory } from '@/components/tools/darts/darts-history';
 import { DartsScoreboard } from '@/components/tools/darts/darts-scoreboard';
 import { DartsTurnInput } from '@/components/tools/darts/darts-turn-input';
+import { GameActions } from '@/components/tools/game-actions';
 import { Button } from '@/components/ui/button';
 import type { StoredUpdate } from '@/hooks/use-stored-state';
-import { legWinner, nextLeg, toSetup, undoTurn } from '@/lib/tools/darts';
+import { launchConfetti } from '@/lib/confetti';
+import { endDarts, legWinner, matchWinners, nextLeg, toSetup, undoTurn } from '@/lib/tools/darts';
 import type { DartsState } from '@/lib/tools/darts';
 
-/** A leg being played: the scoreboard, the turn being entered, and the turns so far. */
+/**
+ * A leg being played: the scoreboard, the turn being entered, and the turns
+ * so far. The game can be ended at any point (the legs won decide) or
+ * cancelled.
+ */
 export function DartsBoard({
     state,
     update,
@@ -22,7 +26,6 @@ export function DartsBoard({
     update: StoredUpdate<DartsState>;
 }) {
     const { t } = useTranslation();
-    const [leaving, setLeaving] = useState(false);
     const winner = legWinner(state);
 
     return (
@@ -46,7 +49,13 @@ export function DartsBoard({
                 </section>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <GameActions
+                onEnd={() => {
+                    update(endDarts);
+                    if (matchWinners(endDarts(state)).length > 0) launchConfetti();
+                }}
+                onCancel={() => update(toSetup)}
+            >
                 {winner === null && (
                     <Button
                         variant="outline"
@@ -58,25 +67,9 @@ export function DartsBoard({
                         {t('tools.undo')}
                     </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setLeaving(true)}>
-                    <RotateCcw />
-                    {t('tools.newGame')}
-                </Button>
-            </div>
+            </GameActions>
 
             <DartsHistory state={state} />
-
-            <ConfirmDialog
-                open={leaving}
-                onOpenChange={setLeaving}
-                title={t('tools.newGameTitle')}
-                description={t('tools.darts.newGameDescription')}
-                confirmLabel={t('tools.newGame')}
-                onConfirm={() => {
-                    update(toSetup);
-                    setLeaving(false);
-                }}
-            />
         </div>
     );
 }

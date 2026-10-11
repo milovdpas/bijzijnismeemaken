@@ -79,6 +79,27 @@ export function movePlayerUp(players: readonly ToolPlayer[], id: string): ToolPl
     return next;
 }
 
+export interface RankedPlayer {
+    player: ToolPlayer;
+    value: number;
+    /** Shared by a tie, then skipping: 1, 1, 3. */
+    rank: number;
+}
+
+/** A final standing: highest first, ties sharing a rank and keeping the order of play. */
+export function rankPlayers(
+    players: readonly ToolPlayer[],
+    valueOf: (player: ToolPlayer) => number,
+): RankedPlayer[] {
+    const sorted = players
+        .map((player) => ({ player, value: valueOf(player) }))
+        .sort((a, b) => b.value - a.value);
+    return sorted.map((entry) => ({
+        ...entry,
+        rank: sorted.findIndex((other) => other.value === entry.value) + 1,
+    }));
+}
+
 /** Players read back from storage; null when anything about them is off. */
 export function parsePlayers(raw: unknown, max: number): ToolPlayer[] | null {
     if (!Array.isArray(raw) || raw.length > max) return null;

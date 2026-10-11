@@ -1,11 +1,13 @@
 'use client';
 
-import { RotateCcw, Users } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { GameActions } from '@/components/tools/game-actions';
+import { GameResult } from '@/components/tools/game-result';
 import { PlayerAvatar } from '@/components/tools/player-avatar';
+import { YahtzeeBonusDialog } from '@/components/tools/yahtzee/yahtzee-bonus-dialog';
 import { YahtzeeCellDialog } from '@/components/tools/yahtzee/yahtzee-cell-dialog';
 import { Button } from '@/components/ui/button';
 import type { StoredUpdate } from '@/hooks/use-stored-state';
@@ -16,10 +18,13 @@ import {
     LOWER_CATEGORIES,
     UPPER_CATEGORIES,
     bonusPace,
+    earnsYahtzeeBonus,
+    endYahtzee,
     isFinished,
     nextPlayer,
+    playerTotals,
+    setExtraYahtzees,
     setScore,
-    sheetTotals,
     startYahtzee,
     yahtzeeToSetup,
     yahtzeeWinners,
@@ -27,12 +32,13 @@ import {
 import type { YahtzeeCategory, YahtzeeState } from '@/lib/tools/yahtzee';
 import { cn } from '@/lib/utils';
 
-type Leaving = 'restart' | 'players';
+const STICKY = 'sticky left-0 z-10 px-3 text-left text-xs whitespace-nowrap';
 
 /**
  * The sheet: a column per player, the thirteen boxes, the upper total with
- * how it paces against the bonus, and the totals. The column of whoever is
- * next is tinted; the category column stays put while the sheet scrolls.
+ * how it paces against the bonus, the Yahtzee bonus and the totals. The
+ * column of whoever is next is tinted; the box names stay put while the
+ * sheet scrolls. A finished sheet can still be corrected.
  */
 export function YahtzeeSheetView({
     state,
@@ -46,26 +52,26 @@ export function YahtzeeSheetView({
         player: ToolPlayer;
         category: YahtzeeCategory;
     } | null>(null);
-    const [leaving, setLeaving] = useState<Leaving | null>(null);
+    const [bonusFor, setBonusFor] = useState<ToolPlayer | null>(null);
+    const finished = isFinished(state);
     const next = nextPlayer(state);
     const winners = yahtzeeWinners(state);
     const sheetOf = (player: ToolPlayer) => state.sheets[player.id] ?? {};
-    const totalsOf = (player: ToolPlayer) => sheetTotals(sheetOf(player));
+    const totalsOf = (player: ToolPlayer) => playerTotals(state, player.id);
     const signed = new Intl.NumberFormat(i18n.language, { signDisplay: 'exceptZero' });
     const tint = (player: ToolPlayer) => next?.id === player.id && 'bg-brand/10';
     const anyScore = state.players.some((player) => totalsOf(player).filled > 0);
 
-    const leave = (kind: Leaving) => {
-        update(kind === 'restart' ? startYahtzee : yahtzeeToSetup);
-        setLeaving(null);
+    /** Applies a change and celebrates when it is the one that ended the game. */
+    const apply = (change: (current: YahtzeeState) => YahtzeeState) => {
+        update(change);
+        const after = change(state);
+        if (!isFinished(state) && yahtzeeWinners(after).length > 0) launchConfetti();
     };
 
     const row = (category: YahtzeeCategory) => (
         <tr key={category} className="border-b">
-            <th
-                scope="row"
-                className="sticky left-0 z-10 bg-card px-3 py-1 text-left text-xs font-semibold whitespace-nowrap"
-            >
+            <th scope="row" className={cn(STICKY, 'bg-card py-1 font-semibold')}>
                 {t(`tools.yahtzee.categories.${category}`)}
             </th>
             {state.players.map((player) => {
@@ -101,10 +107,7 @@ export function YahtzeeSheetView({
         <tr className={cn('border-b bg-muted/40', strong && 'border-b-0')}>
             <th
                 scope="row"
-                className={cn(
-                    'sticky left-0 z-10 bg-muted px-3 py-1.5 text-left text-xs whitespace-nowrap',
-                    strong ? 'font-extrabold' : 'font-bold',
-                )}
+                className={cn(STICKY, 'bg-muted py-1.5', strong ? 'font-extrabold' : 'font-bold')}
             >
                 {label}
             </th>
@@ -122,33 +125,67 @@ export function YahtzeeSheetView({
         </tr>
     );
 
+    const bonusRow = (
+        <tr className="border-b">
+            <th scope="row" className={cn(STICKY, 'bg-card py-1 font-semibold')}>
+                {t('tools.yahtzee.yahtzeeBonus')}
+            </th>
+            {state.players.map((player) => {
+                const eligible = earnsYahtzeeBonus(sheetOf(player));
+                const { yahtzeeBonus } = totalsOf(player);
+                return (
+                    <td key={player.id} className={cn('px-1 py-1', tint(player))}>
+                        <button
+                            type="button"
+                            disabled={!eligible}
+                            title={eligible ? undefined : t('tools.yahtzee.bonusNone')}
+                            aria-label={t('tools.yahtzee.bonusCell', { name: player.name })}
+                            onClick={() => setBonusFor(player)}
+                            className="flex h-8 w-full min-w-11 items-center justify-center rounded-lg text-sm font-bold tabular-nums transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:text-muted-foreground/50 disabled:hover:bg-transparent"
+                        >
+                            {yahtzeeBonus > 0 ? (
+                                yahtzeeBonus
+                            ) : eligible ? (
+                                <Plus className="size-3.5 text-muted-foreground" />
+                            ) : (
+                                '–'
+                            )}
+                        </button>
+                    </td>
+                );
+            })}
+        </tr>
+    );
+
     return (
         <div className="space-y-4">
-            {winners.length > 0 && (
-                <section className="rounded-2xl border-2 border-brand bg-brand/15 p-4 text-center">
-                    <p className="text-lg font-extrabold text-ink">
-                        {winners.length === 1
-                            ? t('tools.yahtzee.winner', {
-                                  name: winners[0]?.name ?? '',
-                                  total: winners[0] ? totalsOf(winners[0]).total : 0,
-                              })
-                            : t('tools.yahtzee.tie', {
-                                  total: winners[0] ? totalsOf(winners[0]).total : 0,
-                              })}
+            {finished ? (
+                <GameResult
+                    winners={winners}
+                    detail={
+                        winners[0] === undefined
+                            ? undefined
+                            : t('tools.result.points', { count: totalsOf(winners[0]).total })
+                    }
+                >
+                    <Button onClick={() => update(startYahtzee)}>{t('tools.newGame')}</Button>
+                    <Button variant="outline" onClick={() => update(yahtzeeToSetup)}>
+                        {t('tools.changePlayers')}
+                    </Button>
+                </GameResult>
+            ) : (
+                next !== null && (
+                    <p className="text-sm font-semibold">
+                        {t('tools.yahtzee.next', { name: next.name })}
                     </p>
-                </section>
-            )}
-            {next !== null && (
-                <p className="text-sm font-semibold">
-                    {t('tools.yahtzee.next', { name: next.name })}
-                </p>
+                )
             )}
 
             <div className="overflow-x-auto rounded-2xl border bg-card">
                 <table className="w-full border-collapse text-sm">
                     <thead>
                         <tr className="border-b">
-                            <th scope="col" className="sticky left-0 z-10 bg-card px-3 py-2">
+                            <th scope="col" className={cn(STICKY, 'bg-card py-2')}>
                                 <span className="sr-only">{t('tools.yahtzee.box')}</span>
                             </th>
                             {state.players.map((player) => (
@@ -202,31 +239,20 @@ export function YahtzeeSheetView({
                             },
                         )}
                         {LOWER_CATEGORIES.map(row)}
+                        {bonusRow}
                         {sumRow(t('tools.yahtzee.lower'), (player) => totalsOf(player).lower)}
                         {sumRow(t('tools.yahtzee.total'), (player) => totalsOf(player).total, true)}
                     </tbody>
                 </table>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!anyScore}
-                    onClick={() => setLeaving('restart')}
-                >
-                    <RotateCcw />
-                    {t('tools.newGame')}
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => (anyScore ? setLeaving('players') : leave('players'))}
-                >
-                    <Users />
-                    {t('tools.editPlayers')}
-                </Button>
-            </div>
+            {!finished && (
+                <GameActions
+                    canEnd={anyScore}
+                    onEnd={() => apply(endYahtzee)}
+                    onCancel={() => update(yahtzeeToSetup)}
+                />
+            )}
 
             {editing !== null && (
                 <YahtzeeCellDialog
@@ -237,34 +263,26 @@ export function YahtzeeSheetView({
                         if (!open) setEditing(null);
                     }}
                     onSave={(value) => {
-                        const change = (current: YahtzeeState) =>
-                            setScore(current, editing.player.id, editing.category, value);
-                        update(change);
-                        if (!isFinished(state) && isFinished(change(state))) launchConfetti();
+                        apply((current) =>
+                            setScore(current, editing.player.id, editing.category, value),
+                        );
                         setEditing(null);
                     }}
                 />
             )}
-            <ConfirmDialog
-                open={leaving !== null}
-                onOpenChange={(open) => {
-                    if (!open) setLeaving(null);
-                }}
-                title={
-                    leaving === 'players'
-                        ? t('tools.yahtzee.playersTitle')
-                        : t('tools.newGameTitle')
-                }
-                description={
-                    leaving === 'players'
-                        ? t('tools.yahtzee.playersDescription')
-                        : t('tools.newGameDescription')
-                }
-                confirmLabel={leaving === 'players' ? t('tools.editPlayers') : t('tools.newGame')}
-                onConfirm={() => {
-                    if (leaving !== null) leave(leaving);
-                }}
-            />
+            {bonusFor !== null && (
+                <YahtzeeBonusDialog
+                    player={bonusFor}
+                    current={state.extraYahtzees[bonusFor.id] ?? 0}
+                    onOpenChange={(open) => {
+                        if (!open) setBonusFor(null);
+                    }}
+                    onSave={(count) => {
+                        update((current) => setExtraYahtzees(current, bonusFor.id, count));
+                        setBonusFor(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

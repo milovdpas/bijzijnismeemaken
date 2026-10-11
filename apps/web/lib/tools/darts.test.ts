@@ -9,8 +9,10 @@ import {
     clockThrow,
     currentPlayer,
     emptyDarts,
+    endDarts,
     isPossibleTurn,
     legWinner,
+    matchWinners,
     nextLeg,
     parseDartsState,
     setDartsPlayers,
@@ -253,6 +255,37 @@ describe('around the clock', () => {
     });
 });
 
+describe('ending a game', () => {
+    it('counts a leg just won, drops a leg half thrown, and names the most legs', () => {
+        // Anna wins the first leg; the game is ended right then.
+        const won = play(game(), 180, 0, 180, 0, 141);
+        const ended = endDarts(won);
+        expect(ended.phase).toBe('finished');
+        expect(winsOf(ended, 'p1')).toBe(1);
+        expect(currentPlayer(ended)).toBeNull();
+        expect(matchWinners(ended).map((player) => player.name)).toEqual(['Anna']);
+        expect(x01Throw(ended, 60, null)).toBe(ended);
+        expect(endDarts(ended)).toBe(ended);
+
+        // Bob wins the next one, then a third leg is abandoned halfway: a tie on legs.
+        let state = play(nextLeg(won), 180, 0, 180, 0, 141);
+        state = play(nextLeg(state), 60);
+        const tied = endDarts(state);
+        expect(tied.wins).toEqual(['p1', 'p2']);
+        expect(matchWinners(tied).map((player) => player.name)).toEqual(['Anna', 'Bob']);
+    });
+
+    it('ends without a winner when no leg was finished, and starts again', () => {
+        const ended = endDarts(play(game(), 60, 45));
+        expect(matchWinners(ended)).toEqual([]);
+        expect(matchWinners(game())).toEqual([]);
+        const again = startGame(ended);
+        expect(again.phase).toBe('playing');
+        expect(again.wins).toEqual([]);
+        expect(currentPlayer(again)?.name).toBe('Anna');
+    });
+});
+
 describe('storage', () => {
     it('reads a stored game back, and nothing that does not fit', () => {
         const state = play(game({ start: 301 }), 60, 45);
@@ -267,5 +300,7 @@ describe('storage', () => {
         expect(parseDartsState({ ...state, starter: 5 })).toBeNull();
         expect(parseDartsState({ ...state, wins: ['p9'] })).toBeNull();
         expect(parseDartsState('501')).toBeNull();
+        const ended = endDarts(play(game(), 180, 0, 180, 0, 141));
+        expect(parseDartsState(JSON.parse(JSON.stringify(ended)))).toEqual(ended);
     });
 });

@@ -8,6 +8,7 @@ import {
     movePlayerUp,
     nextId,
     parsePlayers,
+    rankPlayers,
     removePlayer,
 } from './players';
 import type { ToolPlayer } from './players';
@@ -60,6 +61,22 @@ describe('players', () => {
         expect(names(movePlayerUp(players, 'p3'))).toEqual(['Anna', 'Cas', 'Bob']);
         expect(names(movePlayerUp(players, 'p1'))).toEqual(['Anna', 'Bob', 'Cas']);
         expect(names(movePlayerUp(players, 'nobody'))).toEqual(['Anna', 'Bob', 'Cas']);
+    });
+
+    it('ranks a final standing, ties sharing a place in the order of play', () => {
+        const players = table('Anna', 'Bob', 'Cas', 'Dirk');
+        const points: Record<string, number> = { p1: 10, p2: 30, p3: 10, p4: 5 };
+        expect(
+            rankPlayers(players, (player) => points[player.id] ?? 0).map((row) => [
+                row.player.name,
+                row.rank,
+            ]),
+        ).toEqual([
+            ['Bob', 1],
+            ['Anna', 2],
+            ['Cas', 2],
+            ['Dirk', 4],
+        ]);
     });
 
     it('reads players back from storage, and nothing that is off', () => {

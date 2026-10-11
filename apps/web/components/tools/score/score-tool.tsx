@@ -1,52 +1,55 @@
 'use client';
 
-import { DateTime } from 'luxon';
-import { Minus, Pencil, Plus, RotateCcw, Users } from 'lucide-react';
+import { Minus, Plus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { FinalStanding } from '@/components/tools/final-standing';
+import { GameActions } from '@/components/tools/game-actions';
+import { GameResult } from '@/components/tools/game-result';
 import { PlayerAvatar } from '@/components/tools/player-avatar';
 import { PlayerSetup } from '@/components/tools/player-setup';
 import { AmountDialog } from '@/components/tools/score/amount-dialog';
+import { ScoreHistory } from '@/components/tools/score/score-history';
 import { Button } from '@/components/ui/button';
 import { useStoredState } from '@/hooks/use-stored-state';
+import { launchConfetti } from '@/lib/confetti';
 import type { ToolProps } from '@/lib/tools';
+import { rankPlayers } from '@/lib/tools/players';
 import type { ToolPlayer } from '@/lib/tools/players';
 import {
     SCORE_MAX_PLAYERS,
     addEntry,
     correctEntry,
     emptyScore,
-    historyLines,
+    endScore,
     leaders,
-    newRound,
     parseScoreState,
     removeEntry,
+    restartScore,
+    scoreWinners,
     setScorePlayers,
     totals,
 } from '@/lib/tools/score';
 import type { ScoreEntry } from '@/lib/tools/score';
-import { cn } from '@/lib/utils';
 
 /**
  * The score tracker: a row per player with their total and a point up or
  * down, any amount through a tap on the total, and a history in which every
- * entry can be corrected or taken out again.
+ * entry can be corrected or taken out again. Ending the game turns the rows
+ * into the final standing.
  */
 export function ScoreTool({ groupId, storageKey }: ToolProps) {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const [state, update] = useStoredState(storageKey, parseScoreState, emptyScore);
     const [choosing, setChoosing] = useState(() => state.players.length === 0);
     const [adding, setAdding] = useState<ToolPlayer | null>(null);
     const [correcting, setCorrecting] = useState<ScoreEntry | null>(null);
-    const [resetting, setResetting] = useState(false);
     /** A new player list that would drop somebody's points, waiting for a yes. */
     const [dropping, setDropping] = useState<ToolPlayer[] | null>(null);
     const sums = totals(state);
     const ahead = new Set(leaders(state));
-    const lines = historyLines(state);
-    const signed = new Intl.NumberFormat(i18n.language, { signDisplay: 'always' });
     const playerOf = (id: string) => state.players.find((player) => player.id === id);
     const correctingPlayer = correcting === null ? undefined : playerOf(correcting.playerId);
     const step = (player: ToolPlayer, amount: 1 | -1) =>
@@ -95,6 +98,40 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
         );
     }
 
+    if (state.finished) {
+        const winners = scoreWinners(state);
+        const top = winners[0];
+        return (
+            <div className="space-y-5">
+                <GameResult
+                    winners={winners}
+                    detail={
+                        top === undefined
+                            ? undefined
+                            : t('tools.result.points', { count: sums[top.id] ?? 0 })
+                    }
+                >
+                    <Button onClick={() => update(restartScore)}>{t('tools.newGame')}</Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            update(restartScore);
+                            setChoosing(true);
+                        }}
+                    >
+                        {t('tools.changePlayers')}
+                    </Button>
+                </GameResult>
+                <FinalStanding
+                    rows={rankPlayers(state.players, (player) => sums[player.id] ?? 0)}
+                    format={String}
+                    highlight={winners.length > 0}
+                />
+                <ScoreHistory state={state} />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-5">
             <ul className="divide-y rounded-2xl border bg-card">
@@ -133,62 +170,21 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
             </ul>
             <p className="text-xs text-muted-foreground">{t('tools.score.tapTotal')}</p>
 
-            <div className="flex flex-wrap gap-2">
+            <GameActions
+                canEnd={state.entries.length > 0}
+                onEnd={() => {
+                    update(endScore);
+                    launchConfetti();
+                }}
+                onCancel={() => update(restartScore)}
+            >
                 <Button variant="outline" size="sm" onClick={() => setChoosing(true)}>
                     <Users />
                     {t('tools.editPlayers')}
                 </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={state.entries.length === 0}
-                    onClick={() => setResetting(true)}
-                >
-                    <RotateCcw />
-                    {t('tools.score.newRound')}
-                </Button>
-            </div>
+            </GameActions>
 
-            <section className="space-y-2">
-                <h3 className="text-sm font-bold">{t('tools.score.history')}</h3>
-                {lines.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t('tools.score.historyEmpty')}</p>
-                ) : (
-                    <ol className="divide-y border-t">
-                        {lines.map(({ entry, total }) => (
-                            <li key={entry.id} className="flex items-center gap-3 py-2 text-sm">
-                                <span className="w-11 shrink-0 text-xs text-muted-foreground tabular-nums">
-                                    {DateTime.fromMillis(entry.at).toFormat('HH:mm')}
-                                </span>
-                                <span className="min-w-0 flex-1 truncate font-semibold">
-                                    {playerOf(entry.playerId)?.name}
-                                </span>
-                                <span
-                                    className={cn(
-                                        'font-bold tabular-nums',
-                                        entry.amount < 0 && 'text-destructive',
-                                    )}
-                                >
-                                    {signed.format(entry.amount)}
-                                </span>
-                                <span className="w-20 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                                    {t('tools.score.after', { total })}
-                                </span>
-                                <Button
-                                    size="icon-xs"
-                                    variant="ghost"
-                                    aria-label={t('tools.score.correct', {
-                                        name: playerOf(entry.playerId)?.name ?? '',
-                                    })}
-                                    onClick={() => setCorrecting(entry)}
-                                >
-                                    <Pencil />
-                                </Button>
-                            </li>
-                        ))}
-                    </ol>
-                )}
-            </section>
+            <ScoreHistory state={state} onCorrect={setCorrecting} />
 
             {adding !== null && (
                 <AmountDialog
@@ -220,17 +216,6 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
                     }}
                 />
             )}
-            <ConfirmDialog
-                open={resetting}
-                onOpenChange={setResetting}
-                title={t('tools.score.newRoundTitle')}
-                description={t('tools.score.newRoundDescription')}
-                confirmLabel={t('tools.score.newRound')}
-                onConfirm={() => {
-                    update(newRound);
-                    setResetting(false);
-                }}
-            />
         </div>
     );
 }
