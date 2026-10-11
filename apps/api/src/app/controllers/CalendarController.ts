@@ -26,14 +26,6 @@ import {
 } from '../validators/calendarSchemas';
 import { rangeQuerySchema } from '../validators/commonSchemas';
 
-/** Where the browser lands after the provider round trip, unless the connect named a return path. */
-const SETTINGS_PATH = '/settings/calendar';
-
-function landing(returnTo: string | null, query: string): string {
-    const path = returnTo ?? SETTINGS_PATH;
-    return `${env.appUrl}${path}${path.includes('?') ? '&' : '?'}${query}`;
-}
-
 /**
  * A person's own calendar: the connection, its calendars, a manual sync,
  * the synced events with titles (for the ignore rules) and those rules.
@@ -53,25 +45,27 @@ export default class CalendarController {
         );
     };
 
-    /** A redirect either way: the settings page reads `connected` or `error` from the query. */
+    /**
+     * A redirect either way. A refusal lands on the calendar settings, which
+     * read `error` from the query; a connection lands where the connect asked
+     * (onboarding goes on to its next step), or on the settings with `connected`.
+     */
     callback: Handler = async (req, res) => {
         const { state, code, error } = queryOf(req, calendarCallbackQuerySchema);
         if (error !== undefined || code === undefined) {
-            res.redirect(302, landing(null, 'error=cancelled'));
+            res.redirect(302, `${env.appUrl}/settings/calendar?error=cancelled`);
             return;
         }
         const result = await CalendarService.completeConnect(req.user, state, code);
         if (!result.ok) {
-            res.redirect(
-                302,
-                landing(null, `error=${result.problem === 'STATE_INVALID' ? 'state' : 'provider'}`),
-            );
+            const reason = result.problem === 'STATE_INVALID' ? 'state' : 'provider';
+            res.redirect(302, `${env.appUrl}/settings/calendar?error=${reason}`);
             return;
         }
         if (result.autoAddEnabled) {
             await CalendarWriteService.backfill(req.user);
         }
-        res.redirect(302, landing(result.returnTo, 'connected=1'));
+        res.redirect(302, `${env.appUrl}${result.returnTo ?? '/settings/calendar?connected=1'}`);
     };
 
     disconnect: Handler = async (req, res) => {

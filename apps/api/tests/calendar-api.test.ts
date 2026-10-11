@@ -107,7 +107,7 @@ describe('calendar connection', () => {
         const landed = await asMe.get(
             `${API_ENDPOINTS.CALENDAR.GOOGLE_CALLBACK}?state=${stateForStep}&code=ok`,
         );
-        expect(landed.headers.location).toBe(`${env.appUrl}/welcome/availability?connected=1`);
+        expect(landed.headers.location).toBe(`${env.appUrl}/welcome/availability`);
         expect(data<MeResponse>(await asMe.get(API_ENDPOINTS.ME.ROOT)).setup).toEqual({
             calendarSeen: true,
             availabilitySeen: false,
