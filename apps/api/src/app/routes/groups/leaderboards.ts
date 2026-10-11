@@ -3,7 +3,10 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import LeaderboardController from '../../controllers/LeaderboardController';
+import { includeLeaderboard } from '../../middleware/IncludeLeaderboard';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
+import { requireLeaderboardEditor } from '../../middleware/RequireLeaderboardEditor';
+import { requireLeaderboardManager } from '../../middleware/RequireLeaderboardManager';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
 import { groupIdParamSchema } from '../../validators/commonSchemas';
@@ -47,6 +50,7 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema }),
             member,
+            includeLeaderboard,
             this.controller.detail,
         );
         router.patch(
@@ -54,6 +58,8 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema, body: updateLeaderboardSchema }),
             member,
+            includeLeaderboard,
+            requireLeaderboardManager,
             this.controller.update,
         );
         router.delete(
@@ -61,6 +67,8 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema }),
             member,
+            includeLeaderboard,
+            requireLeaderboardManager,
             this.controller.delete,
         );
         router.get(
@@ -68,6 +76,7 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema, query: scoresQuerySchema }),
             member,
+            includeLeaderboard,
             this.controller.scores,
         );
         router.get(
@@ -75,6 +84,7 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema }),
             member,
+            includeLeaderboard,
             this.controller.periods,
         );
         router.get(
@@ -82,6 +92,7 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema, query: historyQuerySchema }),
             member,
+            includeLeaderboard,
             this.controller.history,
         );
         router.post(
@@ -89,6 +100,7 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardParamSchema, body: addLeaderboardMemberSchema }),
             member,
+            includeLeaderboard,
             this.controller.addMember,
         );
         router.delete(
@@ -96,6 +108,8 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardMemberParamSchema }),
             member,
+            includeLeaderboard,
+            requireLeaderboardEditor,
             this.controller.removeMember,
         );
         router.put(
@@ -103,6 +117,8 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardMemberParamSchema, body: setScoreSchema }),
             member,
+            includeLeaderboard,
+            requireLeaderboardEditor,
             this.controller.setScore,
         );
         router.delete(
@@ -110,6 +126,8 @@ export default class LeaderboardRoutes implements IRoute {
             userAuth,
             validate({ params: leaderboardMemberParamSchema }),
             member,
+            includeLeaderboard,
+            requireLeaderboardEditor,
             this.controller.clearScore,
         );
 

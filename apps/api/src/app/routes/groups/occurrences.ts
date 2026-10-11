@@ -4,6 +4,8 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 import type { IRoute } from '../../../interfaces/IRouter';
 import OccurrenceController from '../../controllers/OccurrenceController';
 import { notifyLimit, publicLimit } from '../../middleware/ApiLimits';
+import { includeActivity } from '../../middleware/IncludeActivity';
+import { requireActivityManager } from '../../middleware/RequireActivityManager';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
@@ -24,6 +26,8 @@ export default class OccurrenceRoutes implements IRoute {
     getRoutes(): Router {
         const router = Router();
         const member = requireGroupRole(GroupRole.MEMBER);
+        const activity = includeActivity();
+        const liveActivity = includeActivity({ activeOnly: true });
 
         router.post(
             API_ENDPOINTS.ACTIVITIES.OCCURRENCES(':groupId', ':activityId'),
@@ -31,6 +35,8 @@ export default class OccurrenceRoutes implements IRoute {
             notifyLimit,
             validate({ params: activityParamSchema, body: planOccurrenceSchema }),
             member,
+            liveActivity,
+            requireActivityManager,
             this.controller.plan,
         );
         router.patch(
@@ -39,6 +45,8 @@ export default class OccurrenceRoutes implements IRoute {
             notifyLimit,
             validate({ params: occurrenceParamSchema, body: updateOccurrenceSchema }),
             member,
+            activity,
+            requireActivityManager,
             this.controller.update,
         );
         router.delete(
@@ -46,6 +54,8 @@ export default class OccurrenceRoutes implements IRoute {
             userAuth,
             validate({ params: occurrenceParamSchema }),
             member,
+            activity,
+            requireActivityManager,
             this.controller.delete,
         );
         router.get(

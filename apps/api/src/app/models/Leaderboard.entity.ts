@@ -9,10 +9,11 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { LeaderboardPeriod } from '@bzim/types';
-import type { EditMode, LeaderboardDto, ScoreType, SortOrder } from '@bzim/types';
+import { EditMode, GroupRole, LeaderboardPeriod } from '@bzim/types';
+import type { LeaderboardDto, ScoreType, SortOrder } from '@bzim/types';
 
 import Group from './Group.entity';
+import type GroupMember from './GroupMember.entity';
 import LeaderboardEditor from './LeaderboardEditor.entity';
 import LeaderboardMember from './LeaderboardMember.entity';
 import User from './User.entity';
@@ -90,6 +91,27 @@ export default class Leaderboard extends BaseEntity {
 
     isCreatedBy(userId: string): boolean {
         return this.createdById === userId;
+    }
+
+    /** Who changes its settings and deletes it: the creator, or a group admin. */
+    isManagedBy(member: GroupMember): boolean {
+        return this.isCreatedBy(member.userId) || member.hasRole(GroupRole.ADMIN);
+    }
+
+    /**
+     * Who sets scores and takes people off the board: by edit mode, and a
+     * group admin always (docs/05). Needs `editors` loaded.
+     */
+    isEditableBy(member: GroupMember): boolean {
+        if (member.hasRole(GroupRole.ADMIN)) return true;
+        switch (this.editMode) {
+            case EditMode.EVERYONE:
+                return true;
+            case EditMode.CREATOR:
+                return this.isCreatedBy(member.userId);
+            case EditMode.SELECTED:
+                return this.editors.some((editor) => editor.userId === member.userId);
+        }
     }
 
     /** Needs `createdBy` loaded. */

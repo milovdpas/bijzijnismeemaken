@@ -109,16 +109,16 @@ describe('ActivityService.update', () => {
     });
 });
 
-describe('ActivityService.canManage', () => {
+describe('Activity.isManagedBy', () => {
     it('is the creator or an admin', async () => {
         const { group, member, membership, adminMembership, owner } = await setup();
         const other = await seedUser();
         const otherMembership = await seedMember(group, other);
         const activity = await seedActivity(group, member);
 
-        expect(ActivityService.canManage(activity, membership)).toBe(true);
-        expect(ActivityService.canManage(activity, adminMembership)).toBe(true);
-        expect(ActivityService.canManage(activity, otherMembership)).toBe(false);
+        expect(activity.isManagedBy(membership)).toBe(true);
+        expect(activity.isManagedBy(adminMembership)).toBe(true);
+        expect(activity.isManagedBy(otherMembership)).toBe(false);
         expect(owner.id).not.toBe(member.id);
     });
 });

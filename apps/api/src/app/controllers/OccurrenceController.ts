@@ -4,12 +4,10 @@ import type { GroupOccurrenceDto, OccurrenceDto } from '@bzim/types';
 import type { Handler } from '../../interfaces/IHttp';
 import { paramsOf, queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
-import { ActivityService } from '../services/ActivityService';
 import { OccurrenceService } from '../services/OccurrenceService';
 import {
     sendCalendar,
     sendConflict,
-    sendForbidden,
     sendNoContent,
     sendNotFound,
     sendSuccess,
@@ -17,7 +15,6 @@ import {
 } from '../utils/ApiResponses';
 import { icsFor } from '../utils/CalendarLinks';
 import { verifyOccurrenceToken } from '../utils/SignedLink';
-import { activityParamSchema } from '../validators/activitySchemas';
 import { groupIdParamSchema, rangeQuerySchema } from '../validators/commonSchemas';
 import {
     icsQuerySchema,
@@ -29,24 +26,15 @@ import {
 
 /**
  * Planning an activity onto dates. The group-scoped handlers run behind
- * `requireGroupRole(MEMBER)` and check creator-or-admin themselves; the ICS
- * download is public, guarded by its signed token, because a calendar app
- * fetching it has no session.
+ * `requireGroupRole(MEMBER)`, `includeActivity` and `requireActivityManager`,
+ * so they start from an activity the caller may plan; the ICS download is
+ * public, guarded by its signed token, because a calendar app fetching it
+ * has no session.
  */
 export default class OccurrenceController {
     plan: Handler<BodyOf<typeof planOccurrenceSchema>> = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, false);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        if (!ActivityService.canManage(activity, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin plans an activity');
-            return;
-        }
         const { date, daypart, startTime, notes, participantIds } = req.body;
-        const result = await OccurrenceService.plan(req.group, activity, req.user, {
+        const result = await OccurrenceService.plan(req.group, req.activity, req.user, {
             date,
             daypart,
             startTime,
@@ -71,30 +59,27 @@ export default class OccurrenceController {
     };
 
     update: Handler<BodyOf<typeof updateOccurrenceSchema>> = async (req, res) => {
-        const { activityId, occurrenceId } = paramsOf(req, occurrenceParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, true);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        if (!ActivityService.canManage(activity, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin changes a planned activity');
-            return;
-        }
-        const occurrence = await OccurrenceService.findForActivity(activity, occurrenceId);
+        const { occurrenceId } = paramsOf(req, occurrenceParamSchema);
+        const occurrence = await OccurrenceService.findForActivity(req.activity, occurrenceId);
         if (occurrence === null) {
             sendNotFound(res, 'Occurrence');
             return;
         }
         const { date, daypart, startTime, notes, participantIds, status } = req.body;
-        const result = await OccurrenceService.update(req.group, activity, occurrence, req.user, {
-            date,
-            daypart,
-            startTime,
-            notes,
-            participantIds,
-            status,
-        });
+        const result = await OccurrenceService.update(
+            req.group,
+            req.activity,
+            occurrence,
+            req.user,
+            {
+                date,
+                daypart,
+                startTime,
+                notes,
+                participantIds,
+                status,
+            },
+        );
         if (!result.ok) {
             switch (result.problem) {
                 case 'PARTICIPANT_NOT_MEMBER':
@@ -113,22 +98,13 @@ export default class OccurrenceController {
     };
 
     delete: Handler = async (req, res) => {
-        const { activityId, occurrenceId } = paramsOf(req, occurrenceParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, true);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        if (!ActivityService.canManage(activity, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin removes a planned activity');
-            return;
-        }
-        const occurrence = await OccurrenceService.findForActivity(activity, occurrenceId);
+        const { occurrenceId } = paramsOf(req, occurrenceParamSchema);
+        const occurrence = await OccurrenceService.findForActivity(req.activity, occurrenceId);
         if (occurrence === null) {
             sendNotFound(res, 'Occurrence');
             return;
         }
-        await OccurrenceService.delete(req.group, activity, occurrence);
+        await OccurrenceService.delete(req.group, req.activity, occurrence);
         sendNoContent(res);
     };
 

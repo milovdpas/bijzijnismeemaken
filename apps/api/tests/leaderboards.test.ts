@@ -115,17 +115,17 @@ describe('permissions', () => {
         ]);
         if (e === null || c === null || s === null) throw new Error('boards missing');
 
-        expect(LeaderboardService.canManage(e, creatorMembership)).toBe(true);
-        expect(LeaderboardService.canManage(e, adminMembership)).toBe(true);
-        expect(LeaderboardService.canManage(e, membership)).toBe(false);
+        expect(e.isManagedBy(creatorMembership)).toBe(true);
+        expect(e.isManagedBy(adminMembership)).toBe(true);
+        expect(e.isManagedBy(membership)).toBe(false);
 
-        expect(LeaderboardService.canEditScores(e, membership)).toBe(true);
-        expect(LeaderboardService.canEditScores(c, membership)).toBe(false);
-        expect(LeaderboardService.canEditScores(c, creatorMembership)).toBe(true);
-        expect(LeaderboardService.canEditScores(c, adminMembership)).toBe(true);
-        expect(LeaderboardService.canEditScores(s, membership)).toBe(true);
-        expect(LeaderboardService.canEditScores(s, creatorMembership)).toBe(false);
-        expect(LeaderboardService.canRemoveMember(s, adminMembership)).toBe(true);
+        expect(e.isEditableBy(membership)).toBe(true);
+        expect(c.isEditableBy(membership)).toBe(false);
+        expect(c.isEditableBy(creatorMembership)).toBe(true);
+        expect(c.isEditableBy(adminMembership)).toBe(true);
+        expect(s.isEditableBy(membership)).toBe(true);
+        expect(s.isEditableBy(creatorMembership)).toBe(false);
+        expect(s.isEditableBy(adminMembership)).toBe(true);
     });
 });
 

@@ -9,12 +9,14 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { GroupRole } from '@bzim/types';
 import type { ActivityCategory, ActivityDto, DateMode, Daypart, Weekday } from '@bzim/types';
 
 import { decimalTransformer, timeTransformer } from '../utils/ColumnTransformers';
 import ActivityInterest from './ActivityInterest.entity';
 import ActivityOccurrence from './ActivityOccurrence.entity';
 import Group from './Group.entity';
+import type GroupMember from './GroupMember.entity';
 import User from './User.entity';
 
 /**
@@ -129,9 +131,13 @@ export default class Activity extends BaseEntity {
     @UpdateDateColumn({ name: 'updated_at', type: 'datetime', precision: 3 })
     updatedAt!: Date;
 
-    /** Whether this person may edit, plan or delete it: the creator, or an admin (checked by the caller). */
     isCreatedBy(userId: string): boolean {
         return this.createdById === userId;
+    }
+
+    /** Who edits, plans and deletes it: the creator, or a group admin. */
+    isManagedBy(member: GroupMember): boolean {
+        return this.isCreatedBy(member.userId) || member.hasRole(GroupRole.ADMIN);
     }
 
     /** Needs `createdBy` loaded. */

@@ -4,7 +4,6 @@ import type { FindOptionsRelations } from 'typeorm';
 import {
     AVATAR_KEYS,
     EditMode,
-    GroupRole,
     LEADERBOARD,
     LeaderboardPeriod,
     ScoreType,
@@ -204,27 +203,9 @@ export class LeaderboardService {
 
     static permissionsFor(leaderboard: Leaderboard, viewer: GroupMember): LeaderboardPermissions {
         return {
-            canManage: LeaderboardService.canManage(leaderboard, viewer),
-            canEditScores: LeaderboardService.canEditScores(leaderboard, viewer),
+            canManage: leaderboard.isManagedBy(viewer),
+            canEditScores: leaderboard.isEditableBy(viewer),
         };
-    }
-
-    /** Settings and deletion: the creator, or a group admin. */
-    static canManage(leaderboard: Leaderboard, membership: GroupMember): boolean {
-        return leaderboard.isCreatedBy(membership.userId) || membership.hasRole(GroupRole.ADMIN);
-    }
-
-    /** Entering scores: by edit mode, and always a group admin. Needs `editors` loaded. */
-    static canEditScores(leaderboard: Leaderboard, membership: GroupMember): boolean {
-        if (membership.hasRole(GroupRole.ADMIN)) return true;
-        switch (leaderboard.editMode) {
-            case EditMode.EVERYONE:
-                return true;
-            case EditMode.CREATOR:
-                return leaderboard.isCreatedBy(membership.userId);
-            case EditMode.SELECTED:
-                return leaderboard.editors.some((editor) => editor.userId === membership.userId);
-        }
     }
 
     /**
@@ -298,11 +279,6 @@ export class LeaderboardService {
             where: { id: member.id },
             relations: { user: true },
         });
-    }
-
-    /** Removing: whoever may edit scores, plus admins (docs/05: editors + owner/admin). */
-    static canRemoveMember(leaderboard: Leaderboard, membership: GroupMember): boolean {
-        return LeaderboardService.canEditScores(leaderboard, membership);
     }
 
     /**

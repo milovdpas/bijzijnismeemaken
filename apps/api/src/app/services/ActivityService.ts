@@ -1,4 +1,4 @@
-import { ActivityLabel, GroupRole, Weekday, activityRuleProblem, WidgetType } from '@bzim/types';
+import { ActivityLabel, Weekday, activityRuleProblem, WidgetType } from '@bzim/types';
 import type {
     ActivityDetailDto,
     ActivityInput,
@@ -10,7 +10,6 @@ import type { FindOptionsRelations } from 'typeorm';
 import Activity from '../models/Activity.entity';
 import ActivityInterest from '../models/ActivityInterest.entity';
 import type Group from '../models/Group.entity';
-import type GroupMember from '../models/GroupMember.entity';
 import type User from '../models/User.entity';
 import ActivityPresenter from '../presenters/ActivityPresenter';
 import { OccurrenceService } from './OccurrenceService';
@@ -119,11 +118,6 @@ export class ActivityService {
         await OccurrenceService.cancelAllPlanned(group, activity);
         await WidgetService.removeForTarget(WidgetType.ACTIVITY, activity.id);
         await activity.remove();
-    }
-
-    /** Whether this member may edit, plan or delete the activity: its creator, or an admin. */
-    static canManage(activity: Activity, membership: GroupMember): boolean {
-        return activity.isCreatedBy(membership.userId) || membership.hasRole(GroupRole.ADMIN);
     }
 
     /** One activity of this group with everything loaded, or null. Inactive ones only when asked. */

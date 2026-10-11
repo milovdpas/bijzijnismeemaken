@@ -16,7 +16,6 @@ import { ScoreQueryService } from '../services/ScoreQueryService';
 import { ScoreService } from '../services/ScoreService';
 import {
     sendConflict,
-    sendForbidden,
     sendNoContent,
     sendNotFound,
     sendSuccess,
@@ -28,7 +27,6 @@ import {
     createLeaderboardSchema,
     historyQuerySchema,
     leaderboardMemberParamSchema,
-    leaderboardParamSchema,
     scoresQuerySchema,
     setScoreSchema,
     updateLeaderboardSchema,
@@ -36,8 +34,10 @@ import {
 
 /**
  * Leaderboards inside a group. `requireGroupRole(MEMBER)` has loaded
- * `req.group` and `req.membership`; the finer rules (creator, admin, edit
- * mode) are the service's and are checked here per action.
+ * `req.group` and `req.membership`, and on the routes of one board
+ * `includeLeaderboard` has loaded `req.leaderboard`. Settings are the
+ * creator's or an admin's (`requireLeaderboardManager`); scores and taking
+ * people off follow the edit mode (`requireLeaderboardEditor`).
  */
 export default class LeaderboardController {
     list: Handler = async (req, res) => {
@@ -86,29 +86,13 @@ export default class LeaderboardController {
     };
 
     detail: Handler = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
         sendSuccess<LeaderboardDetailDto>(
             res,
-            await LeaderboardService.detail(leaderboard, req.membership),
+            await LeaderboardService.detail(req.leaderboard, req.membership),
         );
     };
 
     update: Handler<BodyOf<typeof updateLeaderboardSchema>> = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        if (!LeaderboardService.canManage(leaderboard, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin changes a leaderboard');
-            return;
-        }
         const {
             name,
             description,
@@ -122,7 +106,7 @@ export default class LeaderboardController {
             showSteppers,
             cardPeriod,
         } = req.body;
-        const result = await LeaderboardService.update(req.group, leaderboard, {
+        const result = await LeaderboardService.update(req.group, req.leaderboard, {
             name,
             description,
             scoreType,
@@ -146,32 +130,16 @@ export default class LeaderboardController {
     };
 
     delete: Handler = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        if (!LeaderboardService.canManage(leaderboard, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin deletes a leaderboard');
-            return;
-        }
-        await LeaderboardService.delete(leaderboard);
+        await LeaderboardService.delete(req.leaderboard);
         sendNoContent(res);
     };
 
     scores: Handler = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
         const { period, year, month, page, pageSize } = queryOf(req, scoresQuerySchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
         sendSuccess<ScoresResponse>(
             res,
             await ScoreQueryService.page(
-                leaderboard,
+                req.leaderboard,
                 period,
                 year,
                 month,
@@ -183,24 +151,12 @@ export default class LeaderboardController {
     };
 
     periods: Handler = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        sendSuccess<PeriodsResponse>(res, await ScoreQueryService.periods(leaderboard));
+        sendSuccess<PeriodsResponse>(res, await ScoreQueryService.periods(req.leaderboard));
     };
 
     history: Handler = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
         const { page, pageSize } = queryOf(req, historyQuerySchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        const result = await ScoreQueryService.history(leaderboard, page, pageSize);
+        const result = await ScoreQueryService.history(req.leaderboard, page, pageSize);
         sendSuccess<Paginated<ScoreHistoryDto>>(
             res,
             paginate(result.items, result.total, page, pageSize),
@@ -209,16 +165,10 @@ export default class LeaderboardController {
 
     /** Any member puts somebody on the board: a group member by id, or a guest by name. */
     addMember: Handler<BodyOf<typeof addLeaderboardMemberSchema>> = async (req, res) => {
-        const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
         const { userId, name, avatarKey } = req.body;
         if (userId === undefined) {
             const guest = await LeaderboardService.addGuest(
-                leaderboard,
+                req.leaderboard,
                 name ?? '',
                 avatarKey,
                 req.user,
@@ -226,7 +176,12 @@ export default class LeaderboardController {
             sendSuccess<LeaderboardMemberDto>(res, guest.toDto(), 201);
             return;
         }
-        const result = await LeaderboardService.addMember(req.group, leaderboard, userId, req.user);
+        const result = await LeaderboardService.addMember(
+            req.group,
+            req.leaderboard,
+            userId,
+            req.user,
+        );
         if (!result.ok) {
             switch (result.problem) {
                 case 'NOT_A_GROUP_MEMBER':
@@ -241,63 +196,36 @@ export default class LeaderboardController {
     };
 
     removeMember: Handler = async (req, res) => {
-        const { leaderboardId, memberId } = paramsOf(req, leaderboardMemberParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        if (!LeaderboardService.canRemoveMember(leaderboard, req.membership)) {
-            sendForbidden(res, 'Only editors and admins remove leaderboard members');
-            return;
-        }
-        const member = await LeaderboardService.findMember(leaderboard, memberId);
+        const { memberId } = paramsOf(req, leaderboardMemberParamSchema);
+        const member = await LeaderboardService.findMember(req.leaderboard, memberId);
         if (member === null || !member.isActive()) {
             sendNotFound(res, 'Leaderboard member');
             return;
         }
-        await LeaderboardService.removeMember(leaderboard, member, req.user);
+        await LeaderboardService.removeMember(req.leaderboard, member, req.user);
         sendNoContent(res);
     };
 
     setScore: Handler<BodyOf<typeof setScoreSchema>> = async (req, res) => {
-        const { leaderboardId, memberId } = paramsOf(req, leaderboardMemberParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        if (!LeaderboardService.canEditScores(leaderboard, req.membership)) {
-            sendForbidden(res, 'You may not set scores on this leaderboard');
-            return;
-        }
-        const member = await LeaderboardService.findMember(leaderboard, memberId);
+        const { memberId } = paramsOf(req, leaderboardMemberParamSchema);
+        const member = await LeaderboardService.findMember(req.leaderboard, memberId);
         if (member === null || !member.isActive()) {
             sendNotFound(res, 'Leaderboard member');
             return;
         }
         const { score } = req.body;
-        await ScoreService.set(leaderboard, member, req.user, score);
+        await ScoreService.set(req.leaderboard, member, req.user, score);
         sendNoContent(res);
     };
 
     clearScore: Handler = async (req, res) => {
-        const { leaderboardId, memberId } = paramsOf(req, leaderboardMemberParamSchema);
-        const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-        if (leaderboard === null) {
-            sendNotFound(res, 'Leaderboard');
-            return;
-        }
-        if (!LeaderboardService.canEditScores(leaderboard, req.membership)) {
-            sendForbidden(res, 'You may not clear scores on this leaderboard');
-            return;
-        }
-        const member = await LeaderboardService.findMember(leaderboard, memberId);
+        const { memberId } = paramsOf(req, leaderboardMemberParamSchema);
+        const member = await LeaderboardService.findMember(req.leaderboard, memberId);
         if (member === null || !member.isActive()) {
             sendNotFound(res, 'Leaderboard member');
             return;
         }
-        await ScoreService.clear(leaderboard, member, req.user);
+        await ScoreService.clear(req.leaderboard, member, req.user);
         sendNoContent(res);
     };
 }

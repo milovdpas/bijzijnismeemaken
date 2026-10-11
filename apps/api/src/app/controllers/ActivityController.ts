@@ -9,14 +9,12 @@ import { ActivityService } from '../services/ActivityService';
 import { NotificationService } from '../services/NotificationService';
 import { SuggestionService } from '../services/SuggestionService';
 import {
-    sendForbidden,
     sendNoContent,
     sendNotFound,
     sendSuccess,
     sendValidationFailed,
 } from '../utils/ApiResponses';
 import {
-    activityParamSchema,
     createActivitySchema,
     interestOfParamSchema,
     listActivitiesQuerySchema,
@@ -27,8 +25,10 @@ import { today } from '../utils/Dates';
 
 /**
  * Activities inside a group. `requireGroupRole` has loaded `req.group` and
- * `req.membership`. Inactive activities (their creator left) exist only for
- * admins; for everyone else they are not found.
+ * `req.membership`, and on the routes of one activity `includeActivity` has
+ * loaded `req.activity`: inactive ones (their creator left) exist only for
+ * admins. Editing and deleting are the creator's or an admin's
+ * (`requireActivityManager`).
  */
 export default class ActivityController {
     list: Handler = async (req, res) => {
@@ -100,35 +100,11 @@ export default class ActivityController {
         sendSuccess<ActivityDetailDto>(res, ActivityService.detail(result.activity, req.user), 201);
     };
 
-    detail: Handler = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(
-            req.group,
-            activityId,
-            req.membership.hasRole(GroupRole.ADMIN),
-        );
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        sendSuccess<ActivityDetailDto>(res, ActivityService.detail(activity, req.user));
+    detail: Handler = (req, res) => {
+        sendSuccess<ActivityDetailDto>(res, ActivityService.detail(req.activity, req.user));
     };
 
     update: Handler<BodyOf<typeof updateActivitySchema>> = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(
-            req.group,
-            activityId,
-            req.membership.hasRole(GroupRole.ADMIN),
-        );
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        if (!ActivityService.canManage(activity, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin edits an activity');
-            return;
-        }
         const {
             category,
             title,
@@ -150,7 +126,7 @@ export default class ActivityController {
             externalUrl,
             preferredDayparts,
         } = req.body;
-        const result = await ActivityService.update(activity, {
+        const result = await ActivityService.update(req.activity, {
             category,
             title,
             description,
@@ -179,39 +155,19 @@ export default class ActivityController {
     };
 
     delete: Handler = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(
-            req.group,
-            activityId,
-            req.membership.hasRole(GroupRole.ADMIN),
-        );
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        if (!ActivityService.canManage(activity, req.membership)) {
-            sendForbidden(res, 'Only the creator or an admin deletes an activity');
-            return;
-        }
-        await ActivityService.delete(req.group, activity);
+        await ActivityService.delete(req.group, req.activity);
         sendNoContent(res);
     };
 
     /** Ranked dates for the planning dialog. Without `memberIds`, the people who are in. */
     suggestions: Handler = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
         const { memberIds, from, weeks } = queryOf(req, suggestionsQuerySchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, false);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
         sendSuccess<SuggestionsResponse>(
             res,
             await SuggestionService.rank(
                 req.group,
-                activity,
-                memberIds ?? activity.interests.map((interest) => interest.userId),
+                req.activity,
+                memberIds ?? req.activity.interests.map((interest) => interest.userId),
                 from ?? today(),
                 weeks,
             ),
@@ -220,51 +176,29 @@ export default class ActivityController {
 
     /** "I'm in." Saying it twice is fine. */
     markMeIn: Handler = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, false);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        await ActivityService.addInterest(activity, req.user.id, req.user);
+        await ActivityService.addInterest(req.activity, req.user.id, req.user);
         sendNoContent(res);
     };
 
     markMeOut: Handler = async (req, res) => {
-        const { activityId } = paramsOf(req, activityParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, false);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        await ActivityService.removeInterest(activity, req.user.id);
+        await ActivityService.removeInterest(req.activity, req.user.id);
         sendNoContent(res);
     };
 
     /** An admin marking somebody else in; the route guards the role. */
     markMemberIn: Handler = async (req, res) => {
-        const { activityId, userId } = paramsOf(req, interestOfParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, true);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
+        const { userId } = paramsOf(req, interestOfParamSchema);
         if (!(await GroupMember.existsBy({ groupId: req.group.id, userId }))) {
             sendNotFound(res, 'Member');
             return;
         }
-        await ActivityService.addInterest(activity, userId, req.user);
+        await ActivityService.addInterest(req.activity, userId, req.user);
         sendNoContent(res);
     };
 
     markMemberOut: Handler = async (req, res) => {
-        const { activityId, userId } = paramsOf(req, interestOfParamSchema);
-        const activity = await ActivityService.findForGroup(req.group, activityId, true);
-        if (activity === null) {
-            sendNotFound(res, 'Activity');
-            return;
-        }
-        await ActivityService.removeInterest(activity, userId);
+        const { userId } = paramsOf(req, interestOfParamSchema);
+        await ActivityService.removeInterest(req.activity, userId);
         sendNoContent(res);
     };
 }
