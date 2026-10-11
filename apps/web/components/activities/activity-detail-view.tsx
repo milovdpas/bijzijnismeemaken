@@ -1,6 +1,6 @@
 'use client';
 
-import { ERROR_CODES, GroupRole } from '@bzim/types';
+import { ActivityCategory, ERROR_CODES, GroupRole } from '@bzim/types';
 import { ArrowLeft, Pencil, Sparkles, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,7 @@ import { OccurrencesSection } from '@/components/activities/occurrences-section'
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { FormMessage } from '@/components/common/form-message';
+import { ActivityTournaments } from '@/components/tournaments/activity-tournaments';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useActivity, useDeleteActivity } from '@/hooks/queries/use-activities';
@@ -155,6 +156,9 @@ export function ActivityDetailView({
 
             <InterestSection groupId={groupId} activity={data} isAdmin={isAdmin} />
             <OccurrencesSection groupId={groupId} activity={data} canManage={canManage} />
+            {data.category === ActivityCategory.TOURNAMENT && (
+                <ActivityTournaments groupId={groupId} activityId={activityId} />
+            )}
 
             <ConfirmDialog
                 open={deleting}

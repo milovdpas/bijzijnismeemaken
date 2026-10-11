@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { TournamentStatus } from '@bzim/types';
 import type {
+    MatchResultInput,
     TournamentDetailDto,
     TournamentEntryInput,
     TournamentEntryPatch,
@@ -15,12 +16,16 @@ import type {
 import { ApiError } from '@/lib/api/client';
 import {
     addTournamentEntry,
+    advanceTournament,
+    clearResult,
     createTournament,
     deleteTournament,
     drawTournament,
     fetchTournament,
     fetchTournaments,
+    finishTournament,
     removeTournamentEntry,
+    reportResult,
     startTournament,
     updateTournament,
     updateTournamentEntry,
@@ -40,6 +45,17 @@ export function useTournaments(
         queryKey: queryKeys.tournaments.list(groupId, archive ? 'archive' : 'current'),
         queryFn: () =>
             fetchTournaments(groupId, archive ? { status: TournamentStatus.FINISHED } : {}),
+    });
+}
+
+/** The tournaments made from one activity, any status, for that activity's page. */
+export function useActivityTournaments(
+    groupId: string,
+    activityId: string,
+): UseQueryResult<TournamentListingDto[]> {
+    return useQuery({
+        queryKey: queryKeys.tournaments.list(groupId, `activity:${activityId}`),
+        queryFn: () => fetchTournaments(groupId, { activityId }),
     });
 }
 
@@ -157,4 +173,39 @@ export function useStartTournament(
     tournamentId: string,
 ): UseMutationResult<TournamentDetailDto, Error, void> {
     return useTournamentChange(groupId, () => startTournament(groupId, tournamentId));
+}
+
+/** Enters or corrects a result; a knockout winner moves on in the answer. */
+export function useReportResult(
+    groupId: string,
+    tournamentId: string,
+): UseMutationResult<TournamentDetailDto, Error, { matchId: string; result: MatchResultInput }> {
+    return useTournamentChange(
+        groupId,
+        ({ matchId, result }: { matchId: string; result: MatchResultInput }) =>
+            reportResult(groupId, tournamentId, matchId, result),
+    );
+}
+
+export function useClearResult(
+    groupId: string,
+    tournamentId: string,
+): UseMutationResult<TournamentDetailDto, Error, string> {
+    return useTournamentChange(groupId, (matchId: string) =>
+        clearResult(groupId, tournamentId, matchId),
+    );
+}
+
+export function useAdvanceTournament(
+    groupId: string,
+    tournamentId: string,
+): UseMutationResult<TournamentDetailDto, Error, void> {
+    return useTournamentChange(groupId, () => advanceTournament(groupId, tournamentId));
+}
+
+export function useFinishTournament(
+    groupId: string,
+    tournamentId: string,
+): UseMutationResult<TournamentDetailDto, Error, void> {
+    return useTournamentChange(groupId, () => finishTournament(groupId, tournamentId));
 }

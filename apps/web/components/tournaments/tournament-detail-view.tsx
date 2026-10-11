@@ -135,7 +135,7 @@ export function TournamentDetailView({
             {data.status === TournamentStatus.DRAFT ? (
                 <TournamentDraft groupId={groupId} tournament={data} />
             ) : (
-                <TournamentPlay tournament={data} />
+                <TournamentPlay groupId={groupId} tournament={data} />
             )}
 
             <ConfirmDialog
