@@ -9,6 +9,7 @@ import GroupRoutes from './groups/groups';
 import ImageRoutes from './groups/images';
 import InviteRoutes from './groups/invites';
 import LeaderboardRoutes from './groups/leaderboards';
+import TournamentRoutes from './groups/tournaments';
 import WidgetRoutes from './groups/widgets';
 import OccurrenceRoutes from './groups/occurrences';
 import PushRoutes from './groups/push';
@@ -39,6 +40,7 @@ export default class Api implements IRoute {
         new AvailabilityRoutes(),
         new CalendarRoutes(),
         new LeaderboardRoutes(),
+        new TournamentRoutes(),
         new WidgetRoutes(),
         // Last, and not user authenticated: the scheduler calls it, the web app
         // never does.

@@ -70,6 +70,25 @@ export const LEADERBOARD = {
     GUEST_NAME_MAX_LENGTH: 40,
 } as const;
 
+/** Tournaments (M4, docs/01 §1.5c). */
+export const TOURNAMENT = {
+    NAME_MIN_LENGTH: 2,
+    NAME_MAX_LENGTH: 60,
+    DESCRIPTION_MAX_LENGTH: 1000,
+    ENTRY_NAME_MAX_LENGTH: 60,
+    /** A guest in an entry: a name, with the bounds of a display name. */
+    GUEST_NAME_MAX_LENGTH: 40,
+    MIN_ENTRIES: 2,
+    /** A bracket of 64; more would not fit a phone, or an evening. */
+    MAX_ENTRIES: 64,
+    TEAM_SIZE_MIN: 2,
+    TEAM_SIZE_MAX: 8,
+    GROUP_COUNT_MAX: 8,
+    ADVANCE_PER_GROUP_MAX: 4,
+    POINTS_MAX: 10,
+    SCORE_MAX: 999,
+} as const;
+
 export const ACTIVITY = {
     TITLE_MIN_LENGTH: 2,
     TITLE_MAX_LENGTH: 80,
@@ -325,6 +344,28 @@ export const API_ENDPOINTS = {
         /** PUT sets, DELETE clears the member's score for the current period. */
         MEMBER_SCORE: (groupId: string, leaderboardId: string, memberId: string) =>
             `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members/${memberId}/score`,
+    },
+
+    TOURNAMENTS: {
+        LIST: (groupId: string) => `${V1}/groups/${groupId}/tournaments`,
+        CREATE: (groupId: string) => `${V1}/groups/${groupId}/tournaments`,
+        DETAIL: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}`,
+        ENTRIES: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/entries`,
+        ENTRY: (groupId: string, tournamentId: string, entryId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/entries/${entryId}`,
+        DRAW: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/draw`,
+        START: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/start`,
+        ADVANCE: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/advance`,
+        FINISH: (groupId: string, tournamentId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/finish`,
+        /** PUT enters or corrects, DELETE clears a match's result. */
+        RESULT: (groupId: string, tournamentId: string, matchId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/matches/${matchId}/result`,
     },
 
     /** Cron entry points, called by `tools/worker.ts` with the worker token. */

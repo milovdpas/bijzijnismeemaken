@@ -11,6 +11,9 @@ import LeaderboardEditor from '../models/LeaderboardEditor.entity';
 import LeaderboardMember from '../models/LeaderboardMember.entity';
 import LeaderboardScoreHistory from '../models/LeaderboardScoreHistory.entity';
 import OccurrenceParticipant from '../models/OccurrenceParticipant.entity';
+import Tournament from '../models/Tournament.entity';
+import TournamentEntry from '../models/TournamentEntry.entity';
+import TournamentEntryMember from '../models/TournamentEntryMember.entity';
 import User from '../models/User.entity';
 import { CalendarWriteService } from './CalendarWriteService';
 import { NotificationService } from './NotificationService';
@@ -38,7 +41,9 @@ export interface Departure {
  * cancelled; their interests and participations go; their leaderboard rows
  * keep name and face as snapshots but no longer point at them; the boards
  * they created and the history lines they wrote are decoupled the same way;
- * their editor rows go. Runs inside the membership transaction; the
+ * their editor rows go. Tournaments likewise: the entries keep their names
+ * and avatars, the person behind them goes, and a tournament they organised
+ * keeps their name as its organiser. Runs inside the membership transaction; the
  * cancellation mails are sent by `notify` once that has committed.
  */
 export class DepartureService {
@@ -129,6 +134,32 @@ export class DepartureService {
                 LeaderboardScoreHistory,
                 { changedById: userId, leaderboardId: In(leaderboardIds) },
                 { changedById: null, changedByNameSnapshot: name },
+            );
+        }
+
+        // Tournaments: entries and organiser keep the name, not the person.
+        await manager.update(
+            Tournament,
+            { groupId: group.id, createdById: userId },
+            { createdById: null, creatorNameSnapshot: name },
+        );
+        const tournamentIds = (
+            await manager.find(Tournament, { where: { groupId: group.id }, select: { id: true } })
+        ).map((tournament) => tournament.id);
+        const entryIds =
+            tournamentIds.length === 0
+                ? []
+                : (
+                      await manager.find(TournamentEntry, {
+                          where: { tournamentId: In(tournamentIds) },
+                          select: { id: true },
+                      })
+                  ).map((entry) => entry.id);
+        if (entryIds.length > 0) {
+            await manager.update(
+                TournamentEntryMember,
+                { userId, entryId: In(entryIds) },
+                { userId: null, displayNameSnapshot: name, avatarKeySnapshot: avatarKey },
             );
         }
 

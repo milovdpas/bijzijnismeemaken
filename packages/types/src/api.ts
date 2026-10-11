@@ -12,10 +12,16 @@ import type {
     GroupRole,
     LeaderboardPeriod,
     Locale,
+    MatchSlot,
+    MatchStage,
+    MatchStatus,
     NotificationType,
     OccurrenceStatus,
+    ParticipantMode,
     ScoreType,
     SortOrder,
+    TournamentFormat,
+    TournamentStatus,
     Weekday,
     WidgetType,
 } from './enums';
@@ -752,4 +758,176 @@ export interface CalendarIgnoreRuleInput {
     kind: CalendarIgnoreRuleKind;
     value: string;
     label: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tournaments (M4)                                                            */
+/* -------------------------------------------------------------------------- */
+
+/** The settings a tournament is made with; most can change only while it is a draft. */
+export interface TournamentSettings {
+    name: string;
+    description: string | null;
+    format: TournamentFormat;
+    participantMode: ParticipantMode;
+    /** People per team; null when players play. */
+    teamSize: number | null;
+    winPoints: number;
+    drawPoints: number;
+    /** Groups in the group stage; null for a knockout from the start. */
+    groupCount: number | null;
+    advancePerGroup: number | null;
+    thirdPlace: boolean;
+}
+
+/** `POST /groups/:id/tournaments`. Points and third place default to 3, 1 and off. */
+export interface TournamentInput {
+    name: string;
+    description?: string | null;
+    format: TournamentFormat;
+    participantMode: ParticipantMode;
+    teamSize?: number | null;
+    winPoints?: number;
+    drawPoints?: number;
+    groupCount?: number | null;
+    advancePerGroup?: number | null;
+    thirdPlace?: boolean;
+    /** An activity of category `tournament` in the same group; it then links to this. */
+    activityId?: Uuid | null;
+}
+
+/** A person in an entry: a group member, or a guest by name. */
+export interface TournamentPersonInput {
+    userId?: Uuid;
+    name?: string;
+}
+
+/**
+ * `POST …/entries`. A member (`userId`) or a guest (`name`) as a player, or,
+ * when teams play, a team: `members`, with an optional `name`.
+ */
+export interface TournamentEntryInput {
+    userId?: Uuid;
+    name?: string;
+    members?: TournamentPersonInput[];
+}
+
+/** `PATCH …/entries/:id`, while a draft. `seed` moves the entry in the draw, the rest shift. */
+export interface TournamentEntryPatch {
+    name?: string;
+    members?: TournamentPersonInput[];
+    seed?: number;
+    groupNo?: number;
+}
+
+/** `POST …/draw`: shuffle the seeds; with `teams`, first deal the people into random teams. */
+export interface TournamentDrawInput {
+    teams?: boolean;
+}
+
+/** `PUT …/matches/:id/result`. A knockout match cannot end level. */
+export interface MatchResultInput {
+    homeScore: number;
+    awayScore: number;
+}
+
+export interface TournamentMemberDto {
+    id: Uuid;
+    /** Null for a guest, and for somebody who left the group. */
+    user: UserSummary | null;
+    displayName: string;
+    avatarKey: AvatarKey | null;
+}
+
+export interface TournamentEntryDto {
+    id: Uuid;
+    name: string;
+    /** 1 is the top seed. */
+    seed: number;
+    groupNo: number | null;
+    members: TournamentMemberDto[];
+}
+
+export interface TournamentMatchDto {
+    id: Uuid;
+    stage: MatchStage;
+    groupNo: number | null;
+    round: number;
+    position: number;
+    homeEntryId: Uuid | null;
+    awayEntryId: Uuid | null;
+    homeScore: number | null;
+    awayScore: number | null;
+    winnerEntryId: Uuid | null;
+    status: MatchStatus;
+    nextMatchId: Uuid | null;
+    nextSlot: MatchSlot | null;
+    /** One side empty, the other through without playing. */
+    isBye: boolean;
+    playedAt: IsoDateTimeString | null;
+    /** Whether the viewer may enter (or, as organiser or admin, correct) the result now. */
+    canReport: boolean;
+}
+
+export interface TournamentStandingDto {
+    entryId: Uuid;
+    played: number;
+    won: number;
+    drawn: number;
+    lost: number;
+    scored: number;
+    conceded: number;
+    difference: number;
+    points: number;
+    rank: number;
+    /** Within the places that go through to the knockout. */
+    qualifies: boolean;
+}
+
+export interface TournamentGroupDto {
+    groupNo: number;
+    standings: TournamentStandingDto[];
+}
+
+/** A tournament in the list: running and drafts on the tab, finished ones in the archive. */
+export interface TournamentListingDto {
+    id: Uuid;
+    groupId: Uuid;
+    name: string;
+    format: TournamentFormat;
+    participantMode: ParticipantMode;
+    status: TournamentStatus;
+    entryCount: number;
+    /** The winning entry's name, once finished. */
+    winnerName: string | null;
+    activityId: Uuid | null;
+    /** The organiser's name, kept when they leave the group. */
+    organiserName: string | null;
+    createdAt: IsoDateTimeString;
+    startedAt: IsoDateTimeString | null;
+    finishedAt: IsoDateTimeString | null;
+}
+
+/**
+ * `GET …/tournaments/:id`: everything to draw the tournament, plus what the
+ * viewer may do with it.
+ */
+export interface TournamentDetailDto extends TournamentListingDto, TournamentSettings {
+    organiser: UserSummary | null;
+    activity: { id: Uuid; title: string } | null;
+    winnerEntryId: Uuid | null;
+    /** The organiser, or a group admin: settings, entries, draw, start, advance, finish, results. */
+    canManage: boolean;
+    /** The entries the viewer plays in. */
+    myEntryIds: Uuid[];
+    /** While a draft: why it cannot start yet (a problem code), or null when it can. */
+    startProblem: string | null;
+    /** Every group match is played and the knockout is not drawn yet. */
+    canAdvance: boolean;
+    /** The final is played. */
+    canFinish: boolean;
+    entries: TournamentEntryDto[];
+    matches: TournamentMatchDto[];
+    /** One table per group, for a group stage; empty for a knockout. */
+    groups: TournamentGroupDto[];
 }

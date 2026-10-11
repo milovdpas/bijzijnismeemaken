@@ -118,20 +118,22 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 ## Tournaments (M4)
 | Method | Path | Purpose | Perm |
 |---|---|---|---|
-| GET | `/groups/:groupId/tournaments?status=` | List (running first; `finished` for the archive) | M |
+| GET | `/groups/:groupId/tournaments?status=&activityId=` | List. No status: running, then drafts, newest first; `status=finished` is the archive. With `activityId` and no status: that activity's tournaments, any status | M |
 | POST | `/groups/:groupId/tournaments` | Create (draft; optional `activityId` of a `tournament`-category activity) | M |
-| GET | `…/:tournamentId` | Detail: settings, entries with members, matches, group standings, winner | M |
-| PATCH | `…/:tournamentId` | Settings while draft | C, A |
+| GET | `…/:tournamentId` | Detail: settings, entries with members, matches (with `isBye` and the viewer's `canReport`), group standings (`qualifies`), winner, and `canManage`, `myEntryIds`, `startProblem` (draft), `canAdvance`, `canFinish` | M |
+| PATCH | `…/:tournamentId` | Settings. Name and description any time, the rest while a draft (409 `NOT_DRAFT`); settings that do not apply are cleared (players have no team size, a knockout no groups); a new group count deals the groups again by seed | C, A |
 | DELETE | `…/:tournamentId` | Delete | C, A |
-| POST | `…/entries` | Add an entry: `{ userId }`, `{ name }` (guest) or `{ name, members: [...] }` (team) | C, A (draft) |
-| PATCH | `…/entries/:entryId` | Name, members, seed, group | C, A (draft) |
-| DELETE | `…/entries/:entryId` | Remove | C, A (draft) |
-| POST | `…/draw` | `{ teams?: boolean }`: shuffle the seeds (and build random teams of `team_size` from the people added) | C, A (draft) |
-| POST | `…/start` | Generate matches, status `running` | C, A |
-| PUT | `…/matches/:matchId/result` | `{ homeScore, awayScore }`; a side's member while the match has no result, C/A always | side, C, A |
+| POST | `…/entries` | Add an entry: `{ userId }`, `{ name }` (guest) or `{ name?, members: [{ userId } or { name }] }` (team). In a team tournament a single person is a team of one (the people random teams are dealt from). Next seed; in a group stage the group that seed is dealt. Nobody in two entries (409 `ALREADY_IN`) | C, A (draft) |
+| PATCH | `…/entries/:entryId` | Name, members (a player's name follows), seed (moves it; the others shift), group | C, A (draft) |
+| DELETE | `…/entries/:entryId` | Remove; the seeds behind it close up | C, A (draft) |
+| POST | `…/draw` | `{ teams?: boolean }`, body optional: shuffle the seeds and deal the groups again; with `teams`, first deal everybody into random teams, as many as the team size needs, sizes differing by one at most (422 `TOO_FEW_PEOPLE` under two teams) | C, A (draft) |
+| POST | `…/start` | Generate matches (knockout: the bracket with byes through; group stage: every group's round robin), status `running`. 422 with the `startProblem` when it cannot | C, A |
+| PUT | `…/matches/:matchId/result` | `{ homeScore, awayScore }`; a side's member while the match has no result, C/A always (also correcting). A knockout winner goes on, a semi-final loser to third place; a knockout cannot end level (422 `DRAW_IN_KNOCKOUT`); a correction that changes the winner after the next match was played is 409 `LATER_PLAYED` | side, C, A |
 | DELETE | `…/matches/:matchId/result` | Clear a result (and what followed from it, if nothing later was played) | C, A |
 | POST | `…/advance` | Group stage complete → knockout from the standings | C, A |
-| POST | `…/finish` | Final played → status `finished`, winner set | C, A |
+| POST | `…/finish` | Final played → status `finished`, winner set (an unplayed third-place match does not hold it up) | C, A |
+
+Tournament refusals carry `details.problem`: 409 for timing (`NOT_DRAFT`, `NOT_RUNNING`, `FULL`, `ALREADY_IN`, `NOT_READY`, `LATER_PLAYED`, `NOT_GROUPS`, `GROUPS_UNFINISHED`, `ALREADY_ADVANCED`, `FINAL_UNPLAYED`), 422 for input (`TEAM_SIZE`, `GROUPS`, `POINTS`, `ACTIVITY`, `NOT_A_GROUP_MEMBER`, `TOO_FEW_ENTRIES`, `ADVANCE`, `TOO_FEW_PEOPLE`, `DRAW_IN_KNOCKOUT`), 403 for a result somebody may not touch.
 
 ## Worker (cron) & internal
 | Method | Path | Purpose | Perm |
