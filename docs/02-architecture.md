@@ -75,19 +75,21 @@ app/
   layout.tsx (ThemeProvider, ServiceWorker, fonts), manifest.ts, globals.css
   (public)/login/page.tsx, join/[token]/page.tsx
   (app)/layout.tsx → AppRuntime (I18nProvider, QueryProvider, AuthGate, Toaster)
-  (app)/onboarding, (app)/groups, (app)/groups/[groupId] (dashboard), (app)/groups/[groupId]/{activities,activities/[activityId],availability,leaderboards,leaderboards/[leaderboardId],leaderboards/[leaderboardId]/history,members,settings}, (app)/availability (my availability: week schedule + month), (app)/settings, (app)/settings/calendar, (app)/invites
+  (app)/onboarding, (app)/groups, (app)/groups/[groupId] (dashboard), (app)/groups/[groupId]/{activities,activities/[activityId],availability,leaderboards,leaderboards/[leaderboardId],leaderboards/[leaderboardId]/history,tools,tools/[tool],members,settings}, (app)/availability (my availability: week schedule + month), (app)/settings, (app)/settings/calendar, (app)/invites
 components/
   ui/ (shadcn Base UI primitives, generated)   common/ (Field, PageHeader, EmptyState, Avatar, InstallInstructions, Pagination)
   layout/ (AppNav, AppRuntime, I18nProvider, ServiceWorker, ThemeToggle)
   groups/, activities/, availability/, leaderboards/, settings/, onboarding/   (feature folders, *-view.tsx top-level, feature hooks beside components)
+  tools/<tool>/ (one folder per tool in the tools tab; shared player-setup, player-avatar, tools-view, tool-view)
 lib/
   api/client.ts (fetch wrapper: credentials include, ApiError(code,status,details), single-flight refresh on 401)
   api/{auth,users,groups,invites,activities,occurrences,availability,calendar,leaderboards}.ts (typed functions using @bzim/types)
   i18n/{index.ts,locales/{en,nl}.ts}  (nl: Dict typing, key test)
   format-date.ts (Luxon, Amsterdam zone), dayparts.ts (pure helpers for grid), avatars.ts, utils.ts (cn)
   query-keys.ts
+  tools.ts (the tools registry: key, icon, label, component, in-progress check), tools/{players,score,darts,yahtzee}.ts (pure game logic, tested), stored.ts (guarded localStorage)
 hooks/
-  queries/use-*.ts (useQuery/useMutation wrappers + invalidation), use-install-app.ts, use-mounted.ts, use-me.ts, use-group-role.ts
+  queries/use-*.ts (useQuery/useMutation wrappers + invalidation), use-install-app.ts, use-mounted.ts, use-me.ts, use-group-role.ts, use-stored-state.ts (state kept in this device's storage)
 store/ use-preferences-store.ts (locale, theme, installPromptSeen) — Zustand persist
 public/ sw.js, icons/ (png 192/512/maskable), avatars/*.svg
 ```

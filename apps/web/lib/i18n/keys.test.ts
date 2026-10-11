@@ -56,8 +56,11 @@ function usedKeys(): string[] {
             for (const m of src.matchAll(/\bt\('([a-zA-Z][\w.-]+)'/g)) {
                 found.add(m[1] ?? '');
             }
-            // PageHeader takes keys as props.
-            for (const m of src.matchAll(/(?:titleKey|subtitleKey)="([a-zA-Z][\w.-]+)"/g)) {
+            // PageHeader and EmptyState take keys as props; registries (tabs, tools,
+            // palettes) name them as properties.
+            for (const m of src.matchAll(
+                /(?:titleKey|subtitleKey|descriptionKey|labelKey)(?:=|:\s*)['"]([a-zA-Z][\w.-]+)['"]/g,
+            )) {
                 found.add(m[1] ?? '');
             }
         }
