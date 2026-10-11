@@ -16,6 +16,26 @@ export function errorKey(error: unknown): string {
     return 'errors.INTERNAL_ERROR';
 }
 
+/**
+ * Codes a form explains in place (a taken handle, a wrong password) or the
+ * client already acts on (signed out). Everything else is unexpected where
+ * it happens and surfaces as a toast, from one place: the mutation cache.
+ */
+const INLINE_CODES: ReadonlySet<string> = new Set([
+    ERROR_CODES.VALIDATION_FAILED,
+    ERROR_CODES.CONFLICT,
+    ERROR_CODES.INVALID_CREDENTIALS,
+    ERROR_CODES.EMAIL_NOT_VERIFIED,
+    ERROR_CODES.TOKEN_INVALID,
+    ERROR_CODES.OWNER_MUST_TRANSFER,
+    ERROR_CODES.ONBOARDING_REQUIRED,
+    ERROR_CODES.UNAUTHENTICATED,
+]);
+
+export function toastWorthy(error: unknown): boolean {
+    return !(error instanceof ApiError && INLINE_CODES.has(error.code));
+}
+
 /** Whether a failed request carried this code. */
 export function isApiError(error: unknown, code: string): boolean {
     return error instanceof ApiError && error.code === code;

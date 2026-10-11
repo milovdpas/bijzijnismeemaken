@@ -647,6 +647,9 @@ export const en = {
             BAD_URL: 'The address must start with http:// or https://.',
         },
     },
+    offline: {
+        banner: 'No connection. Changes wait until you are back online.',
+    },
     install: {
         title: 'Put it on your home screen',
         description: 'Opens like an app, full screen, one tap away.',

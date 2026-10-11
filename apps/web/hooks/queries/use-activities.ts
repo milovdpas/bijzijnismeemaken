@@ -6,6 +6,8 @@ import type {
     ActivityDetailDto,
     ActivityInput,
     ActivityListingDto,
+    GroupMemberResponse,
+    MeResponse,
     OccurrenceInput,
     OccurrenceUpdateInput,
     SuggestionsResponse,
@@ -26,6 +28,7 @@ import {
     updateOccurrence,
 } from '@/lib/api/activities';
 import type { ActivityFilters } from '@/lib/api/activities';
+import { applyInterest } from '@/lib/interest';
 import { queryKeys } from '@/lib/query-keys';
 
 /** The group's list under the current filter. The previous list stays while a new filter loads. */
@@ -97,20 +100,53 @@ export function useDeleteActivity(groupId: string): UseMutationResult<void, Erro
 }
 
 /**
- * Interest changes, the caller's own or (for admins) somebody else's. Both
- * refetch the activity, since the "in" list is what the detail shows.
+ * Interest changes, the caller's own or (for admins) somebody else's. The
+ * detail flips at once (the button, the count, the "in" list) and flips
+ * back if the server disagrees; the lists catch up on the refetch.
  */
 export function useSetInterest(
     groupId: string,
     activityId: string,
-): UseMutationResult<void, Error, { userId: string | null; inFor: boolean }> {
+): UseMutationResult<
+    void,
+    Error,
+    { userId: string | null; inFor: boolean },
+    { previous: ActivityDetailDto | undefined }
+> {
     const client = useQueryClient();
+    const key = queryKeys.activities.detail(groupId, activityId);
     return useMutation({
         mutationFn: ({ userId, inFor }) =>
             userId === null
                 ? setMyInterest(groupId, activityId, inFor)
                 : setMemberInterest(groupId, activityId, userId, inFor),
-        onSuccess: () => {
+        onMutate: async ({ userId, inFor }) => {
+            await client.cancelQueries({ queryKey: key });
+            const previous = client.getQueryData<ActivityDetailDto>(key);
+            const me = client.getQueryData<MeResponse>(queryKeys.me);
+            const targetId = userId ?? me?.id;
+            if (previous !== undefined && targetId !== undefined) {
+                const summary =
+                    client
+                        .getQueryData<GroupMemberResponse[]>(queryKeys.members.list(groupId))
+                        ?.find((member) => member.user.id === targetId)?.user ??
+                    previous.interests.find((user) => user.id === targetId) ??
+                    null;
+                client.setQueryData(
+                    key,
+                    applyInterest(
+                        previous,
+                        { userId: targetId, isMe: userId === null, summary },
+                        inFor,
+                    ),
+                );
+            }
+            return { previous };
+        },
+        onError: (_error, _input, context) => {
+            if (context?.previous !== undefined) client.setQueryData(key, context.previous);
+        },
+        onSettled: () => {
             void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
         },
     });

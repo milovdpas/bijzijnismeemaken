@@ -646,6 +646,9 @@ export const nl: Dict = {
             BAD_URL: 'Het adres moet met http:// of https:// beginnen.',
         },
     },
+    offline: {
+        banner: 'Geen verbinding. Wijzigingen wachten tot je weer online bent.',
+    },
     install: {
         title: 'Zet hem op je beginscherm',
         description: 'Opent als een app, schermvullend, met één tik.',
