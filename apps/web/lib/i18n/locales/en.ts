@@ -116,6 +116,19 @@ export const en = {
         mountain: 'Mountain',
         origami: 'Origami',
     },
+    avatarStyles: {
+        icons: 'Icons',
+        lorelei: 'Portraits',
+        notionists: 'Sketches',
+        'open-peeps': 'People',
+        'pixel-art': 'Pixels',
+        thumbs: 'Blobs',
+    },
+    avatarPicker: {
+        style: 'Kind of avatar',
+        face: 'Face {{number}}',
+        shuffle: 'Show others',
+    },
     groups: {
         title: 'Groups',
         subtitle: 'The friend groups you are part of.',

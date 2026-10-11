@@ -2,8 +2,9 @@
  * The service worker, by hand (docs/02 §2.10).
  *
  * Navigations go to the network first and fall back to the cached /offline
- * page when it is unreachable. Next's hashed static files and the icons are
- * cached on first use, since their names change when their contents do. The
+ * page when it is unreachable. Next's hashed static files, the icons and the
+ * generated avatars are cached on first use, since their names change when
+ * their contents do (an avatar's URL is its style and seed). The
  * API lives on another origin and is never touched here, so nothing stale
  * ever stands in for live data. Bump VERSION to drop every old cache.
  *
@@ -15,7 +16,7 @@ const ICON = '/icons/icon-192.png';
 /** On localhost the worker exists for push only: caching dev bundles would serve stale code. */
 const CACHING = self.location.hostname !== 'localhost';
 const OFFLINE_URL = '/offline';
-const CACHED_PATH_PREFIXES = ['/_next/static/', '/icons/'];
+const CACHED_PATH_PREFIXES = ['/_next/static/', '/icons/', '/avatars/'];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(

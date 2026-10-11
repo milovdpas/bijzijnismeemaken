@@ -98,6 +98,24 @@ describe('PATCH /me', () => {
         );
         expect((await client.patch(API_ENDPOINTS.ME.ROOT, {})).status).toBe(422);
     });
+
+    it('takes a generated avatar, a known style with a plain seed', async () => {
+        const user = await seedUser();
+        const { accessToken } = await sessionFor(user);
+        const client = asUser(accessToken);
+
+        const me = data<MeResponse>(
+            await client.patch(API_ENDPOINTS.ME.ROOT, { avatarKey: 'open-peeps:k3j9x2' }),
+        );
+        expect(me.avatarKey).toBe('open-peeps:k3j9x2');
+        for (const avatarKey of ['adventurer:k3j9x2', 'lorelei:', 'lorelei:UPPER', 'lorelei:a b']) {
+            expect((await client.patch(API_ENDPOINTS.ME.ROOT, { avatarKey })).status).toBe(422);
+        }
+        expect(
+            (await client.patch(API_ENDPOINTS.ME.ROOT, { avatarKey: `thumbs:${'a'.repeat(17)}` }))
+                .status,
+        ).toBe(422);
+    });
 });
 
 describe('PATCH /me/password', () => {

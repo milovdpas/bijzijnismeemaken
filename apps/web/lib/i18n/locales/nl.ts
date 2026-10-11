@@ -111,6 +111,19 @@ export const nl: Dict = {
         mountain: 'Berg',
         origami: 'Origami',
     },
+    avatarStyles: {
+        icons: 'Iconen',
+        lorelei: 'Portretten',
+        notionists: 'Schetsen',
+        'open-peeps': 'Mensen',
+        'pixel-art': 'Pixels',
+        thumbs: 'Blobs',
+    },
+    avatarPicker: {
+        style: 'Soort avatar',
+        face: 'Gezicht {{number}}',
+        shuffle: 'Andere tonen',
+    },
     groups: {
         title: 'Groepen',
         subtitle: 'De vriendengroepen waar je bij hoort.',

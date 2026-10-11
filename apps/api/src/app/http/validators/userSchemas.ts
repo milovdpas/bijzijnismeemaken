@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { AUTH, AVATAR_KEYS, Locale, NotificationType, PROFILE } from '@bzim/types';
+import { AUTH, Locale, NotificationType, PROFILE, isAvatarKey } from '@bzim/types';
+import type { AvatarKey } from '@bzim/types';
 
 import { normalizeHandle } from '../../domain/utils/Normalize';
 
@@ -23,7 +24,8 @@ export const updateMeSchema = z
     .object({
         handle: handleSchema,
         displayName: z.string().trim().min(1).max(PROFILE.DISPLAY_NAME_MAX_LENGTH),
-        avatarKey: z.enum(AVATAR_KEYS),
+        /** A built-in icon, or a generated `style:seed` (`parseAvatarKey` in @bzim/types). */
+        avatarKey: z.custom<AvatarKey>(isAvatarKey, 'Not an avatar'),
         locale: z.enum(Locale),
         autoAddToCalendar: z.boolean(),
     })

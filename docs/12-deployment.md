@@ -241,7 +241,7 @@ Then the real test: sign in with Google on the production app, finish onboarding
 
 ## 10. Known gaps before go-live
 
-- **Generated avatars (parked 2026-10-10).** The sixteen icon tiles stay for now. When wanted: DiceBear inside the app (no API, no key; several public-domain styles, so no attribution), a style plus a seed per person, a picker with shuffle. Not Unsplash: a photo credit cannot sit on a 32-pixel avatar, and a stranger's portrait as a friend's face is odd. About one session; slot it beside the M3 polish tasks.
+- **Generated avatars (task 42b, 2026-10-12).** DiceBear inside the app (no API, no key): five CC0 1.0 styles (Lorelei, Notionists, Open Peeps, Pixel Art, Thumbs, checked against each package's `meta.license`), so no attribution; a style plus a seed per person, stored as `style:seed` beside the icon keys; a picker with shuffle. The web server draws them at `/avatars/<style>/<seed>`, cached for a year and by the service worker. Not Unsplash: a photo credit cannot sit on a 32-pixel avatar, and a stranger's portrait as a friend's face is odd. About one session; slot it beside the M3 polish tasks.
 
 - **Unsplash production tier.** The photo search runs on a demo key (50 searches an hour, app id 1098263). Apply for production (1,000 an hour) once that limit is felt. Their checklist: hotlinking (done), the download ping (done), no Unsplash branding in the app name (done), an accurate name and description in their form, and the "Photo by Name on Unsplash" credit with both links wherever a photo is shown, with screenshots. The picker credits already; the activity page credit lands with task 21, which stores the photographer beside the image URL.
 

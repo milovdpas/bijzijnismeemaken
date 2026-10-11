@@ -48,7 +48,7 @@ Adding a style: one `PALETTES` entry (id, label key, two swatches) plus one CSS 
 - Cards: `Card` with `CardHeader` (title + description) and `CardContent`. Settings are a 2-column grid of cards from `md`.
 - Choices with 2–3 options are pill radios (see `appearance-card.tsx`), not selects.
 - Forms: `Field` (label, help, error, `aria-describedby` wired), `FormMessage` (inline error or success under the form; no toasts yet), controlled `FormState` + derived `canSave`. See `components/auth/*` and `components/settings/*`.
-- People: `Avatar` (an icon on a coloured tile, 32 keys in `lib/avatars.ts`: Lucide plus four drawn in `components/icons/avatar-extras.tsx`) and `AvatarPicker` (pages of sixteen that swipe). Never an image upload.
+- People: `Avatar` (an icon on a coloured tile, 32 keys in `lib/avatars.ts`: Lucide plus four drawn in `components/icons/avatar-extras.tsx`; or a generated face on a tile of the same colours, picked by its seed) and `AvatarPicker` (a style row: the icons as pages of sixteen that swipe, or twelve faces of one DiceBear style with a button for others). Generated faces come from the app's own route `app/avatars/[style]/[seed]` as cached SVGs, so no artwork ships in the bundle. Never an image upload.
 - Signed-out pages use `PublicShell` (one centred card under the logo); signed-in pages sit in `AppShell` behind `AuthGate`.
 - Toasts (task 42) sit above everything via `--z-toast`.
 

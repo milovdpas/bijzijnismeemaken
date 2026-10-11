@@ -1,4 +1,4 @@
-import { AVATAR_KEYS, PROFILE } from '@bzim/types';
+import { PROFILE, isAvatarKey } from '@bzim/types';
 import type { AvatarKey } from '@bzim/types';
 
 import { isRecord } from './guards';
@@ -113,8 +113,4 @@ export function parsePlayers(raw: unknown, max: number): ToolPlayer[] | null {
         players.push({ id, name, avatarKey });
     }
     return new Set(players.map((player) => player.id)).size === players.length ? players : null;
-}
-
-function isAvatarKey(value: unknown): value is AvatarKey {
-    return typeof value === 'string' && (AVATAR_KEYS as readonly string[]).includes(value);
 }

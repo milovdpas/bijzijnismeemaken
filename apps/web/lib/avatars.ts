@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import type { ComponentType, SVGProps } from 'react';
 import { AVATAR_KEYS } from '@bzim/types';
-import type { AvatarKey } from '@bzim/types';
+import type { AvatarStyle, IconAvatarKey, ParsedAvatar } from '@bzim/types';
 
 import {
     ButterflyIcon,
@@ -49,7 +49,7 @@ export type AvatarIcon = ComponentType<SVGProps<SVGSVGElement> & { strokeWidth?:
  * assets. The tile colours are chosen to read on both schemes and never
  * clash with the brand yellow.
  */
-export const AVATARS: Record<AvatarKey, { icon: AvatarIcon; tile: string }> = {
+export const AVATARS: Record<IconAvatarKey, { icon: AvatarIcon; tile: string }> = {
     bird: { icon: Bird, tile: 'oklch(0.78 0.14 220)' },
     bot: { icon: Bot, tile: 'oklch(0.8 0.03 260)' },
     bug: { icon: Bug, tile: 'oklch(0.78 0.16 140)' },
@@ -85,20 +85,57 @@ export const AVATARS: Record<AvatarKey, { icon: AvatarIcon; tile: string }> = {
     origami: { icon: Origami, tile: 'oklch(0.84 0.07 240)' },
 };
 
-export function isAvatarKey(value: unknown): value is AvatarKey {
-    return typeof value === 'string' && (AVATAR_KEYS as readonly string[]).includes(value);
-}
-
-/** The keys sixteen at a time: one page of the picker. */
-export function avatarPages(perPage = 16): AvatarKey[][] {
-    const pages: AvatarKey[][] = [];
+/** The icon keys sixteen at a time: one page of the picker. */
+export function avatarPages(perPage = 16): IconAvatarKey[][] {
+    const pages: IconAvatarKey[][] = [];
     for (let start = 0; start < AVATAR_KEYS.length; start += perPage) {
         pages.push(AVATAR_KEYS.slice(start, start + perPage));
     }
     return pages;
 }
 
-/** A face for somebody added by name only. */
-export function randomAvatarKey(): AvatarKey {
+/** A face for somebody added by name only: always an icon tile. */
+export function randomAvatarKey(): IconAvatarKey {
     return AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)] ?? AVATAR_KEYS[0];
+}
+
+const TILES = Object.values(AVATARS).map((avatar) => avatar.tile);
+
+/** A stable number for a string (FNV-1a), to pick colours and seeds without randomness. */
+function hash(text: string): number {
+    let value = 0x811c9dc5;
+    for (let index = 0; index < text.length; index += 1) {
+        value = Math.imul(value ^ text.charCodeAt(index), 0x01000193) >>> 0;
+    }
+    return value;
+}
+
+/**
+ * The tile behind an avatar: an icon's own colour, or for a generated face
+ * one of the same colours, picked by its seed so it never changes.
+ */
+export function avatarTile(avatar: ParsedAvatar): string {
+    return avatar.kind === 'icon'
+        ? AVATARS[avatar.key].tile
+        : (TILES[hash(avatar.seed) % TILES.length] ?? AVATARS.bird.tile);
+}
+
+/** Where a generated avatar is drawn: the app's own route, `app/avatars/[style]/[seed]`. */
+export function generatedAvatarUrl(style: AvatarStyle, seed: string): string {
+    return `/avatars/${style}/${seed}`;
+}
+
+/**
+ * A page of seeds for the picker. Round 0 is the same for everybody, so the
+ * server and the browser render the same first page; the shuffle button
+ * moves to a random round.
+ */
+export function candidateSeeds(round: number, count: number): string[] {
+    return Array.from({ length: count }, (_, index) =>
+        hash(`${String(round)}:${String(index)}`).toString(36),
+    );
+}
+
+export function randomRound(): number {
+    return 1 + Math.floor(Math.random() * 1_000_000_000);
 }

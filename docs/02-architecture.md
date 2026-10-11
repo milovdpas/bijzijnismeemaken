@@ -84,6 +84,7 @@ tests/ (globalSetup, setup, support/; flat *.test.ts per feature)
 app/
   layout.tsx (ThemeProvider, ServiceWorker, fonts), manifest.ts, globals.css
   (public)/login/page.tsx, join/[token]/page.tsx
+  avatars/[style]/[seed]/route.ts (a generated avatar as an SVG, immutable)
   (app)/layout.tsx → AppRuntime (I18nProvider, QueryProvider, AuthGate, Toaster)
   (app)/onboarding, (app)/groups, (app)/groups/[groupId] (dashboard), (app)/groups/[groupId]/{activities,activities/[activityId],availability,leaderboards,leaderboards/[leaderboardId],leaderboards/[leaderboardId]/history,tournaments,tournaments/new,tournaments/[tournamentId],tournaments/[tournamentId]/edit,tools,tools/[tool],members,settings}, (app)/availability (my availability: week schedule + month), (app)/settings, (app)/settings/calendar, (app)/invites
 components/

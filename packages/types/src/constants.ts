@@ -151,9 +151,10 @@ export const PROFILE = {
 /* -------------------------------------------------------------------------- */
 /* Avatars                                                                     */
 /*                                                                            */
-/* The built-in set. Each key is drawn by the web app as a lucide icon on a   */
-/* coloured tile (`apps/web/lib/avatars.ts`); the API only validates that a   */
-/* key is in this list.                                                       */
+/* Two kinds share one string. A key from the built-in set below is drawn by  */
+/* the web app as an icon on a coloured tile (`apps/web/lib/avatars.ts`). A   */
+/* generated avatar is `style:seed`, a DiceBear style and the seed it is      */
+/* drawn from (`avatar.ts` reads it). The API only validates the string.      */
 /* -------------------------------------------------------------------------- */
 
 export const AVATAR_KEYS = [
@@ -192,7 +193,33 @@ export const AVATAR_KEYS = [
     'origami',
 ] as const;
 
-export type AvatarKey = (typeof AVATAR_KEYS)[number];
+/** One of the built-in icon tiles. Guests always get one of these. */
+export type IconAvatarKey = (typeof AVATAR_KEYS)[number];
+
+/**
+ * The DiceBear styles a generated avatar can use: only public-domain
+ * (CC0 1.0) ones, so no credit has to sit next to a 32-pixel face.
+ */
+export const AVATAR_STYLES = [
+    'lorelei',
+    'notionists',
+    'open-peeps',
+    'pixel-art',
+    'thumbs',
+] as const;
+
+export type AvatarStyle = (typeof AVATAR_STYLES)[number];
+
+/** A generated avatar: a style and the seed it is drawn from. */
+export type GeneratedAvatarKey = `${AvatarStyle}:${string}`;
+
+/** What a person shows: an icon tile, or a generated face. */
+export type AvatarKey = IconAvatarKey | GeneratedAvatarKey;
+
+export const AVATAR = {
+    /** Short and plain, so the longest style plus a seed fits the 32-character column. */
+    SEED_MAX_LENGTH: 16,
+} as const;
 
 /* -------------------------------------------------------------------------- */
 /* Routes                                                                      */
