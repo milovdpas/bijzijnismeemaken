@@ -2,7 +2,6 @@ import { In } from 'typeorm';
 import type { EntityManager, FindOptionsRelations } from 'typeorm';
 import {
     ActivityCategory,
-    GroupRole,
     ParticipantMode,
     TOURNAMENT,
     TournamentFormat,
@@ -34,7 +33,7 @@ import { TournamentPlayService } from './TournamentPlayService';
 
 /**
  * Every reason a tournament action is refused. Each method returns only the
- * ones it can produce (`TournamentResult<'FORBIDDEN' | 'NOT_DRAFT'>`), so a
+ * ones it can produce (`TournamentResult<'NOT_DRAFT' | 'FULL'>`), so a
  * handler's switch lists real cases only.
  */
 export type TournamentProblem =
@@ -66,7 +65,7 @@ export type TournamentProblem =
     | 'NOT_READY'
     /** A knockout match needs a winner. */
     | 'DRAW_IN_KNOCKOUT'
-    /** Not the organiser or an admin; for a result, also not a side's player while it has none. */
+    /** A result by somebody who is neither the organiser, an admin, nor a side's player while it has none. */
     | 'FORBIDDEN'
     /** A later match was played on this result; that one has to be cleared first. */
     | 'LATER_PLAYED'
@@ -109,9 +108,9 @@ const SEED_OFFSET = 1000;
 /**
  * Tournaments before they start (docs/01 §1.5c): settings, entries, the
  * draw; and finding, listing and deleting them. Any member creates one;
- * changing it is the organiser's or an admin's (`canManage`), which every
- * method checks against the acting member and answers with `FORBIDDEN`.
- * Playing is `TournamentPlayService`.
+ * changing it is the organiser's or an admin's, which `requireTournamentManager`
+ * checks on the route before any of this runs. Playing is
+ * `TournamentPlayService`.
  */
 export class TournamentService {
     static async create(
@@ -168,12 +167,8 @@ export class TournamentService {
      */
     static async update(
         tournament: Tournament,
-        actor: GroupMember,
         patch: Partial<TournamentSettings>,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | SettingsProblem>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT' | SettingsProblem>> {
         const structural = Object.entries(patch).some(
             ([key, value]) => value !== undefined && key !== 'name' && key !== 'description',
         );
@@ -211,15 +206,8 @@ export class TournamentService {
         return { ok: true, tournament: await TournamentService.reload(tournament.id) };
     }
 
-    static async delete(
-        tournament: Tournament,
-        actor: GroupMember,
-    ): Promise<{ ok: true } | { ok: false; problem: 'FORBIDDEN' }> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    static async delete(tournament: Tournament): Promise<void> {
         await Tournament.delete({ id: tournament.id });
-        return { ok: true };
     }
 
     /**
@@ -230,12 +218,8 @@ export class TournamentService {
      */
     static async addEntry(
         tournament: Tournament,
-        actor: GroupMember,
         input: TournamentEntryInput,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'FULL' | 'TEAM_SIZE' | PeopleProblem>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT' | 'FULL' | 'TEAM_SIZE' | PeopleProblem>> {
         if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
@@ -277,14 +261,8 @@ export class TournamentService {
     static async updateEntry(
         tournament: Tournament,
         entry: TournamentEntry,
-        actor: GroupMember,
         patch: TournamentEntryPatch,
-    ): Promise<
-        TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'GROUPS' | 'TEAM_SIZE' | PeopleProblem>
-    > {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT' | 'GROUPS' | 'TEAM_SIZE' | PeopleProblem>> {
         if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
@@ -338,11 +316,7 @@ export class TournamentService {
     static async removeEntry(
         tournament: Tournament,
         entry: TournamentEntry,
-        actor: GroupMember,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT'>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT'>> {
         if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
@@ -367,12 +341,8 @@ export class TournamentService {
      */
     static async draw(
         tournament: Tournament,
-        actor: GroupMember,
         teams: boolean,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | 'TOO_FEW_PEOPLE'>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT' | 'TOO_FEW_PEOPLE'>> {
         if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
@@ -449,13 +419,8 @@ export class TournamentService {
         });
     }
 
-    /** The organiser, or a group admin. */
-    static canManage(tournament: Tournament, membership: GroupMember): boolean {
-        return tournament.isCreatedBy(membership.userId) || membership.hasRole(GroupRole.ADMIN);
-    }
-
     static detail(tournament: Tournament, viewer: GroupMember): TournamentDetailDto {
-        const canManage = TournamentService.canManage(tournament, viewer);
+        const canManage = tournament.isManagedBy(viewer);
         return TournamentPresenter.detail(tournament, {
             viewerId: viewer.userId,
             canManage,

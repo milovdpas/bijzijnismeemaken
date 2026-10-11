@@ -5,6 +5,7 @@ import type { IRoute } from '../../../interfaces/IRouter';
 import TournamentController from '../../controllers/TournamentController';
 import { includeTournament } from '../../middleware/IncludeTournament';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
+import { requireTournamentManager } from '../../middleware/RequireTournamentManager';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
 import { groupIdParamSchema } from '../../validators/commonSchemas';
@@ -23,7 +24,9 @@ import {
 
 /**
  * Tournaments (M4). Every route is a group member's, and the routes of one
- * tournament load it with `includeTournament`; who may run one is the services'.
+ * tournament load it with `includeTournament`. Running one is the organiser's
+ * or an admin's (`requireTournamentManager`); viewing is anyone's in the
+ * group, and a result is also its players', which the service decides.
  */
 export default class TournamentRoutes implements IRoute {
     private readonly controller = new TournamentController();
@@ -63,6 +66,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentParamSchema, body: updateTournamentSchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.update,
         );
         router.delete(
@@ -71,6 +75,7 @@ export default class TournamentRoutes implements IRoute {
             one,
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.delete,
         );
         router.post(
@@ -79,6 +84,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentParamSchema, body: addEntrySchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.addEntry,
         );
         router.patch(
@@ -87,6 +93,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentEntryParamSchema, body: updateEntrySchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.updateEntry,
         );
         router.delete(
@@ -95,6 +102,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentEntryParamSchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.removeEntry,
         );
         router.post(
@@ -103,6 +111,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentParamSchema, body: drawSchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.draw,
         );
         router.post(
@@ -111,6 +120,7 @@ export default class TournamentRoutes implements IRoute {
             one,
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.start,
         );
         router.post(
@@ -119,6 +129,7 @@ export default class TournamentRoutes implements IRoute {
             one,
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.advance,
         );
         router.post(
@@ -127,6 +138,7 @@ export default class TournamentRoutes implements IRoute {
             one,
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.finish,
         );
         router.put(
@@ -143,6 +155,7 @@ export default class TournamentRoutes implements IRoute {
             validate({ params: tournamentMatchParamSchema }),
             member,
             includeTournament,
+            requireTournamentManager,
             this.controller.clearResult,
         );
 

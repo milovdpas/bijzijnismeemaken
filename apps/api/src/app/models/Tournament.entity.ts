@@ -9,11 +9,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { TournamentStatus } from '@bzim/types';
+import { GroupRole, TournamentStatus } from '@bzim/types';
 import type { ParticipantMode, TournamentDto, TournamentFormat } from '@bzim/types';
 
 import Activity from './Activity.entity';
 import Group from './Group.entity';
+import type GroupMember from './GroupMember.entity';
 import TournamentEntry from './TournamentEntry.entity';
 import TournamentMatch from './TournamentMatch.entity';
 import User from './User.entity';
@@ -112,6 +113,11 @@ export default class Tournament extends BaseEntity {
     /** The organiser: whoever made it. */
     isCreatedBy(userId: string): boolean {
         return this.createdById === userId;
+    }
+
+    /** Who runs it (settings, entries, the draw, play): the organiser, or a group admin. */
+    isManagedBy(member: GroupMember): boolean {
+        return this.isCreatedBy(member.userId) || member.hasRole(GroupRole.ADMIN);
     }
 
     /** Needs `createdBy` loaded; the organiser's name outlives their leaving through the snapshot. */

@@ -37,8 +37,9 @@ export type StartProblem = 'TOO_FEW_ENTRIES' | 'TEAM_SIZE' | 'GROUPS' | 'ADVANCE
  * matches, results and what follows from them, the knockout out of the
  * groups, and the finish. The bracket and table logic is pure, in
  * `modules/tournaments/`; this persists it. Running it is the organiser's or
- * an admin's (`TournamentService.canManage`); a result is also its players'
- * while it has none (`canReport`). Both answer `FORBIDDEN` to anybody else.
+ * an admin's, checked on the route by `requireTournamentManager`. A result is
+ * also its players' while it has none, which depends on the match, so
+ * `report` checks that here (`canReport`) and answers `FORBIDDEN`.
  */
 export class TournamentPlayService {
     /** Why a draft cannot start yet, or null: the draft screen shows the same. */
@@ -74,11 +75,7 @@ export class TournamentPlayService {
      */
     static async start(
         tournament: Tournament,
-        actor: GroupMember,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_DRAFT' | StartProblem>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_DRAFT' | StartProblem>> {
         if (tournament.status !== TournamentStatus.DRAFT) {
             return { ok: false, problem: 'NOT_DRAFT' };
         }
@@ -179,11 +176,7 @@ export class TournamentPlayService {
     static async clearResult(
         tournament: Tournament,
         match: TournamentMatch,
-        actor: GroupMember,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_RUNNING' | 'NOT_READY' | 'LATER_PLAYED'>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_RUNNING' | 'NOT_READY' | 'LATER_PLAYED'>> {
         if (tournament.status !== TournamentStatus.RUNNING) {
             return { ok: false, problem: 'NOT_RUNNING' };
         }
@@ -220,15 +213,9 @@ export class TournamentPlayService {
      */
     static async advance(
         tournament: Tournament,
-        actor: GroupMember,
     ): Promise<
-        TournamentResult<
-            'FORBIDDEN' | 'NOT_GROUPS' | 'NOT_RUNNING' | 'ALREADY_ADVANCED' | 'GROUPS_UNFINISHED'
-        >
+        TournamentResult<'NOT_GROUPS' | 'NOT_RUNNING' | 'ALREADY_ADVANCED' | 'GROUPS_UNFINISHED'>
     > {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
         if (tournament.format !== TournamentFormat.GROUPS_KNOCKOUT) {
             return { ok: false, problem: 'NOT_GROUPS' };
         }
@@ -262,11 +249,7 @@ export class TournamentPlayService {
     /** The final is played: its winner wins, and the tournament goes to the archive. */
     static async finish(
         tournament: Tournament,
-        actor: GroupMember,
-    ): Promise<TournamentResult<'FORBIDDEN' | 'NOT_RUNNING' | 'FINAL_UNPLAYED'>> {
-        if (!TournamentService.canManage(tournament, actor)) {
-            return { ok: false, problem: 'FORBIDDEN' };
-        }
+    ): Promise<TournamentResult<'NOT_RUNNING' | 'FINAL_UNPLAYED'>> {
         if (tournament.status !== TournamentStatus.RUNNING) {
             return { ok: false, problem: 'NOT_RUNNING' };
         }
@@ -289,7 +272,7 @@ export class TournamentPlayService {
     static canReport(tournament: Tournament, match: TournamentMatch, viewer: GroupMember): boolean {
         if (tournament.status !== TournamentStatus.RUNNING) return false;
         if (match.homeEntryId === null || match.awayEntryId === null) return false;
-        if (TournamentService.canManage(tournament, viewer)) return true;
+        if (tournament.isManagedBy(viewer)) return true;
         const sides = new Set([match.homeEntryId, match.awayEntryId]);
         const plays = tournament.entries.some(
             (entry) =>

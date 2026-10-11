@@ -28,9 +28,10 @@ import {
 /**
  * Tournaments inside a group. `requireGroupRole(MEMBER)` has loaded
  * `req.group` and `req.membership`, and on the routes of one tournament
- * `includeTournament` has loaded `req.tournament`. The services decide who
- * may do what and answer `FORBIDDEN`; refusals about timing are a 409 and
- * about the input a 422, both with `details.problem` for the screen.
+ * `includeTournament` has loaded `req.tournament`; the routes that run it
+ * let only the organiser or an admin through (`requireTournamentManager`).
+ * Refusals about timing are a 409 and about the input a 422, both with
+ * `details.problem` for the screen; a result somebody may not enter is a 403.
  */
 export default class TournamentController {
     list: Handler = async (req, res) => {
@@ -111,7 +112,7 @@ export default class TournamentController {
             advancePerGroup,
             thirdPlace,
         } = req.body;
-        const result = await TournamentService.update(req.tournament, req.membership, {
+        const result = await TournamentService.update(req.tournament, {
             name,
             description,
             format,
@@ -125,9 +126,6 @@ export default class TournamentController {
         });
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin changes a tournament');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(
                         res,
@@ -154,26 +152,19 @@ export default class TournamentController {
     };
 
     delete: Handler = async (req, res) => {
-        const result = await TournamentService.delete(req.tournament, req.membership);
-        if (!result.ok) {
-            sendForbidden(res, 'Only the organiser or an admin deletes a tournament');
-            return;
-        }
+        await TournamentService.delete(req.tournament);
         sendNoContent(res);
     };
 
     addEntry: Handler<BodyOf<typeof addEntrySchema>> = async (req, res) => {
         const { userId, name, members } = req.body;
-        const result = await TournamentService.addEntry(req.tournament, req.membership, {
+        const result = await TournamentService.addEntry(req.tournament, {
             userId,
             name,
             members,
         });
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(res, 'The entries are fixed once it has started', undefined, {
                         problem: result.problem,
@@ -216,7 +207,7 @@ export default class TournamentController {
             sendNotFound(res, 'Entry');
             return;
         }
-        const result = await TournamentService.updateEntry(req.tournament, entry, req.membership, {
+        const result = await TournamentService.updateEntry(req.tournament, entry, {
             name,
             members,
             seed,
@@ -224,9 +215,6 @@ export default class TournamentController {
         });
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(res, 'The entries are fixed once it has started', undefined, {
                         problem: result.problem,
@@ -267,12 +255,9 @@ export default class TournamentController {
             sendNotFound(res, 'Entry');
             return;
         }
-        const result = await TournamentService.removeEntry(req.tournament, entry, req.membership);
+        const result = await TournamentService.removeEntry(req.tournament, entry);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin changes the entries');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(res, 'The entries are fixed once it has started', undefined, {
                         problem: result.problem,
@@ -288,12 +273,9 @@ export default class TournamentController {
 
     draw: Handler<BodyOf<typeof drawSchema>> = async (req, res) => {
         const { teams } = req.body;
-        const result = await TournamentService.draw(req.tournament, req.membership, teams ?? false);
+        const result = await TournamentService.draw(req.tournament, teams ?? false);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin makes the draw');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(res, 'The draw is fixed once it has started', undefined, {
                         problem: result.problem,
@@ -313,12 +295,9 @@ export default class TournamentController {
     };
 
     start: Handler = async (req, res) => {
-        const result = await TournamentPlayService.start(req.tournament, req.membership);
+        const result = await TournamentPlayService.start(req.tournament);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin starts a tournament');
-                    return;
                 case 'NOT_DRAFT':
                     sendConflict(res, 'This tournament has started already', undefined, {
                         problem: result.problem,
@@ -392,16 +371,9 @@ export default class TournamentController {
             sendNotFound(res, 'Match');
             return;
         }
-        const result = await TournamentPlayService.clearResult(
-            req.tournament,
-            match,
-            req.membership,
-        );
+        const result = await TournamentPlayService.clearResult(req.tournament, match);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin clears a result');
-                    return;
                 case 'NOT_RUNNING':
                     sendConflict(res, 'Results change while the tournament runs', undefined, {
                         problem: result.problem,
@@ -426,12 +398,9 @@ export default class TournamentController {
     };
 
     advance: Handler = async (req, res) => {
-        const result = await TournamentPlayService.advance(req.tournament, req.membership);
+        const result = await TournamentPlayService.advance(req.tournament);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin draws the knockout');
-                    return;
                 case 'NOT_GROUPS':
                     sendConflict(res, 'Only a group stage advances', undefined, {
                         problem: result.problem,
@@ -461,12 +430,9 @@ export default class TournamentController {
     };
 
     finish: Handler = async (req, res) => {
-        const result = await TournamentPlayService.finish(req.tournament, req.membership);
+        const result = await TournamentPlayService.finish(req.tournament);
         if (!result.ok) {
             switch (result.problem) {
-                case 'FORBIDDEN':
-                    sendForbidden(res, 'Only the organiser or an admin finishes a tournament');
-                    return;
                 case 'NOT_RUNNING':
                     sendConflict(res, 'The tournament is not running', undefined, {
                         problem: result.problem,
