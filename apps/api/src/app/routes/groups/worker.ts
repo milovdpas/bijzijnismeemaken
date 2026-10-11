@@ -26,6 +26,11 @@ export default class WorkerRoutes implements IRoute {
 
         router.post(API_ENDPOINTS.WORKER.CLEANUP, workerAuth, this.controller.cleanup);
         router.post(API_ENDPOINTS.WORKER.CALENDAR_SYNC, workerAuth, this.controller.calendarSync);
+        router.post(
+            API_ENDPOINTS.WORKER.OCCURRENCE_REMINDERS,
+            workerAuth,
+            this.controller.occurrenceReminders,
+        );
 
         return router;
     }

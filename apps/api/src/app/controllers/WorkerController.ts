@@ -4,6 +4,7 @@ import type { WorkerJobResponse } from '@bzim/types';
 import type { Handler } from '../../interfaces/IHttp';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { CleanupService } from '../services/CleanupService';
+import { ReminderService } from '../services/ReminderService';
 import { sendError, sendSuccess } from '../utils/ApiResponses';
 
 /**
@@ -22,6 +23,7 @@ export default class WorkerController {
      */
     private static cleanupRunning = false;
     private static calendarSyncRunning = false;
+    private static remindersRunning = false;
 
     /**
      * Nightly cleanup.
@@ -55,6 +57,26 @@ export default class WorkerController {
             // forever, and the symptom is a job that silently stops after one
             // bad night rather than one bad run.
             WorkerController.cleanupRunning = false;
+        }
+    };
+
+    /** The evening reminder for tomorrow's planned moments (task 41). Same overlap rule. */
+    occurrenceReminders: Handler = async (_req, res) => {
+        if (WorkerController.remindersRunning) {
+            sendError(res, ERROR_CODES.WORKER_BUSY, 'occurrence-reminders is still running.', 409);
+            return;
+        }
+        const startedAt = process.hrtime.bigint();
+        WorkerController.remindersRunning = true;
+        try {
+            const stats = await ReminderService.run();
+            sendSuccess<WorkerJobResponse>(res, {
+                job: 'occurrence-reminders',
+                durationMs: Number((process.hrtime.bigint() - startedAt) / 1_000_000n),
+                stats,
+            });
+        } finally {
+            WorkerController.remindersRunning = false;
         }
     };
 

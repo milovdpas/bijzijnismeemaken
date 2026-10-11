@@ -762,6 +762,7 @@ export const nl: Dict = {
             activity_planned: 'Een activiteit waar ik bij ben wordt gepland',
             activity_rescheduled: 'Een geplande activiteit verschuift',
             activity_cancelled: 'Een geplande activiteit gaat niet door',
+            activity_reminder: 'Een herinnering de avond ervoor',
         },
     },
     settings: {

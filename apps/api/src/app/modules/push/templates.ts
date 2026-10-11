@@ -13,6 +13,7 @@ interface PushDict {
     planned: (values: { title: string; when: string }) => Pick<PushMessage, 'title' | 'body'>;
     rescheduled: (values: { title: string; when: string }) => Pick<PushMessage, 'title' | 'body'>;
     cancelled: (values: { title: string; when: string }) => Pick<PushMessage, 'title' | 'body'>;
+    reminder: (values: { title: string; when: string }) => Pick<PushMessage, 'title' | 'body'>;
 }
 
 const DICTS: Record<Locale, PushDict> = {
@@ -37,6 +38,10 @@ const DICTS: Record<Locale, PushDict> = {
             title: `${title} gaat niet door`,
             body: when,
         }),
+        reminder: ({ title, when }) => ({
+            title: `Morgen: ${title}`,
+            body: when,
+        }),
     },
     [Locale.EN]: {
         invite: ({ inviter, group }) => ({
@@ -57,6 +62,10 @@ const DICTS: Record<Locale, PushDict> = {
         }),
         cancelled: ({ title, when }) => ({
             title: `${title} is off`,
+            body: when,
+        }),
+        reminder: ({ title, when }) => ({
+            title: `Tomorrow: ${title}`,
             body: when,
         }),
     },
@@ -91,7 +100,7 @@ export function pushActivityCreated(
 }
 
 export function pushOccurrence(
-    kind: 'planned' | 'rescheduled' | 'cancelled',
+    kind: 'planned' | 'rescheduled' | 'cancelled' | 'reminder',
     locale: Locale,
     values: { title: string; when: string; link: string; occurrenceId: string },
 ): PushMessage {

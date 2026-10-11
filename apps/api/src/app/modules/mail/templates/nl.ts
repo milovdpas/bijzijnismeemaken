@@ -45,6 +45,12 @@ export const nl: MailDict = {
         button: 'Bekijk de activiteit',
         expiry: 'Je kunt deze mails uitzetten bij de meldingsinstellingen.',
     },
+    activityReminder: {
+        subject: 'Morgen: {{title}}, {{when}}',
+        intro: 'Even een herinnering: morgen, {{when}}, is het "{{title}}" met {{group}}{{where}}. Tot dan!',
+        button: 'Bekijk de activiteit',
+        expiry: 'Je kunt deze mails uitzetten bij de meldingsinstellingen.',
+    },
     activityCreated: {
         subject: '{{creator}} zette "{{title}}" op de lijst van {{group}}',
         intro: '{{creator}} heeft een nieuw idee op de lijst van {{group}} gezet: "{{title}}". Kijk even en zeg of je meedoet.',

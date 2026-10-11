@@ -47,6 +47,12 @@ export const en = {
         button: 'See the activity',
         expiry: 'You can switch these emails off under notification settings.',
     },
+    activityReminder: {
+        subject: 'Tomorrow: {{title}}, {{when}}',
+        intro: 'A reminder: tomorrow, {{when}}, it is "{{title}}" with {{group}}{{where}}. See you there!',
+        button: 'See the activity',
+        expiry: 'You can switch these emails off under notification settings.',
+    },
     activityCreated: {
         subject: '{{creator}} added "{{title}}" to {{group}}',
         intro: '{{creator}} put a new idea on the list of {{group}}: "{{title}}". Have a look and say if you are in.',

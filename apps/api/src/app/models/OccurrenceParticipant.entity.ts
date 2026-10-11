@@ -59,6 +59,10 @@ export default class OccurrenceParticipant extends BaseEntity {
     })
     notifiedForStartTime!: string | null;
 
+    /** When the day-before reminder went out; cleared whenever the moment changes. */
+    @Column({ name: 'reminded_at', type: 'datetime', precision: 3, nullable: true })
+    remindedAt!: Date | null;
+
     /** The provider's event id once auto-added to this person's calendar (M2). */
     @Column({ name: 'calendar_event_id', type: 'varchar', length: 255, nullable: true })
     calendarEventId!: string | null;

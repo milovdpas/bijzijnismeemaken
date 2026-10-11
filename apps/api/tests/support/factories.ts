@@ -175,6 +175,7 @@ export async function seedParticipant(
         notifiedForDate: null,
         notifiedForDaypart: null,
         notifiedForStartTime: null,
+        remindedAt: null,
         calendarEventId: null,
     }).save();
 }

@@ -763,6 +763,7 @@ export const en = {
             activity_planned: 'An activity I am in gets planned',
             activity_rescheduled: 'A planned activity moves',
             activity_cancelled: 'A planned activity is cancelled',
+            activity_reminder: 'A reminder the evening before',
         },
     },
     settings: {

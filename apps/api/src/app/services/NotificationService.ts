@@ -9,6 +9,7 @@ import {
     renderActivityCancelled,
     renderActivityCreated,
     renderActivityPlanned,
+    renderActivityReminder,
     renderActivityRescheduled,
     renderGroupInvite,
 } from '../modules/mail/templates';
@@ -127,6 +128,38 @@ export class NotificationService {
             (locale) =>
                 pushOccurrence(
                     'rescheduled',
+                    locale,
+                    NotificationService.occurrencePushValues(activity, occurrence, locale),
+                ),
+        );
+    }
+
+    /** The evening before: everyone still in, once. */
+    static async occurrenceReminder(
+        group: Group,
+        activity: Activity,
+        occurrence: ActivityOccurrence,
+        rows: OccurrenceParticipant[],
+    ): Promise<void> {
+        await NotificationService.dispatch(
+            NotificationType.ACTIVITY_REMINDER,
+            rows.map((row) => row.user),
+            (user) =>
+                renderActivityReminder(user.locale, user.email, {
+                    group: group.name,
+                    title: activity.title,
+                    when: describeWhen(
+                        user.locale,
+                        occurrence.date,
+                        occurrence.daypart,
+                        occurrence.startTime,
+                    ),
+                    location: activity.locationText,
+                    link: OccurrenceService.activityLink(activity),
+                }),
+            (locale) =>
+                pushOccurrence(
+                    'reminder',
                     locale,
                     NotificationService.occurrencePushValues(activity, occurrence, locale),
                 ),

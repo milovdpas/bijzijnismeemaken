@@ -43,6 +43,9 @@ services:
             ofelia.job-exec.bzim-cleanup.command: 'node dist/tools/worker.js cleanup'
             ofelia.job-exec.bzim-calendar-sync.schedule: '0 5 23 * * *'
             ofelia.job-exec.bzim-calendar-sync.command: 'node dist/tools/worker.js calendar-sync'
+            # 17:00 UTC is 18:00 or 19:00 in Amsterdam: the evening before.
+            ofelia.job-exec.bzim-occurrence-reminders.schedule: '0 0 17 * * *'
+            ofelia.job-exec.bzim-occurrence-reminders.command: 'node dist/tools/worker.js occurrence-reminders'
         healthcheck:
             # 127.0.0.1 rather than localhost. BusyBox wget tries ::1 first, and
             # a Node process bound to 0.0.0.0 is IPv4 only.

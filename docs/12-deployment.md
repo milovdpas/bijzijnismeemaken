@@ -234,7 +234,7 @@ curl -I https://bethereorbesquare.milovanderpas.nl
 # HTTP/2 301, location: https://bijzijnismeemaken.milovanderpas.nl/
 
 docker logs scheduler 2>&1 | grep 'job registered'
-# two bzim lines: bzim-cleanup and bzim-calendar-sync
+# three bzim lines: bzim-cleanup, bzim-calendar-sync and bzim-occurrence-reminders
 ```
 
 Then the real test: sign in with Google on the production app, finish onboarding, create a group, invite a second account by handle and check the invitation email arrives from Brevo.

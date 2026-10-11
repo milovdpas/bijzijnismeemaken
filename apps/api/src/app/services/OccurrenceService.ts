@@ -334,6 +334,8 @@ export class OccurrenceService {
             row.notifiedForDate = occurrence.date;
             row.notifiedForDaypart = occurrence.daypart;
             row.notifiedForStartTime = occurrence.startTime;
+            // A new moment is a new reminder.
+            row.remindedAt = null;
         }
         await OccurrenceParticipant.save(rows);
     }

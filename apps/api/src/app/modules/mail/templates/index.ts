@@ -211,6 +211,33 @@ function renderOccurrenceMail(
     };
 }
 
+export function renderActivityReminder(
+    locale: Locale,
+    to: string,
+    values: { group: string; title: string; when: string; location: string | null; link: string },
+): MailMessage {
+    const dict = DICTS[locale];
+    const names = {
+        group: values.group,
+        title: values.title,
+        when: values.when,
+        where:
+            values.location === null
+                ? ''
+                : fill(dict.common.atLocation, { location: values.location }),
+    };
+    return {
+        to,
+        subject: fill(dict.activityReminder.subject, names),
+        ...layout(dict, {
+            intro: fill(dict.activityReminder.intro, names),
+            button: dict.activityReminder.button,
+            link: values.link,
+            expiry: dict.activityReminder.expiry,
+        }),
+    };
+}
+
 export function renderActivityCancelled(
     locale: Locale,
     to: string,

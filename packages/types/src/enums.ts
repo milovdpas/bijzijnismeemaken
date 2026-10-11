@@ -122,6 +122,8 @@ export enum NotificationType {
     ACTIVITY_PLANNED = 'activity_planned',
     ACTIVITY_RESCHEDULED = 'activity_rescheduled',
     ACTIVITY_CANCELLED = 'activity_cancelled',
+    /** The evening before a planned moment one is in (worker `occurrence-reminders`). */
+    ACTIVITY_REMINDER = 'activity_reminder',
 }
 
 /** How a notification reaches someone. Each type can be switched per channel. Push lands in phase 3. */

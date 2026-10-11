@@ -138,7 +138,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 |---|---|---|---|
 | POST | `/worker/calendar-sync` | Sync all active calendar connections (M2) | `X-Worker-Token` |
 | POST | `/worker/cleanup` | Nightly cleanup (old events, tokens, states, blocks) | `X-Worker-Token` |
-| POST | `/worker/occurrence-reminders` | Day-before reminders (M3) | `X-Worker-Token` |
+| POST | `/worker/occurrence-reminders` | Day-before reminders: every participant of tomorrow's planned occurrences, once (`reminded_at`), type `activity_reminder` on both channels | `X-Worker-Token` |
 | GET | `/health` | DB check | public |
 | GET | `/me/push-subscriptions` | `{ publicKey, subscriptions }`: the VAPID public key (null when the server has none) and this person's devices | S |
 | POST | `/me/push-subscriptions` | `{ endpoint, keys: { p256dh, auth } }` from `PushSubscription.toJSON()`; upsert by endpoint, a shared browser moves to whoever subscribed last | S |
