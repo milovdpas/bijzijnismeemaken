@@ -9,7 +9,7 @@
 # ---------------------------------------------------------------------------
 # Builder: install, compile the shared package, then the API.
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 WORKDIR /app
 
 # Manifests first, so a source-only change reuses the cached install layer.
@@ -47,7 +47,7 @@ RUN mkdir -p apps/api/node_modules packages/types/node_modules
 # ---------------------------------------------------------------------------
 # Runtime: the compiled output, production dependencies, nothing else.
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS production
+FROM node:25-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
