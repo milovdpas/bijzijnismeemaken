@@ -60,6 +60,8 @@ export enum ActivityCategory {
     SPORTS = 'sports',
     FOOD_AND_DRINKS = 'food_and_drinks',
     TRIP = 'trip',
+    /** A tournament can be made from it (M4); the activity then links to it. */
+    TOURNAMENT = 'tournament',
     OTHER = 'other',
 }
 
@@ -176,4 +178,44 @@ export enum CalendarEventType {
     FOCUS_TIME = 'focusTime',
     WORKING_LOCATION = 'workingLocation',
     BIRTHDAY = 'birthday',
+}
+
+/** How a tournament is played (docs/01 §1.5c). */
+export enum TournamentFormat {
+    /** A bracket from the first match: lose once and you are out. */
+    KNOCKOUT = 'knockout',
+    /** Groups where everybody plays everybody, then the best of each group in a bracket. */
+    GROUPS_KNOCKOUT = 'groups_knockout',
+}
+
+/** What plays in a tournament: single people, or teams of a set size. A player is a team of one. */
+export enum ParticipantMode {
+    PLAYERS = 'players',
+    TEAMS = 'teams',
+}
+
+export enum TournamentStatus {
+    /** Entries, draw and settings can still change. */
+    DRAFT = 'draft',
+    /** Matches are generated and results come in; entries are fixed. */
+    RUNNING = 'running',
+    /** The final is played; the tournament is in the archive. */
+    FINISHED = 'finished',
+}
+
+export enum MatchStage {
+    GROUP = 'group',
+    KNOCKOUT = 'knockout',
+}
+
+export enum MatchStatus {
+    PENDING = 'pending',
+    /** A result is in, or it was a bye. */
+    PLAYED = 'played',
+}
+
+/** A side of a match; also which side a winner takes in the next one. */
+export enum MatchSlot {
+    HOME = 'home',
+    AWAY = 'away',
 }

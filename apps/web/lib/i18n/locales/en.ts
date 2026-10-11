@@ -385,6 +385,7 @@ export const en = {
         sports: 'Sports',
         food_and_drinks: 'Food & drinks',
         trip: 'Trip',
+        tournament: 'Tournament',
         other: 'Other',
     },
     dateModes: {

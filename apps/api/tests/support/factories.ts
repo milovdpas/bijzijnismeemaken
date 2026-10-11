@@ -13,8 +13,11 @@ import {
     GroupRole,
     Locale,
     OccurrenceStatus,
+    ParticipantMode,
     ScoreType,
     SortOrder,
+    TournamentFormat,
+    TournamentStatus,
     Weekday,
     slugify,
 } from '@bzim/types';
@@ -31,6 +34,9 @@ import Leaderboard from '../../src/app/models/Leaderboard.entity';
 import LeaderboardMember from '../../src/app/models/LeaderboardMember.entity';
 import ManualUnavailability from '../../src/app/models/ManualUnavailability.entity';
 import OccurrenceParticipant from '../../src/app/models/OccurrenceParticipant.entity';
+import Tournament from '../../src/app/models/Tournament.entity';
+import TournamentEntry from '../../src/app/models/TournamentEntry.entity';
+import TournamentEntryMember from '../../src/app/models/TournamentEntryMember.entity';
 import User from '../../src/app/models/User.entity';
 import WeeklyUnavailabilityRule from '../../src/app/models/WeeklyUnavailabilityRule.entity';
 
@@ -243,6 +249,65 @@ export async function seedLeaderboardMember(
         addedById: null,
         removedAt: null,
     }).save();
+}
+
+/** A players knockout in draft, no third place. */
+export async function seedTournament(
+    group: Group,
+    creator: User,
+    overrides: DeepPartial<Tournament> = {},
+): Promise<Tournament> {
+    counter += 1;
+    const tournament = Tournament.create({
+        groupId: group.id,
+        activityId: null,
+        createdById: creator.id,
+        creatorNameSnapshot: null,
+        name: `Tournament ${String(counter)}`,
+        description: null,
+        format: TournamentFormat.KNOCKOUT,
+        participantMode: ParticipantMode.PLAYERS,
+        teamSize: null,
+        status: TournamentStatus.DRAFT,
+        winPoints: 3,
+        drawPoints: 1,
+        groupCount: null,
+        advancePerGroup: null,
+        thirdPlace: false,
+        winnerEntryId: null,
+        startedAt: null,
+        finishedAt: null,
+    });
+    Object.assign(tournament, overrides);
+    return tournament.save();
+}
+
+/** An entry with the given people in it; a member brings their name and avatar, a string is a guest. */
+export async function seedTournamentEntry(
+    tournament: Tournament,
+    seed: number,
+    people: (User | string)[],
+    name?: string,
+): Promise<TournamentEntry> {
+    const entry = await TournamentEntry.create({
+        tournamentId: tournament.id,
+        name:
+            name ??
+            people
+                .map((person) => (typeof person === 'string' ? person : (person.displayName ?? '')))
+                .join(' & '),
+        seed,
+        groupNo: null,
+    }).save();
+    for (const person of people) {
+        await TournamentEntryMember.create({
+            entryId: entry.id,
+            userId: typeof person === 'string' ? null : person.id,
+            displayNameSnapshot: typeof person === 'string' ? person : (person.displayName ?? ''),
+            avatarKeySnapshot: typeof person === 'string' ? null : person.avatarKey,
+        }).save();
+    }
+    return entry;
 }
 
 export async function seedCalendarConnection(

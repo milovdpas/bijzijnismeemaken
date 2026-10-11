@@ -27,6 +27,10 @@ import OAuthState from '../app/models/OAuthState.entity';
 import OccurrenceParticipant from '../app/models/OccurrenceParticipant.entity';
 import PushSubscription from '../app/models/PushSubscription.entity';
 import RefreshToken from '../app/models/RefreshToken.entity';
+import Tournament from '../app/models/Tournament.entity';
+import TournamentEntry from '../app/models/TournamentEntry.entity';
+import TournamentEntryMember from '../app/models/TournamentEntryMember.entity';
+import TournamentMatch from '../app/models/TournamentMatch.entity';
 import User from '../app/models/User.entity';
 import WeeklyUnavailabilityRule from '../app/models/WeeklyUnavailabilityRule.entity';
 
@@ -86,6 +90,10 @@ export const AppDataSource = new DataSource({
         LeaderboardScoreYearly,
         LeaderboardScoreTotal,
         LeaderboardScoreHistory,
+        Tournament,
+        TournamentEntry,
+        TournamentEntryMember,
+        TournamentMatch,
     ],
 });
 

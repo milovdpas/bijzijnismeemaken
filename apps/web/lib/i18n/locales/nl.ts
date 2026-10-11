@@ -384,6 +384,7 @@ export const nl: Dict = {
         sports: 'Sport',
         food_and_drinks: 'Eten & drinken',
         trip: 'Uitje',
+        tournament: 'Toernooi',
         other: 'Anders',
     },
     dateModes: {

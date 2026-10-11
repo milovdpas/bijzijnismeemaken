@@ -1,6 +1,7 @@
 import {
     Dumbbell,
     House,
+    Medal,
     PartyPopper,
     Plane,
     Sparkles,
@@ -18,6 +19,7 @@ export const CATEGORY_ICONS: Record<ActivityCategory, LucideIcon> = {
     [ActivityCategory.SPORTS]: Dumbbell,
     [ActivityCategory.FOOD_AND_DRINKS]: UtensilsCrossed,
     [ActivityCategory.TRIP]: Plane,
+    [ActivityCategory.TOURNAMENT]: Medal,
     [ActivityCategory.OTHER]: Sparkles,
 };
 
@@ -29,5 +31,6 @@ export const CATEGORY_ORDER: readonly ActivityCategory[] = [
     ActivityCategory.SPORTS,
     ActivityCategory.FOOD_AND_DRINKS,
     ActivityCategory.TRIP,
+    ActivityCategory.TOURNAMENT,
     ActivityCategory.OTHER,
 ];
