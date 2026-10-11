@@ -697,6 +697,9 @@ export const en = {
             newRoundTitle: 'Start a new round?',
             newRoundDescription:
                 'Every total goes back to zero and the history is cleared. The players stay.',
+            removeTitle: 'Remove this player?',
+            removeDescription: 'Their points and their entries in the history go too.',
+            removeConfirm: 'Remove',
         },
         darts: {
             title: 'Darts',

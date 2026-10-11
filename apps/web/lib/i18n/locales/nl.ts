@@ -697,6 +697,9 @@ export const nl: Dict = {
             newRoundTitle: 'Een nieuwe ronde beginnen?',
             newRoundDescription:
                 'Alle totalen gaan terug naar nul en de geschiedenis wordt gewist. De spelers blijven.',
+            removeTitle: 'Deze speler verwijderen?',
+            removeDescription: 'Hun punten en hun invoer in de geschiedenis gaan ook weg.',
+            removeConfirm: 'Verwijderen',
         },
         darts: {
             title: 'Darts',

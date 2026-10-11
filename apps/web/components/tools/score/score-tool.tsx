@@ -41,6 +41,8 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
     const [adding, setAdding] = useState<ToolPlayer | null>(null);
     const [correcting, setCorrecting] = useState<ScoreEntry | null>(null);
     const [resetting, setResetting] = useState(false);
+    /** A new player list that would drop somebody's points, waiting for a yes. */
+    const [dropping, setDropping] = useState<ToolPlayer[] | null>(null);
     const sums = totals(state);
     const ahead = new Set(leaders(state));
     const lines = historyLines(state);
@@ -49,6 +51,11 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
     const correctingPlayer = correcting === null ? undefined : playerOf(correcting.playerId);
     const step = (player: ToolPlayer, amount: 1 | -1) =>
         update((current) => addEntry(current, player.id, amount, Date.now()));
+    const changePlayers = (players: ToolPlayer[]) => {
+        const kept = new Set(players.map((player) => player.id));
+        if (state.entries.some((entry) => !kept.has(entry.playerId))) setDropping(players);
+        else update((current) => setScorePlayers(current, players));
+    };
 
     if (choosing) {
         return (
@@ -57,7 +64,7 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
                     groupId={groupId}
                     players={state.players}
                     max={SCORE_MAX_PLAYERS}
-                    onChange={(players) => update((current) => setScorePlayers(current, players))}
+                    onChange={changePlayers}
                 />
                 <div className="flex justify-end">
                     <Button
@@ -68,6 +75,22 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
                         {t('tools.done')}
                     </Button>
                 </div>
+                <ConfirmDialog
+                    open={dropping !== null}
+                    onOpenChange={(open) => {
+                        if (!open) setDropping(null);
+                    }}
+                    title={t('tools.score.removeTitle')}
+                    description={t('tools.score.removeDescription')}
+                    confirmLabel={t('tools.score.removeConfirm')}
+                    destructive
+                    onConfirm={() => {
+                        if (dropping !== null) {
+                            update((current) => setScorePlayers(current, dropping));
+                        }
+                        setDropping(null);
+                    }}
+                />
             </div>
         );
     }
