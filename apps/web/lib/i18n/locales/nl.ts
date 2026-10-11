@@ -464,8 +464,6 @@ export const nl: Dict = {
         notFoundDescription: 'Misschien is hij verwijderd.',
         delete: 'Ranglijst verwijderen',
         deleteDescription: '"{{name}}" en alle scores erop zijn voorgoed weg.',
-        periodsLabel: 'Houdt bij:',
-        editorsLabel: 'Scores ingevoerd door:',
         editorsEveryone: 'iedereen in de groep',
         editorsCreator: '{{name}} en de beheerders',
         editorsSelected: '{{names}} en de beheerders',

@@ -465,8 +465,6 @@ export const en = {
         notFoundDescription: 'It may have been deleted.',
         delete: 'Delete leaderboard',
         deleteDescription: '"{{name}}" and every score on it is gone for good.',
-        periodsLabel: 'Keeps:',
-        editorsLabel: 'Scores entered by:',
         editorsEveryone: 'everyone in the group',
         editorsCreator: '{{name}} and the admins',
         editorsSelected: '{{names}} and the admins',

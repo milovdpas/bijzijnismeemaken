@@ -1,6 +1,6 @@
 'use client';
 
-import { EditMode, ERROR_CODES, ScoreType } from '@bzim/types';
+import { ERROR_CODES, ScoreType } from '@bzim/types';
 import { ArrowLeft, Hash, History, Pencil, Timer, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -13,12 +13,10 @@ import { FormMessage } from '@/components/common/form-message';
 import { PlayersTab } from '@/components/leaderboards/players-tab';
 import { RankingTab } from '@/components/leaderboards/ranking-tab';
 import { TimerTab } from '@/components/leaderboards/timer-tab';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDeleteLeaderboard, useLeaderboard } from '@/hooks/queries/use-leaderboards';
 import { errorKey, isApiError } from '@/lib/api/errors';
-import { enabledPeriods } from '@/lib/leaderboard-periods';
 
 /**
  * One board: its settings in a header, then one card with two tabs, the
@@ -73,23 +71,6 @@ export function LeaderboardDetailView({
 
     const data = board.data;
     const Icon = data.scoreType === ScoreType.TIME ? Timer : Hash;
-    const editorsLine = (() => {
-        switch (data.editMode) {
-            case EditMode.EVERYONE:
-                return t('leaderboardDetail.editorsEveryone');
-            case EditMode.CREATOR:
-                return t('leaderboardDetail.editorsCreator', {
-                    name: data.creatorName ?? t('leaderboardDetail.unknownCreator'),
-                });
-            case EditMode.SELECTED:
-                return data.editors.length === 0
-                    ? t('leaderboardDetail.editorsNone')
-                    : t('leaderboardDetail.editorsSelected', {
-                          names: data.editors.map((user) => user.displayName).join(', '),
-                      });
-        }
-    })();
-
     return (
         <div className="space-y-4">
             <Link
@@ -108,8 +89,6 @@ export function LeaderboardDetailView({
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                             <h2 className="text-xl md:text-2xl">{data.name}</h2>
-                            <Badge variant="outline">{t(`scoreTypes.${data.scoreType}`)}</Badge>
-                            <Badge variant="outline">{t(`sortOrders.${data.sortOrder}`)}</Badge>
                         </div>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                             {t('leaderboardDetail.by', {
@@ -153,20 +132,6 @@ export function LeaderboardDetailView({
                 {data.description !== null && (
                     <p className="text-sm whitespace-pre-line">{data.description}</p>
                 )}
-                <dl className="grid gap-1 text-xs text-muted-foreground">
-                    <div className="flex flex-wrap gap-x-1.5">
-                        <dt className="font-semibold">{t('leaderboardDetail.periodsLabel')}</dt>
-                        <dd>
-                            {enabledPeriods(data)
-                                .map((period) => t(`periods.${period}`))
-                                .join(' · ')}
-                        </dd>
-                    </div>
-                    <div className="flex flex-wrap gap-x-1.5">
-                        <dt className="font-semibold">{t('leaderboardDetail.editorsLabel')}</dt>
-                        <dd>{editorsLine}</dd>
-                    </div>
-                </dl>
             </header>
 
             <Tabs defaultValue="ranking" className="rounded-2xl border bg-card p-4">

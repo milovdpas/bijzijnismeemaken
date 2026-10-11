@@ -116,7 +116,15 @@ export function RankingTab({
                     <Minus />
                 </Button>
             )}
-            <span className="min-w-12 shrink-0 text-right text-sm font-bold tabular-nums">
+            <span
+                className={cn(
+                    'shrink-0 text-sm font-bold tabular-nums',
+                    // Between two steppers the number sits centred, the same gap on either side.
+                    canEnter && leaderboard.showSteppers
+                        ? 'w-14 text-center'
+                        : 'min-w-12 text-right',
+                )}
+            >
                 {formatScore(item.score, leaderboard.scoreType, i18n.language)}
             </span>
             {canEnter && leaderboard.showSteppers && (
