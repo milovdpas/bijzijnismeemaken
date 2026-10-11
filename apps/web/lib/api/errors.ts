@@ -47,3 +47,17 @@ export function validationProblem(error: unknown): string | null {
     const problem = (error.details as { problem?: unknown } | undefined)?.problem;
     return typeof problem === 'string' ? problem : null;
 }
+
+/**
+ * The rule name a refusal carried in `details.problem`: a 422 about the input
+ * or a 409 about timing. The tournament endpoints send both, and their screens
+ * name every rule in their own sentence.
+ */
+export function refusalProblem(error: unknown): string | null {
+    if (!(error instanceof ApiError)) return null;
+    if (error.code !== ERROR_CODES.VALIDATION_FAILED && error.code !== ERROR_CODES.CONFLICT) {
+        return null;
+    }
+    const problem = (error.details as { problem?: unknown } | undefined)?.problem;
+    return typeof problem === 'string' ? problem : null;
+}

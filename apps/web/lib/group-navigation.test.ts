@@ -16,6 +16,7 @@ describe('group navigation', () => {
         expect(activeGroupTab(`/groups/${ID}/leaderboards`, ID)).toBe('leaderboards');
         expect(activeGroupTab(`/groups/${ID}/activities/abc`, ID)).toBe('activities');
         expect(activeGroupTab(`/groups/${ID}/tools/darts`, ID)).toBe('tools');
+        expect(activeGroupTab(`/groups/${ID}/tournaments/abc/edit`, ID)).toBe('tournaments');
         expect(activeGroupTab(`/groups/${ID}`, ID)).toBe('dashboard');
         expect(activeGroupTab(`/groups/other/members`, ID)).toBeNull();
     });

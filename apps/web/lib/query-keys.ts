@@ -71,6 +71,13 @@ export const queryKeys = {
         history: (groupId: string, leaderboardId: string, page: number) =>
             ['leaderboards', groupId, 'one', leaderboardId, 'history', page] as const,
     },
+    tournaments: {
+        /** Every list of the group's tournaments: what is on, the archive, one activity's. */
+        lists: (groupId: string) => ['tournaments', groupId, 'list'] as const,
+        list: (groupId: string, scope: string) => ['tournaments', groupId, 'list', scope] as const,
+        detail: (groupId: string, tournamentId: string) =>
+            ['tournaments', groupId, 'detail', tournamentId] as const,
+    },
     invites: {
         all: ['invites'] as const,
         mine: ['invites', 'mine'] as const,

@@ -1,4 +1,4 @@
-import { Gamepad2, LayoutGrid, Sparkles, Trophy } from 'lucide-react';
+import { Gamepad2, LayoutGrid, Medal, Sparkles, Trophy } from 'lucide-react';
 import { CalendarDaysIcon } from '@/components/icons/calendar-days-icon';
 import { GearIcon } from '@/components/icons/gear-icon';
 import { PeopleIcon } from '@/components/icons/people-icon';
@@ -10,7 +10,14 @@ import { GroupRole } from '@bzim/types';
  * the group pages never have to agree on their own order or icons.
  */
 export type GroupTab =
-    'dashboard' | 'activities' | 'availability' | 'leaderboards' | 'tools' | 'members' | 'settings';
+    | 'dashboard'
+    | 'activities'
+    | 'availability'
+    | 'leaderboards'
+    | 'tournaments'
+    | 'tools'
+    | 'members'
+    | 'settings';
 
 export interface GroupTabItem {
     tab: GroupTab;
@@ -30,6 +37,7 @@ export const GROUP_TABS: readonly GroupTabItem[] = [
         adminOnly: false,
     },
     { tab: 'leaderboards', labelKey: 'groupTabs.leaderboards', icon: Trophy, adminOnly: false },
+    { tab: 'tournaments', labelKey: 'groupTabs.tournaments', icon: Medal, adminOnly: false },
     { tab: 'tools', labelKey: 'groupTabs.tools', icon: Gamepad2, adminOnly: false },
     { tab: 'members', labelKey: 'groupTabs.members', icon: PeopleIcon, adminOnly: false },
     { tab: 'settings', labelKey: 'groupTabs.settings', icon: GearIcon, adminOnly: true },
