@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
 import { FormMessage } from '@/components/common/form-message';
+import { ConnectChoice } from '@/components/calendar/connect-choice';
 import { StepShell } from '@/components/onboarding/step-shell';
 import { Button } from '@/components/ui/button';
 import { useCalendar } from '@/hooks/queries/use-calendar';
 import { useMarkSetup } from '@/hooks/queries/use-me';
-import { goToCalendarConnect } from '@/lib/api/calendar';
 import { errorKey } from '@/lib/api/errors';
 
 const NEXT = '/welcome/availability';
@@ -52,16 +52,12 @@ export function CalendarStep() {
                         )}
                     </div>
                 </div>
+                {!connected && <ConnectChoice returnTo={NEXT} />}
                 {mark.isError && <FormMessage tone="error">{t(errorKey(mark.error))}</FormMessage>}
                 <div className="flex flex-wrap justify-end gap-2">
                     <Button variant="ghost" disabled={mark.isPending} onClick={next}>
                         {connected ? t('welcome.next') : t('welcome.skip')}
                     </Button>
-                    {!connected && (
-                        <Button onClick={() => void goToCalendarConnect('read', NEXT)}>
-                            {t('calendarSettings.connectGoogle')}
-                        </Button>
-                    )}
                 </div>
             </div>
         </StepShell>

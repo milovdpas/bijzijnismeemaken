@@ -694,6 +694,7 @@ export const nl: Dict = {
         autoAdd: 'Geplande activiteiten in mijn agenda zetten',
         autoAddHelp:
             'Elke activiteit waarvoor je bent ingepland komt in je hoofdagenda en verhuist mee met de datum.',
+        connectChoiceHint: 'Kies het nu, dan vraagt Google het maar één keer.',
         autoAddNeedsScope:
             'Google vraagt dan nog één keer om toestemming om afspraken toe te voegen.',
         disconnect: 'Ontkoppelen',

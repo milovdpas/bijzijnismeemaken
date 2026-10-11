@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { CalendarEventsCard } from '@/components/calendar/calendar-events-card';
+import { ConnectChoice } from '@/components/calendar/connect-choice';
 import { IgnoreRulesCard } from '@/components/calendar/ignore-rules-card';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { FormMessage } from '@/components/common/form-message';
@@ -253,15 +254,13 @@ export function CalendarSettingsView() {
                             {t('calendarSettings.connectDescription')}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2 text-xs text-muted-foreground">
-                        <p>{t('calendarSettings.privacy')}</p>
-                        <p>{t('calendarSettings.freeHint')}</p>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2 text-xs text-muted-foreground">
+                            <p>{t('calendarSettings.privacy')}</p>
+                            <p>{t('calendarSettings.freeHint')}</p>
+                        </div>
+                        <ConnectChoice />
                     </CardContent>
-                    <CardFooter className="justify-end">
-                        <Button onClick={() => void goToCalendarConnect('read')}>
-                            {t('calendarSettings.connectGoogle')}
-                        </Button>
-                    </CardFooter>
                 </Card>
             )}
             {calendar.data !== null && calendar.data !== undefined && (

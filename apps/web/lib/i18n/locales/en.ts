@@ -697,6 +697,7 @@ export const en = {
         autoAddHelp:
             'Every activity you are planned in for appears in your main calendar and follows its date.',
         autoAddNeedsScope: 'Google will ask once more, for permission to add events.',
+        connectChoiceHint: 'Choose now, and Google asks only once.',
         disconnect: 'Disconnect',
         disconnectDescription:
             'The synced appointments are removed and your availability goes back to what you set by hand.',
