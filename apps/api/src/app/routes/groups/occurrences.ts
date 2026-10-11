@@ -3,7 +3,7 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import OccurrenceController from '../../controllers/OccurrenceController';
-import { publicLimit } from '../../middleware/ApiLimits';
+import { notifyLimit, publicLimit } from '../../middleware/ApiLimits';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
@@ -28,6 +28,7 @@ export default class OccurrenceRoutes implements IRoute {
         router.post(
             API_ENDPOINTS.ACTIVITIES.OCCURRENCES(':groupId', ':activityId'),
             userAuth,
+            notifyLimit,
             validate({ params: activityParamSchema, body: planOccurrenceSchema }),
             member,
             this.controller.plan,
@@ -35,6 +36,7 @@ export default class OccurrenceRoutes implements IRoute {
         router.patch(
             API_ENDPOINTS.ACTIVITIES.OCCURRENCE(':groupId', ':activityId', ':occurrenceId'),
             userAuth,
+            notifyLimit,
             validate({ params: occurrenceParamSchema, body: updateOccurrenceSchema }),
             member,
             this.controller.update,

@@ -5,6 +5,7 @@ import { env } from '../../config/app';
 import PushSubscription from '../models/PushSubscription.entity';
 import type User from '../models/User.entity';
 import { PushGone, pushSender } from '../modules/push';
+import { shortEndpoint } from '../utils/Log';
 import type { PushMessage } from '../modules/push';
 
 export interface PushSubscriptionInput {
@@ -84,7 +85,10 @@ export class PushService {
                         await PushSubscription.delete(row.id);
                         return;
                     }
-                    console.error(`Could not push "${message.title}" to ${row.endpoint}:`, error);
+                    console.error(
+                        `Could not push "${message.title}" to ${shortEndpoint(row.endpoint)}:`,
+                        error,
+                    );
                 }
             }),
         );

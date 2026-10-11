@@ -1,3 +1,4 @@
+import { maskEmail } from '../../utils/Log';
 import type { MailMessage, Mailer } from './Mailer';
 
 /**
@@ -7,7 +8,7 @@ import type { MailMessage, Mailer } from './Mailer';
 export default class ConsoleMailer implements Mailer {
     send(message: MailMessage): Promise<void> {
         console.log(
-            `[mail] to=${message.to} subject=${JSON.stringify(message.subject)}\n${message.text}`,
+            `[mail] to=${maskEmail(message.to)} subject=${JSON.stringify(message.subject)}\n${message.text}`,
         );
         return Promise.resolve();
     }

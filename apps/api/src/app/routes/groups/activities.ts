@@ -3,6 +3,7 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import ActivityController from '../../controllers/ActivityController';
+import { notifyLimit } from '../../middleware/ApiLimits';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
@@ -35,6 +36,7 @@ export default class ActivityRoutes implements IRoute {
         router.post(
             API_ENDPOINTS.ACTIVITIES.CREATE(':groupId'),
             userAuth,
+            notifyLimit,
             validate({ params: groupIdParamSchema, body: createActivitySchema }),
             member,
             this.controller.create,

@@ -3,6 +3,7 @@ import { API_ENDPOINTS, GroupRole } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import InviteController from '../../controllers/InviteController';
+import { notifyLimit } from '../../middleware/ApiLimits';
 import { requireGroupRole } from '../../middleware/RequireGroupRole';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
@@ -23,6 +24,7 @@ export default class InviteRoutes implements IRoute {
         router.post(
             API_ENDPOINTS.GROUPS.INVITES(':groupId'),
             userAuth,
+            notifyLimit,
             validate({ params: groupIdParamSchema, body: inviteSchema }),
             requireGroupRole(GroupRole.ADMIN),
             this.controller.invite,

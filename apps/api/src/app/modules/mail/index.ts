@@ -1,4 +1,5 @@
 import { env } from '../../../config/app';
+import { maskEmail } from '../../utils/Log';
 import BrevoMailer from './BrevoMailer';
 import ConsoleMailer from './ConsoleMailer';
 import type { MailMessage, Mailer } from './Mailer';
@@ -31,7 +32,7 @@ export async function deliver(message: MailMessage): Promise<void> {
     try {
         await mailer.send(message);
     } catch (error) {
-        console.error(`Could not send "${message.subject}" to ${message.to}:`, error);
+        console.error(`Could not send "${message.subject}" to ${maskEmail(message.to)}:`, error);
     }
 }
 

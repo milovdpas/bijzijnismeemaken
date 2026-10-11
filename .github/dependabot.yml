@@ -1,0 +1,49 @@
+# Weekly dependency updates, batched so Monday brings one pull request per
+# ecosystem rather than twenty. Majors come on their own: they are the ones
+# that need reading. The npm workspaces share the root lockfile, so one npm
+# entry at the root covers packages/* and apps/*.
+version: 2
+updates:
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '07:00'
+          timezone: Europe/Amsterdam
+      open-pull-requests-limit: 5
+      groups:
+          minor-and-patch:
+              update-types: [minor, patch]
+      commit-message:
+          prefix: 'chore'
+
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '07:00'
+          timezone: Europe/Amsterdam
+      commit-message:
+          prefix: 'chore'
+
+    - package-ecosystem: docker
+      directory: /apps/api
+      schedule:
+          interval: weekly
+          day: monday
+          time: '07:00'
+          timezone: Europe/Amsterdam
+      commit-message:
+          prefix: 'chore'
+
+    - package-ecosystem: docker
+      directory: /apps/web
+      schedule:
+          interval: weekly
+          day: monday
+          time: '07:00'
+          timezone: Europe/Amsterdam
+      commit-message:
+          prefix: 'chore'

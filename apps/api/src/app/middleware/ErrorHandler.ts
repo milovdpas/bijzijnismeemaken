@@ -18,7 +18,7 @@ import { sendError } from '../utils/ApiResponses';
  */
 export function errorHandler(
     error: unknown,
-    _req: Request,
+    req: Request,
     res: Response,
     next: NextFunction,
 ): void {
@@ -36,7 +36,9 @@ export function errorHandler(
         return;
     }
 
-    console.error('Unhandled error:', error);
+    // The route, so the line can be matched to a feature; the path holds ids,
+    // never a token or an address, so it is safe to name.
+    console.error(`Unhandled error on ${req.method} ${req.path}:`, error);
     sendError(
         res,
         ERROR_CODES.INTERNAL_ERROR,

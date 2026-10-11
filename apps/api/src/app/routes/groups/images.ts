@@ -3,7 +3,7 @@ import { API_ENDPOINTS } from '@bzim/types';
 
 import type { IRoute } from '../../../interfaces/IRouter';
 import ImageController from '../../controllers/ImageController';
-import { publicLimit } from '../../middleware/ApiLimits';
+import { imageSearchLimit, publicLimit } from '../../middleware/ApiLimits';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
 import { imageSearchQuerySchema, imageUsedSchema } from '../../validators/imageSchemas';
@@ -18,7 +18,7 @@ export default class ImageRoutes implements IRoute {
         router.get(
             API_ENDPOINTS.IMAGES.SEARCH,
             userAuth,
-            publicLimit,
+            imageSearchLimit,
             validate({ query: imageSearchQuerySchema }),
             this.controller.search,
         );

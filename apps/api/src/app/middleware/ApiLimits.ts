@@ -74,6 +74,31 @@ function emailOf(req: Request): string | null {
     return typeof body?.email === 'string' ? body.email : null;
 }
 
+/**
+ * Anything that notifies a whole group or a chosen few: inviting, a new idea
+ * (every member hears), planning or moving a moment (every participant). A
+ * person who really does sixty of these in an hour is a script; everybody
+ * else never notices.
+ */
+export const notifyLimit = rateLimit({
+    name: 'notify',
+    limit: 60,
+    windowMs: 60 * MINUTE,
+    key: (req: Request) => req.user.id,
+});
+
+/**
+ * The photo search spends an Unsplash call, and the demo tier allows fifty an
+ * hour for the whole app. Twenty per person per hour keeps one keen searcher
+ * from using up everybody's.
+ */
+export const imageSearchLimit = rateLimit({
+    name: 'image-search',
+    limit: 20,
+    windowMs: 60 * MINUTE,
+    key: (req: Request) => req.user.id,
+});
+
 /** A manual calendar sync spends a Google call per calendar: once every five minutes per person. */
 export const calendarSyncLimit = rateLimit({
     name: 'calendar-sync',

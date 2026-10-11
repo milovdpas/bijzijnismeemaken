@@ -47,7 +47,9 @@ Carried over from `C:\Users\milov\PersonalProjects\dynamic_alarm\apps\api` (its 
 - One `env` object is exported from `config/app.ts`, including `isProduction()`.
 
 ## Logging and jobs
-- `utils/Logger.ts` is a thin wrapper over `console` with level prefixes. No pino or winston.
+- Plain `console` with a prefix naming the place (`Calendar connect failed:`, `Unhandled error on POST /api/v1/...:`), `error` for what needs a look and `warn` for what is expected now and then (a tripped limit, a revoke Google refused). No pino or winston, and no logger wrapper: there is nothing to add.
+- Nothing personal or secret in a line: an email goes through `maskEmail` and a push endpoint through `shortEndpoint` (`utils/Log.ts`); tokens, keys and cookie values never. Ids are fine.
+- Rate limits (`middleware/ApiLimits.ts`): `publicLimit` on every unauthenticated route, `notifyLimit` (60 an hour per person) on what mails a group or its participants, `imageSearchLimit` (20 an hour per person) on the Unsplash search, `mailLimit` and the login limits on auth. A new route that spends an external call or sends to more than one person gets one.
 - Scheduled work has no folder of its own. Each cron job is a `POST /api/v1/worker/<job>` endpoint on `WorkerController` (route class `app/routes/groups/worker.ts`) that calls a service method; Ofelia `job-exec` labels run `node dist/tools/worker.js <job>` inside the container, which POSTs to that endpoint. A static in-process flag per endpoint prevents overlapping runs. After a deploy that adds or changes a label: `docker restart scheduler` and check the `job registered` lines.
 
 ## Tests
