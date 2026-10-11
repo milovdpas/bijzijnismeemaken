@@ -4,7 +4,7 @@
 #   docker build -f apps/web/Dockerfile -t bzim-web .
 
 # ---- build ----------------------------------------------------------------
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -34,7 +34,7 @@ RUN npm run build --workspace=@bzim/types \
     && npm run build --workspace=@bzim/web
 
 # ---- run ------------------------------------------------------------------
-FROM node:22-alpine AS production
+FROM node:25-alpine AS production
 WORKDIR /app
 
 ENV NODE_ENV=production
