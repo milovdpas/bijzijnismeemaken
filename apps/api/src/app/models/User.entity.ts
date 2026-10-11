@@ -63,6 +63,13 @@ export default class User extends BaseEntity {
     @Column({ name: 'auto_add_to_calendar', type: 'boolean', default: false })
     autoAddToCalendar!: boolean;
 
+    /** The optional setup steps: when each was done or skipped (docs/07 task 38b). */
+    @Column({ name: 'setup_calendar_seen_at', type: 'datetime', precision: 3, nullable: true })
+    setupCalendarSeenAt!: Date | null;
+
+    @Column({ name: 'setup_availability_seen_at', type: 'datetime', precision: 3, nullable: true })
+    setupAvailabilitySeenAt!: Date | null;
+
     @Column({ name: 'last_login_at', type: 'datetime', precision: 3, nullable: true })
     lastLoginAt!: Date | null;
 
@@ -110,6 +117,10 @@ export default class User extends BaseEntity {
             hasPassword: this.passwordHash !== null,
             hasGoogle: this.googleSub !== null,
             autoAddToCalendar: this.autoAddToCalendar,
+            setup: {
+                calendarSeen: this.setupCalendarSeenAt !== null,
+                availabilitySeen: this.setupAvailabilitySeenAt !== null,
+            },
             createdAt: this.createdAt.toISOString(),
         };
     }

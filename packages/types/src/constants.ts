@@ -209,6 +209,7 @@ export const API_ENDPOINTS = {
         /** GET profile, PATCH profile, DELETE account. */
         ROOT: `${V1}/me`,
         PASSWORD: `${V1}/me/password`,
+        SETUP: (step: string) => `${V1}/me/setup/${step}`,
         AVAILABILITY: `${V1}/me/availability`,
         UNAVAILABILITY: `${V1}/me/unavailability`,
         UNAVAILABILITY_RULES: `${V1}/me/unavailability-rules`,

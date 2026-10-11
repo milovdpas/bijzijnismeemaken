@@ -95,8 +95,13 @@ export interface MeResponse {
     hasPassword: boolean;
     hasGoogle: boolean;
     autoAddToCalendar: boolean;
+    /** The optional setup steps after the profile: done or skipped, either way seen. */
+    setup: { calendarSeen: boolean; availabilitySeen: boolean };
     createdAt: IsoDateTimeString;
 }
+
+/** The optional setup steps; `POST /me/setup/:step` marks one seen. */
+export type SetupStep = 'calendar' | 'availability';
 
 /** `PATCH /me`. Every field optional; onboarding sends the first three together. */
 export interface UpdateMeRequest {

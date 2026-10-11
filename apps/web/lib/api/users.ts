@@ -3,6 +3,7 @@ import type {
     ChangePasswordRequest,
     HandleAvailableResponse,
     MeResponse,
+    SetupStep,
     UpdateMeRequest,
     UserSummary,
 } from '@bzim/types';
@@ -11,6 +12,10 @@ import { request } from './client';
 
 export function fetchMe(): Promise<MeResponse> {
     return request<MeResponse>(API_ENDPOINTS.ME.ROOT);
+}
+
+export function markSetup(step: SetupStep): Promise<MeResponse> {
+    return request<MeResponse>(API_ENDPOINTS.ME.SETUP(step), { method: 'POST' });
 }
 
 export function updateMe(patch: UpdateMeRequest): Promise<MeResponse> {

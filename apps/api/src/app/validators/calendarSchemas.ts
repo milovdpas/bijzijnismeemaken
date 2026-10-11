@@ -3,6 +3,8 @@ import { CalendarIgnoreRuleKind } from '@bzim/types';
 
 export const calendarConnectQuerySchema = z.object({
     scope: z.enum(['read', 'readwrite']).default('read'),
+    /** Where to land afterwards instead of the calendar settings; a path, checked like the login one. */
+    returnTo: z.string().max(255).optional(),
 });
 
 /** What Google sends back: the state always, then either a code or an error. */

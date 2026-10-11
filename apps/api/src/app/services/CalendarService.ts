@@ -20,7 +20,13 @@ const REFRESH_MARGIN_SECONDS = 60;
 const WRITE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 export type ConnectResult =
-    | { ok: true; connection: CalendarConnection; autoAddEnabled: boolean }
+    | {
+          ok: true;
+          connection: CalendarConnection;
+          autoAddEnabled: boolean;
+          /** Where the connect asked to land afterwards, or null for the calendar settings. */
+          returnTo: string | null;
+      }
     | { ok: false; problem: 'STATE_INVALID' | 'PROVIDER_FAILED' };
 
 /**
@@ -43,14 +49,23 @@ export class CalendarService {
     }
 
     /** The URL to send the browser to. The state row remembers who asked, so the callback can check. */
-    static async startConnect(user: User, scope: CalendarScope): Promise<string> {
+    static async startConnect(
+        user: User,
+        scope: CalendarScope,
+        returnTo: string | null,
+    ): Promise<string> {
         const state = generateToken();
+        // Starting the connect is seeing the setup step, whatever happens at Google.
+        if (user.setupCalendarSeenAt === null) {
+            user.setupCalendarSeenAt = DateTime.utc().toJSDate();
+            await user.save();
+        }
         await OAuthState.create({
             state,
             purpose:
                 scope === 'readwrite' ? OAuthPurpose.CALENDAR_WRITE : OAuthPurpose.CALENDAR_READ,
             userId: user.id,
-            returnTo: null,
+            returnTo,
             expiresAt: DateTime.utc().plus({ minutes: OAUTH_STATE_MINUTES }).toJSDate(),
         }).save();
         return CalendarService.provider().connectUrl(state, scope);
@@ -136,6 +151,7 @@ export class CalendarService {
             ok: true,
             connection: await CalendarService.reload(connection.id),
             autoAddEnabled,
+            returnTo: row.returnTo,
         };
     }
 

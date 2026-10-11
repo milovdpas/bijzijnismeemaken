@@ -13,6 +13,7 @@ import { CalendarEventService } from '../services/CalendarEventService';
 import { CalendarService } from '../services/CalendarService';
 import { CalendarSyncService } from '../services/CalendarSyncService';
 import { CalendarWriteService } from '../services/CalendarWriteService';
+import { safeReturnTo } from '../services/AuthService';
 import { IgnoreRuleService } from '../services/IgnoreRuleService';
 import { sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
 import {
@@ -25,8 +26,13 @@ import {
 } from '../validators/calendarSchemas';
 import { rangeQuerySchema } from '../validators/commonSchemas';
 
-/** Where the browser lands after the provider round trip. */
-const SETTINGS_PAGE = `${env.appUrl}/settings/calendar`;
+/** Where the browser lands after the provider round trip, unless the connect named a return path. */
+const SETTINGS_PATH = '/settings/calendar';
+
+function landing(returnTo: string | null, query: string): string {
+    const path = returnTo ?? SETTINGS_PATH;
+    return `${env.appUrl}${path}${path.includes('?') ? '&' : '?'}${query}`;
+}
 
 /**
  * A person's own calendar: the connection, its calendars, a manual sync,
@@ -40,29 +46,32 @@ export default class CalendarController {
     };
 
     connect: Handler = async (req, res) => {
-        const { scope } = queryOf(req, calendarConnectQuerySchema);
-        res.redirect(302, await CalendarService.startConnect(req.user, scope));
+        const { scope, returnTo } = queryOf(req, calendarConnectQuerySchema);
+        res.redirect(
+            302,
+            await CalendarService.startConnect(req.user, scope, safeReturnTo(returnTo)),
+        );
     };
 
     /** A redirect either way: the settings page reads `connected` or `error` from the query. */
     callback: Handler = async (req, res) => {
         const { state, code, error } = queryOf(req, calendarCallbackQuerySchema);
         if (error !== undefined || code === undefined) {
-            res.redirect(302, `${SETTINGS_PAGE}?error=cancelled`);
+            res.redirect(302, landing(null, 'error=cancelled'));
             return;
         }
         const result = await CalendarService.completeConnect(req.user, state, code);
         if (!result.ok) {
             res.redirect(
                 302,
-                `${SETTINGS_PAGE}?error=${result.problem === 'STATE_INVALID' ? 'state' : 'provider'}`,
+                landing(null, `error=${result.problem === 'STATE_INVALID' ? 'state' : 'provider'}`),
             );
             return;
         }
         if (result.autoAddEnabled) {
             await CalendarWriteService.backfill(req.user);
         }
-        res.redirect(302, `${SETTINGS_PAGE}?connected=1`);
+        res.redirect(302, landing(result.returnTo, 'connected=1'));
     };
 
     disconnect: Handler = async (req, res) => {

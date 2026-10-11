@@ -80,7 +80,7 @@ export function OnboardingView() {
                 avatarKey: form.avatarKey,
                 locale: form.locale,
             },
-            { onSuccess: () => router.replace('/groups') },
+            { onSuccess: () => router.replace('/welcome/calendar') },
         );
     };
 

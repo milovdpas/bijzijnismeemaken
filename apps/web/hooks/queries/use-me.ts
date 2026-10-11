@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { MeResponse, UpdateMeRequest } from '@bzim/types';
 
 import { logout } from '@/lib/api/auth';
-import { deleteMe } from '@/lib/api/users';
+import { deleteMe, markSetup } from '@/lib/api/users';
 import { ApiError } from '@/lib/api/client';
 import { fetchMe, updateMe } from '@/lib/api/users';
 import { queryKeys } from '@/lib/query-keys';
@@ -40,6 +40,17 @@ export function useLogout() {
         mutationFn: logout,
         onSettled: () => {
             client.clear();
+        },
+    });
+}
+
+/** A setup step done or skipped; the profile answer carries the new state. */
+export function useMarkSetup() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: markSetup,
+        onSuccess: (me: MeResponse) => {
+            client.setQueryData(queryKeys.me, me);
         },
     });
 }

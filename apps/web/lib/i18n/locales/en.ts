@@ -718,6 +718,26 @@ export const en = {
         },
         removeRule: 'Count {{label}} again',
     },
+    welcome: {
+        step: 'Step {{step}} of {{of}}',
+        calendarTitle: 'Your calendar',
+        calendarSubtitle:
+            'Optional. Connect your Google Calendar and your appointments count as busy, so nobody plans over them.',
+        calendarConnected: 'Connected: {{email}}.',
+        availabilityTitle: 'Your week',
+        availabilitySubtitle:
+            'Optional. Mark the dayparts you are usually busy, like every Tuesday evening. You can change this any time under Availability.',
+        skip: 'Skip for now',
+        next: 'Next',
+        finish: 'Done',
+    },
+    setupCard: {
+        title: 'Finish your setup',
+        description: 'Two quick things that make planning easier for everyone.',
+        calendar: 'Connect your calendar',
+        availability: 'Set your usual busy times',
+        dismiss: 'Do not ask again',
+    },
     settings: {
         title: 'Settings',
         subtitle: 'How the app looks and talks to you.',

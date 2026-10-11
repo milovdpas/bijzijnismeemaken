@@ -717,6 +717,26 @@ export const nl: Dict = {
         },
         removeRule: '{{label}} weer meetellen',
     },
+    welcome: {
+        step: 'Stap {{step}} van {{of}}',
+        calendarTitle: 'Je agenda',
+        calendarSubtitle:
+            'Niet verplicht. Koppel je Google Agenda en je afspraken tellen als bezet, zodat niemand eroverheen plant.',
+        calendarConnected: 'Gekoppeld: {{email}}.',
+        availabilityTitle: 'Je week',
+        availabilitySubtitle:
+            'Niet verplicht. Markeer de dagdelen waarop je meestal bezet bent, zoals elke dinsdagavond. Je kunt dit altijd aanpassen onder Beschikbaarheid.',
+        skip: 'Nu overslaan',
+        next: 'Verder',
+        finish: 'Klaar',
+    },
+    setupCard: {
+        title: 'Maak je instellingen af',
+        description: 'Twee kleine dingen die plannen voor iedereen makkelijker maken.',
+        calendar: 'Koppel je agenda',
+        availability: 'Stel je vaste bezette tijden in',
+        dismiss: 'Niet meer vragen',
+    },
     settings: {
         title: 'Instellingen',
         subtitle: 'Hoe de app eruitziet en met je praat.',

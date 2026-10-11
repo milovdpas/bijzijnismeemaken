@@ -12,6 +12,7 @@ import type {
     CalendarIgnoreRuleDto,
     CalendarSourceDto,
     GroupAvailabilityResponse,
+    MeResponse,
     MyAvailabilityResponse,
     WorkerJobResponse,
 } from '@bzim/types';
@@ -89,6 +90,28 @@ describe('calendar connection', () => {
             data<CalendarConnectionDto | null>(await asMe.get(API_ENDPOINTS.ME.CALENDAR)),
         ).toBeNull();
 
+        // A connect from the setup step marks it seen and comes back where it was asked to.
+        const started = await asMe.get(
+            `${API_ENDPOINTS.ME.CALENDAR_CONNECT}?returnTo=/welcome/availability`,
+        );
+        const stateForStep =
+            new URL(started.headers.location as string).searchParams.get('state') ?? '';
+        const landed = await asMe.get(
+            `${API_ENDPOINTS.CALENDAR.GOOGLE_CALLBACK}?state=${stateForStep}&code=ok`,
+        );
+        expect(landed.headers.location).toBe(`${env.appUrl}/welcome/availability?connected=1`);
+        expect(data<MeResponse>(await asMe.get(API_ENDPOINTS.ME.ROOT)).setup).toEqual({
+            calendarSeen: true,
+            availabilitySeen: false,
+        });
+        expect(
+            data<MeResponse>(await asMe.post(API_ENDPOINTS.ME.SETUP('availability'))).setup,
+        ).toEqual({
+            calendarSeen: true,
+            availabilitySeen: true,
+        });
+        expect((await asMe.post(API_ENDPOINTS.ME.SETUP('nope'))).status).toBe(422);
+
         const connection = await connect(asMe);
         expect(connection).toMatchObject({
             accountEmail: 'agenda@example.test',
@@ -116,7 +139,8 @@ describe('calendar connection', () => {
         const again = await connect(asMe, 'readwrite');
         expect(again.hasWriteScope).toBe(true);
         expect(await CalendarConnection.countBy({ userId: user.id })).toBe(1);
-        expect(fixture.revoked).toEqual(['fixture-refresh']);
+        // The step's connection and the first one were each revoked on replacement.
+        expect(fixture.revoked).toEqual(['fixture-refresh', 'fixture-refresh']);
         expect((await CalendarConnection.findOneByOrFail({ userId: user.id })).refreshToken).toBe(
             'second',
         );

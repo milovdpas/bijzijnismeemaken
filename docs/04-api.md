@@ -23,6 +23,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | PATCH | `/me` | handle, display_name, avatar_key, locale, auto_add_to_calendar | S |
 | GET | `/me/notification-settings` | One entry per `NotificationType` with `email` + `push`, defaults filled in | S |
 | PUT | `/me/notification-settings/:type` | `{ email, push }` upsert | S |
+| POST | `/me/setup/:step` | Marks an optional setup step (`calendar`, `availability`) done or skipped; answers the profile | S |
 | GET | `/users/handle-available?handle=` | Onboarding check | any |
 | GET | `/users/search?q=` | Handle prefix search (for invites), returns id/handle/display_name/avatar | any (rate limited) |
 | GET | `/images/search?q=&page=` | Stock photos (Unsplash) for an activity image; the key stays server-side. 503 when no key is configured | any (rate limited) |
@@ -80,7 +81,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | GET/PUT/DELETE | `/me/unavailability` (`{ date, daypart }`) | One-off blocks (list in range, add, remove) | S |
 | GET/POST/PATCH/DELETE | `/me/unavailability-rules` | Weekly rules | S |
 | GET | `/me/calendar` | Connection status, sources, last sync | S |
-| GET | `/me/calendar/connect?scope=read|readwrite` | Start provider OAuth (redirect) | S |
+| GET | `/me/calendar/connect?scope=read|readwrite&returnTo=` | Start provider OAuth (redirect); `returnTo` is a path to land on afterwards, default the calendar settings; starting marks the calendar setup step seen | S |
 | GET | `/calendar/google/callback` | Provider callback → store connection, list calendars, redirect to `/settings/calendar?connected=1` or `?error=` | S (session cookie; the state row must be the caller's) |
 | DELETE | `/me/calendar` | Disconnect (revoke, delete events/sources) | S |
 | PATCH | `/me/calendar/sources/:sourceId` | enable/disable | S |

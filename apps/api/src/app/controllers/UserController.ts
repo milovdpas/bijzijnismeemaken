@@ -21,6 +21,7 @@ import {
     notificationSettingSchema,
     notificationTypeParamSchema,
     searchUsersQuerySchema,
+    setupStepParamSchema,
     updateMeSchema,
 } from '../validators/userSchemas';
 
@@ -28,6 +29,11 @@ import {
 export default class UserController {
     me: Handler = (req, res) => {
         sendSuccess<MeResponse>(res, req.user.toDto());
+    };
+
+    markSetup: Handler = async (req, res) => {
+        const { step } = paramsOf(req, setupStepParamSchema);
+        sendSuccess<MeResponse>(res, (await UserService.markSetup(req.user, step)).toDto());
     };
 
     updateMe: Handler<BodyOf<typeof updateMeSchema>> = async (req, res) => {

@@ -12,6 +12,7 @@ import {
     notificationSettingSchema,
     notificationTypeParamSchema,
     searchUsersQuerySchema,
+    setupStepParamSchema,
     updateMeSchema,
 } from '../../validators/userSchemas';
 
@@ -39,6 +40,12 @@ export default class UserRoutes implements IRoute {
             this.controller.changePassword,
         );
         router.delete(API_ENDPOINTS.ME.ROOT, userAuth, this.controller.deleteMe);
+        router.post(
+            API_ENDPOINTS.ME.SETUP(':step'),
+            userAuth,
+            validate({ params: setupStepParamSchema }),
+            this.controller.markSetup,
+        );
 
         router.get(
             API_ENDPOINTS.ME.NOTIFICATION_SETTINGS,

@@ -1,6 +1,7 @@
+import { DateTime } from 'luxon';
 import { Like, Not } from 'typeorm';
 import { PROFILE } from '@bzim/types';
-import type { UpdateMeRequest } from '@bzim/types';
+import type { SetupStep, UpdateMeRequest } from '@bzim/types';
 
 import { AppDataSource } from '../../database/typeorm-db';
 import GroupInvite from '../models/GroupInvite.entity';
@@ -50,6 +51,17 @@ export class UserService {
             await CalendarWriteService.removeAllFor(user);
         }
         return { ok: true, user };
+    }
+
+    /** A setup step done or skipped: seen either way, so the groups page stops asking. */
+    static async markSetup(user: User, step: SetupStep): Promise<User> {
+        const now = DateTime.utc().toJSDate();
+        if (step === 'calendar' && user.setupCalendarSeenAt === null)
+            user.setupCalendarSeenAt = now;
+        if (step === 'availability' && user.setupAvailabilitySeenAt === null) {
+            user.setupAvailabilitySeenAt = now;
+        }
+        return user.save();
     }
 
     /**

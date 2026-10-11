@@ -1,4 +1,8 @@
 import { z } from 'zod';
+
+export const setupStepParamSchema = z.object({
+    step: z.enum(['calendar', 'availability']),
+});
 import { AUTH, AVATAR_KEYS, Locale, NotificationType, PROFILE } from '@bzim/types';
 
 import { normalizeHandle } from '../utils/Normalize';

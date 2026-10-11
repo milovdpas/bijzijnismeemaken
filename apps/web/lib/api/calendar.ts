@@ -11,8 +11,9 @@ import { API_URL } from '@/lib/site';
 import { request } from './client';
 
 /** Where the browser goes to connect: the API starts the provider's OAuth and redirects back to settings. */
-export function calendarConnectUrl(scope: 'read' | 'readwrite'): string {
-    return `${API_URL}${API_ENDPOINTS.ME.CALENDAR_CONNECT}?scope=${scope}`;
+export function calendarConnectUrl(scope: 'read' | 'readwrite', returnTo?: string): string {
+    const query = new URLSearchParams({ scope, ...(returnTo === undefined ? {} : { returnTo }) });
+    return `${API_URL}${API_ENDPOINTS.ME.CALENDAR_CONNECT}?${query.toString()}`;
 }
 
 export function fetchCalendar(): Promise<CalendarConnectionDto | null> {

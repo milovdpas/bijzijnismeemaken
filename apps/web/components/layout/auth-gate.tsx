@@ -39,7 +39,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (signedOut) router.replace(loginUrl(pathname));
         else if (needsOnboarding && !onOnboarding) router.replace(ONBOARDING);
-        else if (me.data?.onboardingDone && onOnboarding) router.replace('/groups');
+        else if (me.data?.onboardingDone && onOnboarding) {
+            // Profile done: on to the optional steps, unless they were seen already.
+            router.replace(me.data.setup.calendarSeen ? '/groups' : '/welcome/calendar');
+        }
     }, [signedOut, needsOnboarding, onOnboarding, me.data?.onboardingDone, router, pathname]);
 
     useEffect(() => {

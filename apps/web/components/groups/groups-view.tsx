@@ -10,6 +10,7 @@ import { InvitesBanner } from '@/components/invites/invites-banner';
 import { PageHeader } from '@/components/common/page-header';
 import { CreateGroupDialog } from '@/components/groups/create-group-dialog';
 import { GroupCard } from '@/components/groups/group-card';
+import { SetupCard } from '@/components/groups/setup-card';
 import { Button } from '@/components/ui/button';
 import { useGroups } from '@/hooks/queries/use-groups';
 import { errorKey } from '@/lib/api/errors';
@@ -28,6 +29,7 @@ export function GroupsView() {
                 action={<CreateGroupDialog />}
             />
 
+            <SetupCard />
             <InvitesBanner />
 
             {groups.isPending && (
