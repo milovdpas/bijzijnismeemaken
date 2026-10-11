@@ -15,6 +15,19 @@ updates:
       groups:
           minor-and-patch:
               update-types: [minor, patch]
+          # ESLint and its plugins only work as a set: a new ESLint major
+          # comes with its @eslint/js and typescript-eslint, in one PR.
+          eslint:
+              patterns: ['eslint', '@eslint/*', 'typescript-eslint', 'eslint-*']
+              update-types: [major]
+      ignore:
+          # The Node types follow the runtime in the Dockerfiles, by hand.
+          - dependency-name: '@types/node'
+            update-types: ['version-update:semver-major']
+          # A TypeScript major is a deliberate move: Next and typescript-eslint
+          # have to support it first.
+          - dependency-name: 'typescript'
+            update-types: ['version-update:semver-major']
       commit-message:
           prefix: 'chore'
 
@@ -28,6 +41,8 @@ updates:
       commit-message:
           prefix: 'chore'
 
+    # The images stay on the Node LTS line (even majors); a move to the next
+    # LTS is done by hand, together with CI and the engines field.
     - package-ecosystem: docker
       directory: /apps/api
       schedule:
@@ -35,6 +50,9 @@ updates:
           day: monday
           time: '07:00'
           timezone: Europe/Amsterdam
+      ignore:
+          - dependency-name: 'node'
+            update-types: ['version-update:semver-major']
       commit-message:
           prefix: 'chore'
 
@@ -45,5 +63,8 @@ updates:
           day: monday
           time: '07:00'
           timezone: Europe/Amsterdam
+      ignore:
+          - dependency-name: 'node'
+            update-types: ['version-update:semver-major']
       commit-message:
           prefix: 'chore'
