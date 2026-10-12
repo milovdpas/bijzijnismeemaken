@@ -8,11 +8,12 @@ import OccurrenceParticipant from '../src/app/domain/models/OccurrenceParticipan
 import { mailer } from '../src/app/infrastructure/modules/mail';
 import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
 import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
+import { GOOGLE_CALENDAR_SCOPES } from '../src/app/infrastructure/modules/calendar/GoogleCalendarProvider';
 import { sessionFor } from './support/auth';
 import { asUser, data } from './support/client';
 import { seedActivity, seedGroup, seedMember, seedUser } from './support/factories';
 
-const WRITE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const WRITE_SCOPE = GOOGLE_CALENDAR_SCOPES.write;
 
 afterEach(() => {
     vi.restoreAllMocks();

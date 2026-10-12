@@ -25,6 +25,7 @@ import {
 import Activity from '../../src/app/domain/models/Activity.entity';
 import CalendarConnection from '../../src/app/domain/models/CalendarConnection.entity';
 import CalendarSource from '../../src/app/domain/models/CalendarSource.entity';
+import { GOOGLE_CALENDAR_SCOPES } from '../../src/app/infrastructure/modules/calendar/GoogleCalendarProvider';
 import Crypt from '../../src/app/infrastructure/utils/Crypt';
 import ActivityInterest from '../../src/app/domain/models/ActivityInterest.entity';
 import ActivityOccurrence from '../../src/app/domain/models/ActivityOccurrence.entity';
@@ -331,7 +332,7 @@ export async function seedCalendarConnection(
         refreshToken: overrides.refreshToken ?? `refresh-${String(counter)}`,
         accessToken: overrides.accessToken ?? null,
         accessTokenExpiresAt: null,
-        scopes: 'https://www.googleapis.com/auth/calendar.readonly',
+        scopes: GOOGLE_CALENDAR_SCOPES.read.join(' '),
         hasWriteScope: overrides.hasWriteScope ?? false,
         status: overrides.status ?? CalendarConnectionStatus.ACTIVE,
         lastSyncedAt: null,

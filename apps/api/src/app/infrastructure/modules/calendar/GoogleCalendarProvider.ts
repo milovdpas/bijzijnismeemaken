@@ -14,8 +14,33 @@ import type {
 } from './CalendarProvider';
 
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
-const READ_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
-const WRITE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+
+/**
+ * The narrowest Google scopes that do the job (least privilege, as Google's
+ * verification asks): the list of calendars to pick from and the events on
+ * them, and for auto-add the events on calendars the person owns, which
+ * covers the main calendar it writes to. Since 2026-10-12; before, the app
+ * asked for `calendar.readonly` and `calendar.events`.
+ */
+export const GOOGLE_CALENDAR_SCOPES = {
+    read: [
+        'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
+        'https://www.googleapis.com/auth/calendar.events.readonly',
+    ],
+    write: 'https://www.googleapis.com/auth/calendar.events.owned',
+} as const;
+
+/** Grants that let the app write to the main calendar: today's, and the broader ones given before. */
+const WRITE_GRANTS = new Set<string>([
+    GOOGLE_CALENDAR_SCOPES.write,
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/calendar',
+]);
+
+/** Whether the scopes Google granted include writing to the person's own calendars. */
+export function grantsCalendarWrite(grantedScopes: readonly string[]): boolean {
+    return grantedScopes.some((scope) => WRITE_GRANTS.has(scope));
+}
 /** Google pages at 250 by default; the maximum spares a round trip per busy calendar. */
 const PAGE_SIZE = 2500;
 const TIMEOUT_MS = 15_000;
@@ -117,7 +142,12 @@ export class GoogleCalendarProvider implements CalendarProvider {
 
     connectUrl(state: string, scope: CalendarScope): string {
         return this.client().generateAuthUrl({
-            scope: ['openid', 'email', READ_SCOPE, ...(scope === 'readwrite' ? [WRITE_SCOPE] : [])],
+            scope: [
+                'openid',
+                'email',
+                ...GOOGLE_CALENDAR_SCOPES.read,
+                ...(scope === 'readwrite' ? [GOOGLE_CALENDAR_SCOPES.write] : []),
+            ],
             state,
             // Offline with consent forced: the only way Google hands out a refresh
             // token every time, and the incremental write scope needs the earlier

@@ -46,8 +46,10 @@ export default function PrivacyPolicyPage() {
             </p>
             <p>
                 If you choose to connect a Google Calendar, the app asks for the Google Calendar
-                scopes <code>calendar.readonly</code> and, only if you turn on &ldquo;add planned
-                activities to my calendar&rdquo;, <code>calendar.events</code>. In plain words:
+                scopes <code>calendar.calendarlist.readonly</code> (the list of your calendars) and{' '}
+                <code>calendar.events.readonly</code> (their events) and, only if you turn on
+                &ldquo;add planned activities to my calendar&rdquo;,{' '}
+                <code>calendar.events.owned</code> (events on calendars you own). In plain words:
             </p>
             <ul>
                 <li>
@@ -63,10 +65,11 @@ export default function PrivacyPolicyPage() {
                     calendar. Nothing else.
                 </li>
                 <li>
-                    <strong>How it is stored:</strong> the events are copied to the app&rsquo;s
+                    <strong>How it is protected:</strong> the events are copied to the app&rsquo;s
                     database and refreshed nightly; the access and refresh tokens Google issues are
-                    stored encrypted with a key kept separate from the rest of the data; the account
-                    e-mail is stored encrypted.
+                    stored encrypted (AES-256-GCM) with a key kept separate from the rest of the
+                    data; the account e-mail is stored encrypted. Everything travels over HTTPS, and
+                    only the app&rsquo;s operator has access to the server and the database.
                 </li>
                 <li>
                     <strong>Who it is shared with:</strong> nobody. Other members only ever see

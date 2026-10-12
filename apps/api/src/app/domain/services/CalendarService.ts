@@ -15,6 +15,7 @@ import type {
     CalendarScope,
 } from '../../infrastructure/modules/calendar/CalendarProvider';
 import { CalendarProviderFactory } from '../../infrastructure/modules/calendar/CalendarProviderFactory';
+import { grantsCalendarWrite } from '../../infrastructure/modules/calendar/GoogleCalendarProvider';
 import Crypt from '../../infrastructure/utils/Crypt';
 import { generateToken } from '../../infrastructure/utils/Token';
 import { CalendarWriteService } from './CalendarWriteService';
@@ -23,7 +24,6 @@ import { CalendarWriteService } from './CalendarWriteService';
 const OAUTH_STATE_MINUTES = 10;
 /** An access token this close to expiry is refreshed before use. */
 const REFRESH_MARGIN_SECONDS = 60;
-const WRITE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
 
 export type ConnectResult =
     | {
@@ -140,7 +140,7 @@ export class CalendarService {
                     accessToken: tokens.accessToken,
                     accessTokenExpiresAt: tokens.expiresAt,
                     scopes: tokens.grantedScopes.join(' '),
-                    hasWriteScope: tokens.grantedScopes.includes(WRITE_SCOPE),
+                    hasWriteScope: grantsCalendarWrite(tokens.grantedScopes),
                     status: CalendarConnectionStatus.ACTIVE,
                     lastSyncedAt: null,
                     lastError: null,

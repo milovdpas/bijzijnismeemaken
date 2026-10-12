@@ -5,7 +5,9 @@ import { ProviderError } from '../src/app/infrastructure/modules/calendar/Calend
 import { CalendarProviderFactory } from '../src/app/infrastructure/modules/calendar/CalendarProviderFactory';
 import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calendar/FixtureCalendarProvider';
 import {
+    GOOGLE_CALENDAR_SCOPES,
     GoogleCalendarProvider,
+    grantsCalendarWrite,
     mapGoogleEvent,
     toGoogleEvent,
 } from '../src/app/infrastructure/modules/calendar/GoogleCalendarProvider';
@@ -118,13 +120,33 @@ describe('GoogleCalendarProvider', () => {
         expect(url.searchParams.get('access_type')).toBe('offline');
         expect(url.searchParams.get('prompt')).toBe('consent');
         expect(url.searchParams.get('include_granted_scopes')).toBe('true');
-        expect(url.searchParams.get('scope')).toContain('calendar.events');
         expect(url.searchParams.get('redirect_uri')).toContain('/calendar/google/callback');
-        expect(
-            new URL(new GoogleCalendarProvider().connectUrl('abc', 'read')).searchParams.get(
-                'scope',
-            ),
-        ).not.toContain('calendar.events');
+        // The narrowest scopes: the calendar list and events to read, own calendars to write.
+        const scopes = (connect: 'read' | 'readwrite') =>
+            (
+                new URL(new GoogleCalendarProvider().connectUrl('abc', connect)).searchParams.get(
+                    'scope',
+                ) ?? ''
+            ).split(' ');
+        expect(scopes('read')).toEqual([
+            'openid',
+            'email',
+            'https://www.googleapis.com/auth/calendar.calendarlist.readonly',
+            'https://www.googleapis.com/auth/calendar.events.readonly',
+        ]);
+        expect(scopes('readwrite')).toEqual([
+            ...scopes('read'),
+            'https://www.googleapis.com/auth/calendar.events.owned',
+        ]);
+    });
+
+    it('counts the write scope of today and the broader ones granted before as a write grant', () => {
+        expect(grantsCalendarWrite([...GOOGLE_CALENDAR_SCOPES.read])).toBe(false);
+        expect(grantsCalendarWrite([GOOGLE_CALENDAR_SCOPES.write])).toBe(true);
+        expect(grantsCalendarWrite(['https://www.googleapis.com/auth/calendar.events'])).toBe(true);
+        expect(grantsCalendarWrite(['https://www.googleapis.com/auth/calendar.readonly'])).toBe(
+            false,
+        );
     });
 
     it('pages through events and treats a 401 as a dead grant', async () => {

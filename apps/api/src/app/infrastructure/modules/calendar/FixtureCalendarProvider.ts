@@ -9,6 +9,7 @@ import type {
     ProviderCalendar,
     ProviderEvent,
 } from './CalendarProvider';
+import { GOOGLE_CALENDAR_SCOPES } from './GoogleCalendarProvider';
 
 /**
  * The provider the tests talk to: scripted calendars and events in memory,
@@ -34,7 +35,7 @@ export class FixtureCalendarProvider implements CalendarProvider {
         accessToken: 'fixture-access',
         expiresAt: new Date(Date.now() + 3_600_000),
         accountEmail: 'agenda@example.test',
-        grantedScopes: ['https://www.googleapis.com/auth/calendar.readonly'],
+        grantedScopes: [...GOOGLE_CALENDAR_SCOPES.read],
     };
     /** Set to make every call fail: `reauth` as a dead grant, `error` as a passing failure. */
     failWith: 'reauth' | 'error' | null = null;

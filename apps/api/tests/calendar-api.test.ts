@@ -151,6 +151,7 @@ describe('calendar connection', () => {
         fixture.exchanged = {
             ...fixture.exchanged,
             refreshToken: 'second',
+            // A write grant from before 2026-10-12, broader than today's: still enough.
             grantedScopes: [
                 ...fixture.exchanged.grantedScopes,
                 'https://www.googleapis.com/auth/calendar.events',
