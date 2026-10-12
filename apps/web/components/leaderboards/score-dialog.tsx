@@ -18,7 +18,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { parseScore, scoreToInput } from '@/lib/score-input';
+import { maskTimeInput, parseScore, scoreToInput } from '@/lib/score-input';
 
 /**
  * One person's score for the current period, typed as points or as a time.
@@ -89,7 +89,14 @@ export function ScoreDialog({
                             inputMode="decimal"
                             placeholder={scoreType === ScoreType.TIME ? '1:23.450' : '0'}
                             value={text}
-                            onChange={(event) => setText(event.target.value)}
+                            onChange={(event) =>
+                                // A phone's number pad has no colon: a time puts its own in.
+                                setText(
+                                    scoreType === ScoreType.TIME
+                                        ? maskTimeInput(event.target.value)
+                                        : event.target.value,
+                                )
+                            }
                             className="text-lg tabular-nums"
                         />
                     </Field>

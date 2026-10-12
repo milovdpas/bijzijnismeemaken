@@ -593,7 +593,8 @@ export const nl: Dict = {
         points: 'Punten',
         time: 'Tijd',
         enterPointsHelp: 'Het nieuwe totaal, niet wat erbij kwam. Maximaal drie decimalen.',
-        enterTimeHelp: 'Uren, minuten, seconden en milliseconden, zoals 1:02:03.450 of 1:23.',
+        enterTimeHelp:
+            'Typ de cijfers, de dubbele punten komen vanzelf: 123 is 1:23, 10203 is 1:02:03. Een punt of komma begint de milliseconden.',
         invalid: 'Dat is geen score.',
         clear: 'Score wissen',
     },

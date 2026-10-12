@@ -593,7 +593,8 @@ export const en = {
         points: 'Points',
         time: 'Time',
         enterPointsHelp: 'The new total, not what was added. Up to three decimals.',
-        enterTimeHelp: 'Hours, minutes, seconds and milliseconds, like 1:02:03.450 or 1:23.',
+        enterTimeHelp:
+            'Type the digits and the colons come by themselves: 123 is 1:23, 10203 is 1:02:03. A dot or comma starts the milliseconds.',
         invalid: 'That is not a score.',
         clear: 'Clear score',
     },
