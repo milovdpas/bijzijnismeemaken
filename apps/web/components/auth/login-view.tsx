@@ -1,9 +1,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { rememberDestination } from '@/lib/after-setup';
 import { safeReturnTo } from '@/lib/return-to';
 
 import { GoogleButton } from '@/components/auth/google-button';
@@ -21,7 +22,9 @@ const GOOGLE_ERRORS: Record<string, string> = {
 
 /**
  * Sign in or create an account. Google first, because it is one click; the
- * email form underneath for everyone else. `returnTo` survives both routes.
+ * email form underneath for everyone else. `returnTo` survives both routes,
+ * and is also kept on the device for a new account, which goes through
+ * onboarding (and maybe an emailed link) before it gets there.
  */
 export function LoginView() {
     const { t } = useTranslation();
@@ -31,6 +34,10 @@ export function LoginView() {
     const [tab, setTab] = useState<'sign-in' | 'register'>(
         params.get('register') === '1' ? 'register' : 'sign-in',
     );
+
+    useEffect(() => {
+        if (returnTo !== undefined) rememberDestination(returnTo);
+    }, [returnTo]);
 
     return (
         <div className="space-y-5">

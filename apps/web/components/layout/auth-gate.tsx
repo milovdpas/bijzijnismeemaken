@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 
 import { AppLogo } from '@/components/layout/app-logo';
 import { useMe } from '@/hooks/queries/use-me';
+import { rememberDestination, takeDestination } from '@/lib/after-setup';
 import { ApiError, setUnauthenticatedHandler } from '@/lib/api/client';
 import { usePreferencesStore } from '@/store/use-preferences-store';
 
@@ -14,9 +15,11 @@ const ONBOARDING = '/onboarding';
  * Who is here, and whether they may be.
  *
  * Signed out: to the login page, remembering where they were going. Signed
- * in but not onboarded: to onboarding, and nowhere else until it is done.
- * Onboarded and on the onboarding page: to the groups. While the answer is
- * on its way, a skeleton rather than a flash of the wrong screen.
+ * in but not onboarded: to onboarding, and nowhere else until it is done;
+ * the page they were on (an invite link) waits on the device until the
+ * welcome steps are through. Onboarded and on the onboarding page: on to
+ * that page or the groups. While the answer is on its way, a skeleton
+ * rather than a flash of the wrong screen.
  *
  * Also the place where the profile's language wins over the device's: the
  * server copy is what the emails use, so the app follows it.
@@ -35,15 +38,19 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     const signedOut = me.isError && me.error instanceof ApiError && me.error.status === 401;
     const needsOnboarding = me.data !== undefined && !me.data.onboardingDone;
     const onOnboarding = pathname === ONBOARDING;
+    const onboardingDone = me.data?.onboardingDone === true;
+    const calendarSeen = me.data?.setup.calendarSeen === true;
 
     useEffect(() => {
         if (signedOut) router.replace(loginUrl(pathname));
-        else if (needsOnboarding && !onOnboarding) router.replace(ONBOARDING);
-        else if (me.data?.onboardingDone && onOnboarding) {
+        else if (needsOnboarding && !onOnboarding) {
+            rememberDestination(pathname);
+            router.replace(ONBOARDING);
+        } else if (onboardingDone && onOnboarding) {
             // Profile done: on to the optional steps, unless they were seen already.
-            router.replace(me.data.setup.calendarSeen ? '/groups' : '/welcome/calendar');
+            router.replace(calendarSeen ? (takeDestination() ?? '/groups') : '/welcome/calendar');
         }
-    }, [signedOut, needsOnboarding, onOnboarding, me.data?.onboardingDone, router, pathname]);
+    }, [signedOut, needsOnboarding, onOnboarding, onboardingDone, calendarSeen, router, pathname]);
 
     useEffect(() => {
         if (me.data !== undefined && me.data.locale !== locale) setLocale(me.data.locale);

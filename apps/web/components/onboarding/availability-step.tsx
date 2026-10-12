@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { useCreateRule, useDeleteRule, useRules } from '@/hooks/queries/use-availability';
 import { useMarkSetup } from '@/hooks/queries/use-me';
 import { errorKey } from '@/lib/api/errors';
+import { takeDestination } from '@/lib/after-setup';
 
 /**
  * Step three of three, skippable: the week schedule from the availability
@@ -37,7 +38,11 @@ export function AvailabilityStep() {
         }
     };
     const error = createRule.error ?? deleteRule.error ?? mark.error;
-    const finish = () => mark.mutate('availability', { onSuccess: () => router.push('/groups') });
+    // The end of the welcome steps: where they were going before signing up, else the groups.
+    const finish = () =>
+        mark.mutate('availability', {
+            onSuccess: () => router.push(takeDestination() ?? '/groups'),
+        });
 
     return (
         <StepShell
