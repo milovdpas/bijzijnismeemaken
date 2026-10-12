@@ -5,7 +5,7 @@ Inputs for a user `u` and local date `d` (Europe/Amsterdam), daypart `p ∈ {mor
 
 1. **Manual one-off**: row in `manual_unavailability (u, d, p)` → busy (reason `manual`).
 2. **Weekly rule**: row with `weekday = weekday(d)`, `daypart = p`, `(valid_from IS NULL OR ≤ d)`, `(valid_until IS NULL OR ≥ d)` → busy (reason `rule`).
-3. **Calendar**: any `calendar_events` of `u` from an enabled source where NOT ignored, NOT `transparent` (Google "Free"), and overlaps:
+3. **Calendar**: any `calendar_events` of `u` from an enabled source where NOT ignored, and overlaps (an event marked "Free" in Google counts too, since 2026-10-12):
    - ignored if `lower(title)` ∈ ignore titles, or `recurring_event_id` ∈ ignored series;
    - all-day event: `start_date ≤ d < end_date` → busy for all three dayparts;
    - timed event: convert `[start_at, end_at)` to Amsterdam local; overlaps `[d p.start, d p.end)` iff `start < p.end && end > p.start` (touching edges don't count);

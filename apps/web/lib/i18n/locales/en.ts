@@ -1025,7 +1025,8 @@ export const en = {
             'Pick the Google account whose calendar should count. It can be another account than the one you sign in with.',
         privacy:
             'Your friends only ever see busy or free, never what an appointment is. The titles stay on your own settings page.',
-        freeHint: 'Appointments marked "Free" in Google never block you.',
+        freeHint:
+            'Every appointment counts as busy, also one marked "Free" in Google. Ignore the ones that should not count from your calendar settings.',
         connectGoogle: 'Connect Google Calendar',
         connected:
             'Connected. Your calendars are listed below; the first sync runs tonight, or press "Sync now".',
@@ -1064,7 +1065,6 @@ export const en = {
             'What was synced, for you alone. Keep an appointment or a whole series out of the count.',
         noEvents: 'Nothing synced for these weeks yet.',
         untitled: '(no title)',
-        free: 'Free',
         ignoreTitle: 'Ignore every "{{title}}"',
         ignoreSeries: 'Ignore this series ({{title}})',
         rulesTitle: 'Ignored',

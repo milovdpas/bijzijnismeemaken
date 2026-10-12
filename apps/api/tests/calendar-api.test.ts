@@ -265,7 +265,8 @@ describe('calendar connection', () => {
         );
         const day = (date: string) => mine.days.find((entry) => entry.date === date)?.dayparts;
         expect(day('2026-11-03')?.[Daypart.MORNING]).toBe('calendar');
-        expect(day('2026-11-03')?.[Daypart.AFTERNOON]).toBeNull();
+        // Marked "Free" in Google, and busy all the same: only ignore rules keep an event out.
+        expect(day('2026-11-03')?.[Daypart.AFTERNOON]).toBe('calendar');
         expect(day('2026-11-04')?.[Daypart.EVENING]).toBe('calendar');
         // The owner sees what is behind a calendar cell; the group never does.
         expect(

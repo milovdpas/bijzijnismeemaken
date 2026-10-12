@@ -1025,7 +1025,8 @@ export const nl: Dict = {
             'Kies het Google-account waarvan de agenda moet meetellen. Dat mag een ander account zijn dan waarmee je inlogt.',
         privacy:
             'Je vrienden zien alleen bezet of vrij, nooit wat een afspraak is. De titels blijven op je eigen instellingenpagina.',
-        freeHint: 'Afspraken die in Google op "Beschikbaar" staan, blokkeren je nooit.',
+        freeHint:
+            'Elke afspraak telt als bezet, ook als hij in Google op "Beschikbaar" staat. Afspraken die niet mogen tellen, negeer je via je agenda-instellingen.',
         connectGoogle: 'Google Agenda koppelen',
         connected:
             'Gekoppeld. Je agenda\'s staan hieronder; de eerste synchronisatie loopt vannacht, of druk op "Nu synchroniseren".',
@@ -1065,7 +1066,6 @@ export const nl: Dict = {
             'Wat er is gesynchroniseerd, alleen voor jou. Hou een afspraak of een hele reeks buiten de telling.',
         noEvents: 'Nog niets gesynchroniseerd voor deze weken.',
         untitled: '(geen titel)',
-        free: 'Beschikbaar',
         ignoreTitle: 'Negeer elke "{{title}}"',
         ignoreSeries: 'Negeer deze reeks ({{title}})',
         rulesTitle: 'Genegeerd',

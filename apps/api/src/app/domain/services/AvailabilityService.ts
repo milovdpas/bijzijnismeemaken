@@ -80,10 +80,11 @@ export class AvailabilityService {
                     },
                 ],
             }),
-            // Only what can overlap the window; "Free" events never block (docs/06).
+            // Only what can overlap the window. Every event counts, also one marked
+            // "Free" in Google, which all-day events are by default; the ignore
+            // rules are how somebody keeps one out (docs/06).
             CalendarEvent.findBy({
                 userId: In(userIds),
-                transparent: false,
                 startAt: LessThan(windowEnd),
                 endAt: MoreThan(windowStart),
             }),
@@ -176,7 +177,6 @@ export class AvailabilityService {
             CalendarEvent.find({
                 where: {
                     userId,
-                    transparent: false,
                     startAt: LessThan(windowEnd),
                     endAt: MoreThan(windowStart),
                 },

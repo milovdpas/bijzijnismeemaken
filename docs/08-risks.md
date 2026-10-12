@@ -8,7 +8,7 @@
 5. **iOS PWA**: push requires iOS 16.4+ and home-screen install; cookies in standalone mode are fine. ICS "add to calendar" from email opens Calendar on iOS; Google Calendar template link for Android.
 6. **Calendar volume**: 180 days × a few calendars × ~20 users is small, but full-window replace per night is O(events); fine at this scale. Google API quota (10k req/day default) is far above need.
 7. **Decimal scores**: using DECIMAL(16,3) for both number and time(ms). Time input UX (hh:mm:ss.SSS) needs care; confirm that milliseconds precision is wanted or seconds is enough.
-11. **Google "Free" events**: respecting transparency means a user who marks a real appointment as "Free" shows as available; documented in the calendar settings help text.
+11. **Google "Free" events**: since 2026-10-12 every synced event blocks, also one marked "Free" (Google's default for all-day events). An event that should not count, such as a public holiday or a reminder, needs an ignore rule; the calendar settings help text says so.
 12. **Stale planned occurrences**: non-recurring activities keep `planned` after the date passes until someone acts. Consider a gentle in-app nudge ("Did this happen?") in M3 rather than auto-done.
 8. **Account deletion vs. leaderboard history**: snapshots keep display names of deleted users in groups they were in; acceptable under "friends only" assumption, documented in the privacy note in settings.
 9. **Shared zod schemas**: template keeps zod only in the API with hand-written DTOs in `packages/types`. Keeping that for consistency; revisit if duplication hurts.

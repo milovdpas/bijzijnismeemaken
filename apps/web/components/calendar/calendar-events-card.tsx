@@ -7,7 +7,6 @@ import { EyeOff, Repeat } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { FormMessage } from '@/components/common/form-message';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAddIgnoreRule, useCalendarEvents, useIgnoreRules } from '@/hooks/queries/use-calendar';
@@ -80,11 +79,6 @@ export function CalendarEventsCard({ from, to }: { from: string; to: string }) {
                                                         ? t('calendarSettings.untitled')
                                                         : event.title}
                                                 </span>
-                                                {event.transparent && (
-                                                    <Badge variant="outline">
-                                                        {t('calendarSettings.free')}
-                                                    </Badge>
-                                                )}
                                             </span>
                                             <span className="block text-xs text-muted-foreground">
                                                 {describe(event, i18n.language)}
