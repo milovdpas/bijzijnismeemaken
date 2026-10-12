@@ -62,6 +62,9 @@ export default class CalendarController {
             res.redirect(302, `${env.appUrl}/settings/calendar?error=${reason}`);
             return;
         }
+        // Synced straight away, so the calendar counts on the page this lands on
+        // rather than after the nightly run. A failure is kept on the connection.
+        await CalendarSyncService.syncConnection(result.connection);
         if (result.autoAddEnabled) {
             await CalendarWriteService.backfill(req.user);
         }
@@ -90,6 +93,10 @@ export default class CalendarController {
         if (source === null) {
             sendNotFound(res, 'Calendar');
             return;
+        }
+        // A calendar switched on counts at once; one switched off lost its events already.
+        if (enabled) {
+            await CalendarSyncService.syncConnection(await CalendarService.reload(connection.id));
         }
         sendSuccess<CalendarSourceDto>(res, source.toDto());
     };

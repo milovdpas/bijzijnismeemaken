@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ERROR_CODES } from '@bzim/types';
 
 import { ApiError } from './client';
-import { errorKey, refusalProblem, toastWorthy } from './errors';
+import { errorKey, refusalProblem, retryAfterSeconds, toastWorthy } from './errors';
 
 describe('toastWorthy', () => {
     it('leaves what a form explains inline to the form', () => {
@@ -48,5 +48,20 @@ describe('refusalProblem', () => {
             refusalProblem(new ApiError(ERROR_CODES.CONFLICT, 409, 'no', { problem: 3 })),
         ).toBeNull();
         expect(refusalProblem(new Error('x'))).toBeNull();
+    });
+});
+
+describe('retryAfterSeconds', () => {
+    it('reads the wait from a 429, and nothing from other errors', () => {
+        const limited = new ApiError(ERROR_CODES.RATE_LIMITED, 429, 'no', {
+            retryAfterSeconds: 240,
+        });
+        expect(retryAfterSeconds(limited)).toBe(240);
+        expect(retryAfterSeconds(new ApiError(ERROR_CODES.RATE_LIMITED, 429, 'no'))).toBeNull();
+        expect(
+            retryAfterSeconds(
+                new ApiError(ERROR_CODES.CONFLICT, 409, 'no', { retryAfterSeconds: 5 }),
+            ),
+        ).toBeNull();
     });
 });

@@ -26,7 +26,7 @@ import { FixtureCalendarProvider } from '../src/app/infrastructure/modules/calen
 import type { ProviderEvent } from '../src/app/infrastructure/modules/calendar/CalendarProvider';
 import { env } from '../src/config/app';
 import { sessionFor } from './support/auth';
-import { api, asUser, asWorker, data } from './support/client';
+import { api, asUser, asWorker, data, error } from './support/client';
 import {
     seedActivity,
     seedGroup,
@@ -125,8 +125,9 @@ describe('calendar connection', () => {
             accountEmail: 'agenda@example.test',
             status: CalendarConnectionStatus.ACTIVE,
             hasWriteScope: false,
-            lastSyncedAt: null,
         });
+        // Synced on the way back, so the settings page opens with the calendar counted.
+        expect(connection.lastSyncedAt).not.toBeNull();
         expect(
             connection.sources.map((source) => [source.name, source.isPrimary, source.enabled]),
         ).toEqual([
@@ -246,19 +247,23 @@ describe('calendar connection', () => {
         const work = connection.sources.find((source) => source.name === 'Werk');
         if (work === undefined) throw new Error('no work calendar');
 
-        // Before a sync: no calendar, nothing busy.
-        const before = data<GroupAvailabilityResponse>(
-            await asMe.get(
-                `${API_ENDPOINTS.GROUPS.AVAILABILITY(group.id)}?from=2026-11-02&to=2026-11-08`,
-            ),
-        );
-        expect(before.users.find((entry) => entry.user.id === user.id)?.hasCalendar).toBe(false);
-
-        const synced = data<CalendarConnectionDto>(await asMe.post(API_ENDPOINTS.ME.CALENDAR_SYNC));
-        expect(synced.lastSyncedAt).not.toBeNull();
-        expect(synced.status).toBe(CalendarConnectionStatus.ACTIVE);
+        // Connecting syncs at once, so the calendar counts without waiting for the night.
+        expect(connection.lastSyncedAt).not.toBeNull();
         expect(await CalendarEvent.countBy({ userId: user.id })).toBe(3);
-        expect((await asMe.post(API_ENDPOINTS.ME.CALENDAR_SYNC)).status).toBe(429);
+
+        // By hand three times per five minutes; the fourth says how long to wait.
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+            const synced = data<CalendarConnectionDto>(
+                await asMe.post(API_ENDPOINTS.ME.CALENDAR_SYNC),
+            );
+            expect(synced.status).toBe(CalendarConnectionStatus.ACTIVE);
+        }
+        expect(await CalendarEvent.countBy({ userId: user.id })).toBe(3);
+        const tooSoon = await asMe.post(API_ENDPOINTS.ME.CALENDAR_SYNC);
+        expect(tooSoon.status).toBe(429);
+        const wait = (error(tooSoon).details as { retryAfterSeconds: number }).retryAfterSeconds;
+        expect(wait).toBeGreaterThan(0);
+        expect(wait).toBeLessThanOrEqual(300);
 
         const mine = data<MyAvailabilityResponse>(
             await asMe.get(`${API_ENDPOINTS.ME.AVAILABILITY}?from=2026-11-02&to=2026-11-08`),
@@ -325,11 +330,12 @@ describe('calendar connection', () => {
         expect((await asMe.delete(API_ENDPOINTS.ME.CALENDAR_IGNORE_RULE(ruleId))).status).toBe(204);
         expect((await asMe.delete(API_ENDPOINTS.ME.CALENDAR_IGNORE_RULE(ruleId))).status).toBe(404);
 
-        // Turning the work calendar on makes the nightly job pick it up; off again drops its events.
+        // Turning the work calendar on syncs it at once; off again drops its events.
         const toggled = data<CalendarSourceDto>(
             await asMe.patch(API_ENDPOINTS.ME.CALENDAR_SOURCE(work.id), { enabled: true }),
         );
         expect(toggled.enabled).toBe(true);
+        expect(await CalendarEvent.countBy({ userId: user.id })).toBe(4);
         const job = data<WorkerJobResponse>(
             await asWorker(env.workerToken).post(API_ENDPOINTS.WORKER.CALENDAR_SYNC),
         );

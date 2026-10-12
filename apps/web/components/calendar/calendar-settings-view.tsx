@@ -34,13 +34,14 @@ import {
 } from '@/hooks/queries/use-calendar';
 import { useMe, useUpdateMe } from '@/hooks/queries/use-me';
 import { goToCalendarConnect } from '@/lib/api/calendar';
-import { errorKey } from '@/lib/api/errors';
+import { errorKey, retryAfterSeconds } from '@/lib/api/errors';
 import { formatDateTime } from '@/lib/format-date';
 
 /** The connection card: who is connected, how it is doing, and the three things to do about it. */
 function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
     const { t, i18n } = useTranslation();
     const sync = useSyncCalendar();
+    const waitSeconds = retryAfterSeconds(sync.error);
     const disconnect = useDisconnectCalendar();
     const me = useMe();
     const updateMe = useUpdateMe();
@@ -123,7 +124,15 @@ function ConnectionCard({ connection }: { connection: CalendarConnectionDto }) {
                         {t('calendarSettings.lastError', { error: connection.lastError })}
                     </FormMessage>
                 )}
-                {sync.isError && <FormMessage tone="error">{t(errorKey(sync.error))}</FormMessage>}
+                {sync.isError && (
+                    <FormMessage tone="error">
+                        {waitSeconds === null
+                            ? t(errorKey(sync.error))
+                            : t('calendarSettings.syncWait', {
+                                  count: Math.ceil(waitSeconds / 60),
+                              })}
+                    </FormMessage>
+                )}
             </CardContent>
             <CardFooter className="flex flex-wrap justify-end gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(true)}>

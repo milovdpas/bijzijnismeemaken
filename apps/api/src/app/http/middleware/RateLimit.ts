@@ -105,7 +105,11 @@ export function rateLimit(options: RateLimitOptions): RequestHandler {
                     `against a ceiling of ${String(options.limit)}. Retry in ${String(retryAfter)}s.`,
             );
             res.setHeader('Retry-After', String(retryAfter));
-            sendError(res, ERROR_CODES.RATE_LIMITED, 'Too many requests. Try again shortly.', 429);
+            // In the body too: the browser client reads bodies, not headers, and a
+            // screen can then say how long to wait.
+            sendError(res, ERROR_CODES.RATE_LIMITED, 'Too many requests. Try again shortly.', 429, {
+                retryAfterSeconds: retryAfter,
+            });
             return;
         }
 

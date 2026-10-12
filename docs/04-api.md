@@ -85,7 +85,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | GET | `/calendar/google/callback` | Provider callback → store connection, list calendars, redirect to `/settings/calendar?connected=1` or `?error=` | S (session cookie; the state row must be the caller's) |
 | DELETE | `/me/calendar` | Disconnect (revoke, delete events/sources) | S |
 | PATCH | `/me/calendar/sources/:sourceId` | enable/disable | S |
-| POST | `/me/calendar/sync` | Manual sync now (rate limited: 1/5 min) | S |
+| POST | `/me/calendar/sync` | Manual sync now (rate limited: 3 per 5 min; a 429 carries `details.retryAfterSeconds`, as every rate limit does). Connecting and switching a calendar on sync by themselves | S |
 | GET | `/me/calendar/events?from=&to=` | My own synced events with titles (for ignore rules) | S |
 | GET/POST/DELETE | `/me/calendar/ignore-rules` | Ignore by title / series | S |
 

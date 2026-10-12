@@ -61,3 +61,11 @@ export function refusalProblem(error: unknown): string | null {
     const problem = (error.details as { problem?: unknown } | undefined)?.problem;
     return typeof problem === 'string' ? problem : null;
 }
+
+/** How long a 429 asked to wait, in seconds, or null for anything else. */
+export function retryAfterSeconds(error: unknown): number | null {
+    if (!(error instanceof ApiError) || error.code !== ERROR_CODES.RATE_LIMITED) return null;
+    const seconds = (error.details as { retryAfterSeconds?: unknown } | undefined)
+        ?.retryAfterSeconds;
+    return typeof seconds === 'number' && seconds > 0 ? seconds : null;
+}

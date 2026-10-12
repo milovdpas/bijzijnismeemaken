@@ -1048,6 +1048,8 @@ export const en = {
         reconnect: 'Reconnect',
         lastError: 'Last error: {{error}}',
         syncNow: 'Sync now',
+        syncWait_one: 'Synced a few times just now. You can sync again in {{count}} minute.',
+        syncWait_other: 'Synced a few times just now. You can sync again in {{count}} minutes.',
         autoAdd: 'Add planned activities to my calendar',
         autoAddHelp:
             'Every activity you are planned in for appears in your main calendar and follows its date.',

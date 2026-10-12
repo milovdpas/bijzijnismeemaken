@@ -1048,6 +1048,8 @@ export const nl: Dict = {
         reconnect: 'Opnieuw koppelen',
         lastError: 'Laatste fout: {{error}}',
         syncNow: 'Nu synchroniseren',
+        syncWait_one: 'Net een paar keer gesynchroniseerd. Over {{count}} minuut kan het weer.',
+        syncWait_other: 'Net een paar keer gesynchroniseerd. Over {{count}} minuten kan het weer.',
         autoAdd: 'Geplande activiteiten in mijn agenda zetten',
         autoAddHelp:
             'Elke activiteit waarvoor je bent ingepland komt in je hoofdagenda en verhuist mee met de datum.',

@@ -60,6 +60,8 @@ export function useSyncCalendar(): UseMutationResult<CalendarConnectionDto, Erro
     const client = useQueryClient();
     return useMutation({
         mutationFn: syncCalendar,
+        // The settings card says what went wrong, with the wait when it was too soon.
+        meta: { silent: true },
         onSuccess: (connection) => {
             client.setQueryData(queryKeys.calendar.connection, connection);
             invalidateCalendar(client);

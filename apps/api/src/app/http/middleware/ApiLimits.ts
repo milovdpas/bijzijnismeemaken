@@ -99,10 +99,13 @@ export const imageSearchLimit = rateLimit({
     key: (req: Request) => req.user.id,
 });
 
-/** A manual calendar sync spends a Google call per calendar: once every five minutes per person. */
+/**
+ * A manual calendar sync spends a Google call per calendar: three every five
+ * minutes per person, which forgives a double tap and still spares the quota.
+ */
 export const calendarSyncLimit = rateLimit({
     name: 'calendar-sync',
-    limit: 1,
+    limit: 3,
     windowMs: 5 * MINUTE,
     key: (req: Request) => req.user.id,
 });
