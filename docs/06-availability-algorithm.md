@@ -15,7 +15,7 @@ Inputs for a user `u` and local date `d` (Europe/Amsterdam), daypart `p ∈ {mor
 Computation: `AvailabilityService.matrix(userIds, from, to)` loads all blocks/rules/events for the users and range in 3 queries, builds a `Map<userId, Map<date, Map<daypart, Reason|null>>>` in memory (max ~ 20 users × 84 days × 3 = ~5k cells). The group endpoint strips reasons to `busy/free`; the self endpoint keeps reasons.
 
 **Date suggestions** (`SuggestionService.rank(activity, memberIds, from = today, weeks = 12)`):
-1. Candidate dates: `date_mode = specific` → that date only (if ≥ today); `weekday` → every matching weekday in range; `none` → every day in range.
+1. Candidate dates: `date_mode = specific` → that date only (if ≥ today); `weekday` → every matching weekday in range; `period` → every day of the period in range, the range starting on the period's first day when that lies after `from`; `none` → every day in range.
 2. Candidate dayparts: `preferred_dayparts` if set; else if the activity has a `start_time`, the daypart containing it; else all three.
 3. For each (date, daypart): `freeCount` = members free, `freeIds`, `busyIds`.
 4. Sort by `freeCount DESC`, then `date ASC`, then daypart order (morning, afternoon, evening). Return top 30 plus the total candidate count; the UI groups by date.

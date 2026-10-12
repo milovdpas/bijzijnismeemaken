@@ -68,7 +68,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 - Leave group (admin/member): see 1.6.
 
 ## 1.3 Activities
-- Any member creates an activity: category (event, home, outdoors, sports, food and drinks, trip, other; one column for icon, filter and form hints, never separate schemas; decided 2026-10-10), title, description, image URL, date mode (`none` | `specific` date | `weekday`), optional time, recurring flag, optional extras: location text + maps URL, min/max people, cost per person, duration (minutes), external URL, preferred dayparts (subset of morning/afternoon/evening).
+- Any member creates an activity: category (event, home, outdoors, sports, food and drinks, trip, other; one column for icon, filter and form hints, never separate schemas; decided 2026-10-10), title, description, image URL, date mode (`none` | `specific` date | `weekday` | `period`: any day from a first to a last day, both included), optional time, recurring flag, optional extras: location text + maps URL, min/max people, cost per person, duration (minutes), external URL, preferred dayparts (subset of morning/afternoon/evening).
 - Edit/delete: creator, admin, owner.
 - "I'm in": member toggles own interest; admin/owner can mark others in/out.
 - Planning (creator/admin/owner): choose date (+ optional daypart, optional start time), select which "in" members count → creates an occurrence with status `planned`; only the selected participants get notified (with add-to-calendar); re-date and cancel notify participants again. Occurrence can be re-dated, cancelled or marked done.

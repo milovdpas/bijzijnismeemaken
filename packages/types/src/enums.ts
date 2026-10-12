@@ -72,6 +72,8 @@ export enum DateMode {
     SPECIFIC = 'specific',
     /** Any date on a given weekday; recurring activities use this. */
     WEEKDAY = 'weekday',
+    /** Any date between two dates, both included: a summer, a holiday week. */
+    PERIOD = 'period',
 }
 
 /**

@@ -39,8 +39,8 @@ const optionalPeople = z.number().int().min(1).max(ACTIVITY.PEOPLE_MAX).nullable
 const weekday = z.literal([1, 2, 3, 4, 5, 6, 7]);
 
 /**
- * Every field of an activity. The cross-field rules (date mode versus date
- * and weekday, recurring, min/max) are not here: `activityRuleProblem` in
+ * Every field of an activity. The cross-field rules (date mode versus date,
+ * weekday and period, recurring, min/max) are not here: `activityRuleProblem` in
  * `@bzim/types` judges them in the service, so a PATCH is judged on the
  * merged result rather than on the patch alone.
  */
@@ -55,6 +55,8 @@ const activityFields = z.object({
     dateMode: z.enum(DateMode),
     specificDate: z.iso.date().nullable().optional(),
     weekday: weekday.nullable().optional(),
+    periodStart: z.iso.date().nullable().optional(),
+    periodEnd: z.iso.date().nullable().optional(),
     startTime: optionalTime.optional(),
     locationText: optionalText(ACTIVITY.LOCATION_MAX_LENGTH).optional(),
     locationUrl: optionalUrl.optional(),

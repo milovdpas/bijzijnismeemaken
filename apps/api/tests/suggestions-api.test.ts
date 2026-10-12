@@ -102,4 +102,28 @@ describe('GET …/activities/:id/suggestions', () => {
 
         expect((await client.get(`${url}?weeks=99`)).status).toBe(422);
     });
+
+    it('keeps to a period, and starts at its first day when it lies ahead', async () => {
+        const owner = await seedUser();
+        const group = await seedGroup(owner);
+        const activity = await seedActivity(group, owner, {
+            dateMode: DateMode.PERIOD,
+            periodStart: '2026-11-05',
+            periodEnd: '2026-11-07',
+            preferredDayparts: [Daypart.EVENING],
+        });
+        const client = asUser((await sessionFor(owner)).accessToken);
+        const url = API_ENDPOINTS.ACTIVITIES.SUGGESTIONS(group.id, activity.id);
+
+        const inside = data<SuggestionsResponse>(await client.get(`${url}?from=${FROM}&weeks=2`));
+        expect(inside.items.map((item) => item.date).sort()).toEqual([
+            '2026-11-05',
+            '2026-11-06',
+            '2026-11-07',
+        ]);
+
+        const ahead = data<SuggestionsResponse>(await client.get(`${url}?from=2026-09-01&weeks=1`));
+        expect(ahead.from).toBe('2026-11-05');
+        expect(ahead.items).toHaveLength(3);
+    });
 });

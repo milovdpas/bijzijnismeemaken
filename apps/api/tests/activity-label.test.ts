@@ -33,11 +33,13 @@ describe('activityRuleProblem', () => {
         dateMode: DateMode.NONE,
         specificDate: null,
         weekday: null,
+        periodStart: null,
+        periodEnd: null,
         minPeople: null,
         maxPeople: null,
     };
 
-    it('accepts the three consistent shapes', () => {
+    it('accepts the four consistent shapes', () => {
         expect(activityRuleProblem(base)).toBeNull();
         expect(
             activityRuleProblem({
@@ -52,6 +54,40 @@ describe('activityRuleProblem', () => {
                 isRecurring: true,
                 dateMode: DateMode.WEEKDAY,
                 weekday: 5,
+            }),
+        ).toBeNull();
+        // A period may recur: several evenings out within one summer.
+        expect(
+            activityRuleProblem({
+                ...base,
+                isRecurring: true,
+                dateMode: DateMode.PERIOD,
+                periodStart: '2027-07-01',
+                periodEnd: '2027-08-31',
+            }),
+        ).toBeNull();
+    });
+
+    it('needs both days of a period, in order, and only for the period mode', () => {
+        const summer = { periodStart: '2027-07-01', periodEnd: '2027-08-31' };
+        expect(
+            activityRuleProblem({ ...base, dateMode: DateMode.PERIOD, periodStart: '2027-07-01' }),
+        ).toBe('PERIOD_MISMATCH');
+        expect(activityRuleProblem({ ...base, ...summer })).toBe('PERIOD_MISMATCH');
+        expect(
+            activityRuleProblem({
+                ...base,
+                dateMode: DateMode.PERIOD,
+                periodStart: summer.periodEnd,
+                periodEnd: summer.periodStart,
+            }),
+        ).toBe('PERIOD_ORDER');
+        expect(
+            activityRuleProblem({
+                ...base,
+                dateMode: DateMode.PERIOD,
+                periodStart: '2027-07-01',
+                periodEnd: '2027-07-01',
             }),
         ).toBeNull();
     });

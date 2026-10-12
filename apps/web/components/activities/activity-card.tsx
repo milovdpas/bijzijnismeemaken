@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { CATEGORY_ICONS } from '@/lib/activity-categories';
 import { cn } from '@/lib/utils';
+import { formatPeriod } from '@/lib/format-date';
 
 const LABEL_STYLE: Record<ActivityLabel, string> = {
     [ActivityLabel.IDEA]: 'border-border text-muted-foreground',
@@ -54,6 +55,16 @@ export function ActivityCard({
             return DateTime.fromISO(activity.specificDate, { zone: TIME_ZONE })
                 .setLocale(locale)
                 .toFormat('ccc d LLL yyyy');
+        }
+        if (
+            activity.dateMode === DateMode.PERIOD &&
+            activity.periodStart !== null &&
+            activity.periodEnd !== null
+        ) {
+            return t(
+                'activities.between',
+                formatPeriod(activity.periodStart, activity.periodEnd, locale),
+            );
         }
         if (activity.dateMode === DateMode.WEEKDAY && activity.weekday !== null) {
             return t('activities.onWeekday', {

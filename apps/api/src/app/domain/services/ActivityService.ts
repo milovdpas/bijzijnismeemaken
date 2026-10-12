@@ -42,6 +42,8 @@ function ruleFields(activity: Activity) {
         dateMode: activity.dateMode,
         specificDate: activity.specificDate,
         weekday: activity.weekday,
+        periodStart: activity.periodStart,
+        periodEnd: activity.periodEnd,
         minPeople: activity.minPeople,
         maxPeople: activity.maxPeople,
     };
@@ -73,6 +75,8 @@ export class ActivityService {
             dateMode: input.dateMode,
             specificDate: input.specificDate ?? null,
             weekday: input.weekday ?? null,
+            periodStart: input.periodStart ?? null,
+            periodEnd: input.periodEnd ?? null,
             startTime: input.startTime ?? null,
             locationText: input.locationText ?? null,
             locationUrl: input.locationUrl ?? null,

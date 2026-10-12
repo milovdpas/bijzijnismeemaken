@@ -128,6 +128,8 @@ export async function seedActivity(
         dateMode: DateMode.NONE,
         specificDate: null,
         weekday: null,
+        periodStart: null,
+        periodEnd: null,
         startTime: null,
         locationText: null,
         locationUrl: null,

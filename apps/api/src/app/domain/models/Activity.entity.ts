@@ -81,6 +81,13 @@ export default class Activity extends BaseEntity {
     @Column({ type: 'tinyint', nullable: true })
     weekday!: Weekday | null;
 
+    /** First and last day of the `period` mode, both included. */
+    @Column({ name: 'period_start', type: 'date', nullable: true })
+    periodStart!: string | null;
+
+    @Column({ name: 'period_end', type: 'date', nullable: true })
+    periodEnd!: string | null;
+
     @Column({ name: 'start_time', type: 'time', nullable: true, transformer: timeTransformer })
     startTime!: string | null;
 
@@ -159,6 +166,8 @@ export default class Activity extends BaseEntity {
             dateMode: this.dateMode,
             specificDate: this.specificDate,
             weekday: this.weekday,
+            periodStart: this.periodStart,
+            periodEnd: this.periodEnd,
             startTime: this.startTime,
             locationText: this.locationText,
             locationUrl: this.locationUrl,

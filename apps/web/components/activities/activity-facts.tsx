@@ -6,6 +6,7 @@ import type { ActivityDetailDto } from '@bzim/types';
 import { CalendarDays, Clock, Coins, ExternalLink, MapPin, Repeat, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatPeriod } from '@/lib/format-date';
 
 /** The activity's own facts as a compact list; a fact that is not set is not shown. */
 export function ActivityFacts({ activity }: { activity: ActivityDetailDto }) {
@@ -17,6 +18,16 @@ export function ActivityFacts({ activity }: { activity: ActivityDetailDto }) {
             return DateTime.fromISO(activity.specificDate, { zone: TIME_ZONE })
                 .setLocale(locale)
                 .toFormat('cccc d LLLL yyyy');
+        }
+        if (
+            activity.dateMode === DateMode.PERIOD &&
+            activity.periodStart !== null &&
+            activity.periodEnd !== null
+        ) {
+            return t(
+                'activities.between',
+                formatPeriod(activity.periodStart, activity.periodEnd, locale),
+            );
         }
         if (activity.dateMode === DateMode.WEEKDAY && activity.weekday !== null) {
             return t('activities.onWeekday', {

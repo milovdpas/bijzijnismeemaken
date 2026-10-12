@@ -29,13 +29,22 @@ export class SuggestionService {
         group: Group,
         activity: Activity,
         requestedMemberIds: string[],
-        from: IsoDateString,
+        requestedFrom: IsoDateString,
         weeks: number,
     ): Promise<SuggestionsResponse> {
+        // A period that has not begun yet is looked at from its first day, or
+        // its weeks would all fall outside the window.
+        const start =
+            activity.dateMode === DateMode.PERIOD &&
+            activity.periodStart !== null &&
+            activity.periodStart > requestedFrom
+                ? activity.periodStart
+                : requestedFrom;
         const to =
-            DateTime.fromISO(from, { zone: TIME_ZONE })
+            DateTime.fromISO(start, { zone: TIME_ZONE })
                 .plus({ days: weeks * 7 - 1 })
-                .toISODate() ?? from;
+                .toISODate() ?? start;
+        const from = start;
         // Only members: the matrix of an outsider is nobody's business, and the
         // planner cannot count somebody who is not in the group anyway.
         const memberIds =
@@ -99,7 +108,10 @@ export class SuggestionService {
         };
     }
 
-    /** A specific date is the only candidate; a weekday gives every matching day; no preference gives them all. */
+    /**
+     * A specific date is the only candidate; a weekday gives every matching
+     * day; a period every day inside it; no preference gives them all.
+     */
     private static candidateDates(
         activity: Activity,
         from: IsoDateString,
@@ -112,6 +124,12 @@ export class SuggestionService {
         const days = eachDay(from, to);
         if (activity.dateMode === DateMode.WEEKDAY) {
             return days.filter((date) => weekdayOf(date) === activity.weekday);
+        }
+        if (activity.dateMode === DateMode.PERIOD) {
+            const { periodStart, periodEnd } = activity;
+            return periodStart === null || periodEnd === null
+                ? []
+                : days.filter((date) => date >= periodStart && date <= periodEnd);
         }
         return days;
     }

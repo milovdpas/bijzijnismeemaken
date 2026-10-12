@@ -280,6 +280,9 @@ export interface ActivityDto {
     dateMode: DateMode;
     specificDate: IsoDateString | null;
     weekday: Weekday | null;
+    /** First and last day of the `period` mode, both included; null otherwise. */
+    periodStart: IsoDateString | null;
+    periodEnd: IsoDateString | null;
     startTime: LocalTimeString | null;
     locationText: string | null;
     locationUrl: string | null;
@@ -341,6 +344,8 @@ export interface ActivityInput {
     dateMode: DateMode;
     specificDate?: IsoDateString | null;
     weekday?: Weekday | null;
+    periodStart?: IsoDateString | null;
+    periodEnd?: IsoDateString | null;
     startTime?: LocalTimeString | null;
     locationText?: string | null;
     locationUrl?: string | null;

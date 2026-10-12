@@ -8,6 +8,8 @@ export interface ActivityDateFields {
     dateMode: DateMode;
     specificDate: IsoDateString | null;
     weekday: Weekday | null;
+    periodStart: IsoDateString | null;
+    periodEnd: IsoDateString | null;
     minPeople: number | null;
     maxPeople: number | null;
 }
@@ -17,7 +19,11 @@ export type ActivityRuleProblem =
     | 'SPECIFIC_DATE_MISMATCH'
     /** `weekday` needs a weekday and the others must not carry one. */
     | 'WEEKDAY_MISMATCH'
-    /** A recurring activity has no single date; it is `none` or `weekday`. */
+    /** `period` needs both its days and the others must not carry them. */
+    | 'PERIOD_MISMATCH'
+    /** The period ends before it starts. */
+    | 'PERIOD_ORDER'
+    /** A recurring activity has no single date; it is `none`, `weekday` or `period`. */
     | 'RECURRING_WITH_SPECIFIC_DATE'
     /** Minimum above maximum. */
     | 'PEOPLE_RANGE';
@@ -39,6 +45,14 @@ export function activityRuleProblem(fields: ActivityDateFields): ActivityRulePro
     }
     if ((fields.dateMode === DateMode.WEEKDAY) !== hasWeekday) {
         return 'WEEKDAY_MISMATCH';
+    }
+    const period = fields.dateMode === DateMode.PERIOD;
+    if (period !== (fields.periodStart !== null) || period !== (fields.periodEnd !== null)) {
+        return 'PERIOD_MISMATCH';
+    }
+    // ISO dates compare as strings.
+    if (fields.periodStart !== null && fields.periodEnd !== null) {
+        if (fields.periodStart > fields.periodEnd) return 'PERIOD_ORDER';
     }
     if (
         fields.minPeople !== null &&

@@ -112,6 +112,46 @@ describe('POST /groups/:groupId/activities', () => {
         expect(await Activity.count()).toBe(0);
     });
 
+    it('takes a period of days, in order, and drops it for another mode', async () => {
+        outbox();
+        const { group, asMember } = await setup();
+        const summer = {
+            ...IDEA,
+            dateMode: DateMode.PERIOD,
+            weekday: null,
+            periodStart: '2027-07-01',
+            periodEnd: '2027-08-31',
+        };
+
+        const created = data<ActivityDetailDto>(
+            await asMember.post(API_ENDPOINTS.ACTIVITIES.CREATE(group.id), summer),
+        );
+        expect(created).toMatchObject({
+            dateMode: DateMode.PERIOD,
+            periodStart: '2027-07-01',
+            periodEnd: '2027-08-31',
+        });
+
+        const backwards = await asMember.post(API_ENDPOINTS.ACTIVITIES.CREATE(group.id), {
+            ...summer,
+            periodStart: '2027-09-01',
+        });
+        expect(error(backwards).details).toEqual({ problem: 'PERIOD_ORDER' });
+
+        const url = API_ENDPOINTS.ACTIVITIES.DETAIL(group.id, created.id);
+        const kept = await asMember.patch(url, { dateMode: DateMode.WEEKDAY, weekday: 5 });
+        expect(error(kept).details).toEqual({ problem: 'PERIOD_MISMATCH' });
+        const weekly = data<ActivityDetailDto>(
+            await asMember.patch(url, {
+                dateMode: DateMode.WEEKDAY,
+                weekday: 5,
+                periodStart: null,
+                periodEnd: null,
+            }),
+        );
+        expect(weekly).toMatchObject({ dateMode: DateMode.WEEKDAY, periodStart: null });
+    });
+
     it('is for members only', async () => {
         const { group, asOutsider } = await setup();
         expect(

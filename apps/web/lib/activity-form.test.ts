@@ -71,6 +71,33 @@ describe('toActivityInput', () => {
     });
 });
 
+describe('a period', () => {
+    const summer = {
+        ...blankActivityForm,
+        title: 'Strandvolleybal',
+        dateMode: DateMode.PERIOD,
+        periodStart: '2027-07-01',
+        periodEnd: '2027-08-31',
+    };
+
+    it('needs both days, in order', () => {
+        expect(activityFormProblem(summer)).toBeNull();
+        expect(activityFormProblem({ ...summer, periodEnd: '' })).toBe('PERIOD_MISMATCH');
+        expect(activityFormProblem({ ...summer, periodStart: '2027-09-01' })).toBe('PERIOD_ORDER');
+    });
+
+    it('travels only with the period mode', () => {
+        expect(toActivityInput(summer)).toMatchObject({
+            periodStart: '2027-07-01',
+            periodEnd: '2027-08-31',
+        });
+        expect(toActivityInput({ ...summer, dateMode: DateMode.NONE })).toMatchObject({
+            periodStart: null,
+            periodEnd: null,
+        });
+    });
+});
+
 describe('activityToForm', () => {
     it('round-trips an activity through the form', () => {
         const form = activityToForm({
@@ -86,6 +113,8 @@ describe('activityToForm', () => {
             dateMode: DateMode.SPECIFIC,
             specificDate: '2027-03-06',
             weekday: null,
+            periodStart: null,
+            periodEnd: null,
             startTime: null,
             locationText: 'Ardennen',
             locationUrl: null,

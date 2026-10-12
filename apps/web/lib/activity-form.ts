@@ -23,6 +23,8 @@ export interface ActivityFormState {
     dateMode: DateMode;
     specificDate: string;
     weekday: Weekday | null;
+    periodStart: string;
+    periodEnd: string;
     startTime: string;
     locationText: string;
     locationUrl: string;
@@ -45,6 +47,8 @@ export const blankActivityForm: ActivityFormState = {
     dateMode: DateMode.NONE,
     specificDate: '',
     weekday: null,
+    periodStart: '',
+    periodEnd: '',
     startTime: '',
     locationText: '',
     locationUrl: '',
@@ -68,6 +72,8 @@ export function activityToForm(activity: ActivityDto): ActivityFormState {
         dateMode: activity.dateMode,
         specificDate: activity.specificDate ?? '',
         weekday: activity.weekday,
+        periodStart: activity.periodStart ?? '',
+        periodEnd: activity.periodEnd ?? '',
         startTime: activity.startTime ?? '',
         locationText: activity.locationText ?? '',
         locationUrl: activity.locationUrl ?? '',
@@ -112,6 +118,8 @@ export function activityFormProblem(form: ActivityFormState): ActivityFormProble
         dateMode: form.dateMode,
         specificDate: form.specificDate === '' ? null : form.specificDate,
         weekday: form.weekday,
+        periodStart: form.periodStart === '' ? null : form.periodStart,
+        periodEnd: form.periodEnd === '' ? null : form.periodEnd,
         minPeople: minPeople ?? null,
         maxPeople: maxPeople ?? null,
     });
@@ -132,6 +140,8 @@ export function toActivityInput(form: ActivityFormState): ActivityInput {
         dateMode: form.dateMode,
         specificDate: form.dateMode === DateMode.SPECIFIC ? text(form.specificDate) : null,
         weekday: form.dateMode === DateMode.WEEKDAY ? form.weekday : null,
+        periodStart: form.dateMode === DateMode.PERIOD ? text(form.periodStart) : null,
+        periodEnd: form.dateMode === DateMode.PERIOD ? text(form.periodEnd) : null,
         startTime: text(form.startTime),
         locationText: text(form.locationText),
         locationUrl: text(form.locationUrl),

@@ -66,6 +66,8 @@ export function ActivityForm({
             dateMode,
             specificDate: dateMode === DateMode.SPECIFIC ? form.specificDate : '',
             weekday: dateMode === DateMode.WEEKDAY ? form.weekday : null,
+            periodStart: dateMode === DateMode.PERIOD ? form.periodStart : '',
+            periodEnd: dateMode === DateMode.PERIOD ? form.periodEnd : '',
         });
 
     const chooseRecurring = (isRecurring: boolean) =>
@@ -197,6 +199,46 @@ export function ActivityForm({
                                 </SelectContent>
                             </Select>
                         </Field>
+                    )}
+                    {form.dateMode === DateMode.PERIOD && (
+                        <>
+                            <Field
+                                label={t('activityForm.periodStart')}
+                                error={
+                                    touched &&
+                                    problem === 'PERIOD_MISMATCH' &&
+                                    form.periodStart === ''
+                                        ? t('activityForm.problems.PERIOD_MISMATCH')
+                                        : null
+                                }
+                            >
+                                <Input
+                                    type="date"
+                                    value={form.periodStart}
+                                    max={form.periodEnd === '' ? undefined : form.periodEnd}
+                                    onChange={(event) => patch({ periodStart: event.target.value })}
+                                />
+                            </Field>
+                            <Field
+                                label={t('activityForm.periodEnd')}
+                                error={
+                                    touched && problem === 'PERIOD_ORDER'
+                                        ? t('activityForm.problems.PERIOD_ORDER')
+                                        : touched &&
+                                            problem === 'PERIOD_MISMATCH' &&
+                                            form.periodEnd === ''
+                                          ? t('activityForm.problems.PERIOD_MISMATCH')
+                                          : null
+                                }
+                            >
+                                <Input
+                                    type="date"
+                                    value={form.periodEnd}
+                                    min={form.periodStart === '' ? undefined : form.periodStart}
+                                    onChange={(event) => patch({ periodEnd: event.target.value })}
+                                />
+                            </Field>
+                        </>
                     )}
                     <Field label={t('activityForm.startTime')}>
                         <Input
