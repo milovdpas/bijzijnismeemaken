@@ -1,7 +1,9 @@
 import { API_ENDPOINTS } from '@bzim/types';
 import type {
+    AddCalendarFeedInput,
     CalendarConnectionDto,
     CalendarEventDto,
+    CalendarFeedDto,
     CalendarIgnoreRuleDto,
     CalendarIgnoreRuleInput,
     CalendarSourceDto,
@@ -68,4 +70,24 @@ export function addIgnoreRule(input: CalendarIgnoreRuleInput): Promise<CalendarI
 
 export function removeIgnoreRule(ruleId: string): Promise<void> {
     return request<void>(API_ENDPOINTS.ME.CALENDAR_IGNORE_RULE(ruleId), { method: 'DELETE' });
+}
+
+export function fetchCalendarFeeds(): Promise<CalendarFeedDto[]> {
+    return request<CalendarFeedDto[]>(API_ENDPOINTS.ME.CALENDAR_FEEDS);
+}
+
+/** The API reads the link on the spot and refuses it with the reason when it cannot. */
+export function addCalendarFeed(input: AddCalendarFeedInput): Promise<CalendarFeedDto> {
+    return request<CalendarFeedDto>(API_ENDPOINTS.ME.CALENDAR_FEEDS, {
+        method: 'POST',
+        body: input,
+    });
+}
+
+export function syncCalendarFeeds(): Promise<CalendarFeedDto[]> {
+    return request<CalendarFeedDto[]>(API_ENDPOINTS.ME.CALENDAR_FEEDS_SYNC, { method: 'POST' });
+}
+
+export function removeCalendarFeed(feedId: string): Promise<void> {
+    return request<void>(API_ENDPOINTS.ME.CALENDAR_FEED(feedId), { method: 'DELETE' });
 }

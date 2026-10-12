@@ -1053,7 +1053,7 @@ export const nl: Dict = {
         menu: 'Open het browsermenu en kies "App installeren" of "Toevoegen aan startscherm".',
     },
     calendarSettings: {
-        title: 'Google Agenda',
+        title: 'Agenda',
         subtitle: 'Je afspraken maken je bezet voor de groep, zonder dat iemand ziet wat ze zijn.',
         cardDescription: 'Laat je agenda zeggen wanneer je bezet bent.',
         notConnected: 'Niet gekoppeld. Je telt als vrij, tenzij je zelf tijd blokkeert.',
@@ -1066,6 +1066,7 @@ export const nl: Dict = {
         freeHint:
             'Elke afspraak telt als bezet, ook als hij in Google op "Beschikbaar" staat. Afspraken die niet mogen tellen, negeer je via je agenda-instellingen.',
         connectGoogle: 'Google Agenda koppelen',
+        connectAny: 'Agenda koppelen',
         connected:
             'Gekoppeld. Je agenda\'s staan hieronder; de eerste synchronisatie loopt vannacht, of druk op "Nu synchroniseren".',
         connectErrors: {
@@ -1117,12 +1118,64 @@ export const nl: Dict = {
         },
         removeRule: '{{label}} weer meetellen',
     },
+    calendarFeeds: {
+        title: "Apple, Outlook en andere agenda's",
+        description:
+            'Voeg een agenda toe met zijn link. We lezen hem alleen: je vrienden zien bezet of vrij, verder niets.',
+        count_one: '{{count}} agendalink',
+        count_other: '{{count}} agendalinks',
+        origins: {
+            apple: 'Apple',
+            outlook: 'Outlook',
+            google: 'Google',
+            other: 'Agendalink',
+        },
+        url: 'Agendalink',
+        urlPlaceholder: 'webcal://… of https://…',
+        add: 'Toevoegen',
+        added: '"{{name}}" toegevoegd. De afspraken tellen vanaf nu mee.',
+        addWait_one: 'Net veel links toegevoegd. Over {{count}} minuut kan er weer een bij.',
+        addWait_other: 'Net veel links toegevoegd. Over {{count}} minuten kan er weer een bij.',
+        secret: 'Wie deze link heeft, kan de agenda lezen. We bewaren hem versleuteld en laten hem nooit meer zien.',
+        syncNow: 'Links nu synchroniseren',
+        remove: '{{name}} verwijderen',
+        removeTitle: 'Deze agenda verwijderen?',
+        removeDescription: 'De afspraken uit "{{name}}" tellen meteen niet meer mee.',
+        removeConfirm: 'Verwijderen',
+        howTitle: 'Waar vind ik de link?',
+        howApple: 'Apple (iPhone, iPad, Mac)',
+        appleIphone:
+            "Op iPhone of iPad: open Agenda, tik op Agenda's, tik op ⓘ naast de agenda, zet Openbare agenda aan en tik op Deel link om hem te kopiëren.",
+        appleMac:
+            'Op een Mac: klik in Agenda met Control op de agenda onder iCloud, kies Deel agenda, vink Openbare agenda aan en kopieer de link.',
+        appleWeb:
+            'Op icloud.com: open Agenda, klik op het deelsymbool naast de agenda, vink Openbare agenda aan en kopieer de link.',
+        howOutlook: 'Outlook (Outlook.com, Microsoft 365)',
+        outlookWeb:
+            "In Outlook op het web: Instellingen, Agenda, Gedeelde agenda's. Kies onder Een agenda publiceren de agenda, kies Kan alle details weergeven, klik op Publiceren en kopieer de ICS-link.",
+        outlookBusy:
+            '"Kan zien wanneer ik bezet ben" werkt ook, maar dan heet elke afspraak gewoon Bezet en helpt negeren op titel niet.',
+        outlookWork:
+            'Een werkaccount staat publiceren soms niet toe. Vraag het aan wie het beheert, of voeg de agenda toe vanuit een persoonlijk account.',
+        problems: {
+            INVALID_URL: 'Dat is geen agendalink. Hij begint met webcal:// of https://.',
+            UNREACHABLE:
+                'De agenda was niet bereikbaar. Controleer de link, of probeer het later nog eens.',
+            GONE: 'Deze link werkt niet meer. Deel de agenda opnieuw en voeg de nieuwe link toe.',
+            NOT_A_CALENDAR: 'Achter deze link zit geen agenda.',
+            TOO_LARGE: 'Deze agenda is te groot om te lezen.',
+            ALREADY_ADDED: 'Deze agenda is al toegevoegd.',
+            TOO_MANY: 'Er kan geen agendalink meer bij. Verwijder er eerst een.',
+        },
+    },
     welcome: {
         step: 'Stap {{step}} van {{of}}',
         calendarTitle: 'Je agenda',
         calendarSubtitle:
             'Niet verplicht. Koppel je Google Agenda en je afspraken tellen als bezet, zodat niemand eroverheen plant.',
         calendarConnected: 'Gekoppeld: {{email}}.',
+        calendarLinked: 'Toegevoegd: {{names}}.',
+        calendarFeedTitle: 'Apple of Outlook? Voeg je agenda toe met zijn link.',
         availabilityTitle: 'Je week',
         availabilitySubtitle:
             'Niet verplicht. Markeer de dagdelen waarop je meestal bezet bent, zoals elke dinsdagavond. Je kunt dit altijd aanpassen onder Beschikbaarheid.',

@@ -86,7 +86,11 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | DELETE | `/me/calendar` | Disconnect (revoke, delete events/sources) | S |
 | PATCH | `/me/calendar/sources/:sourceId` | enable/disable | S |
 | POST | `/me/calendar/sync` | Manual sync now (rate limited: 3 per 5 min; a 429 carries `details.retryAfterSeconds`, as every rate limit does). Connecting and switching a calendar on sync by themselves | S |
-| GET | `/me/calendar/events?from=&to=` | My own synced events with titles (for ignore rules) | S |
+| GET | `/me/calendar/events?from=&to=` | My own synced events with titles (for ignore rules); each carries `sourceId` (Google) or `feedId` (a link) | S |
+| GET | `/me/calendar/feeds` | My calendar links (task 50): name, host, status, last read; never the link itself | S |
+| POST | `/me/calendar/feeds` | `{ url, name? }` add a link (`webcal://` read as https); read at once, 201 with its events stored, else 422 `INVALID_URL`, `UNREACHABLE`, `GONE`, `NOT_A_CALENDAR`, `TOO_LARGE`; 409 `ALREADY_ADDED`, `TOO_MANY`. Rate limited: 10 per hour | S |
+| POST | `/me/calendar/feeds/sync` | Read every link again now; answers with all of them (rate limited: 3 per 5 min) | S |
+| DELETE | `/me/calendar/feeds/:feedId` | Remove a link and its events | S |
 | GET/POST/DELETE | `/me/calendar/ignore-rules` | Ignore by title / series | S |
 
 ## Leaderboards

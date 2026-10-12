@@ -758,10 +758,47 @@ export interface CalendarConnectionDto {
     createdAt: IsoDateTimeString;
 }
 
+/**
+ * Why a calendar link could not be read. `GONE`: the link was switched off
+ * or replaced at its calendar, so it needs a new one; the rest may pass.
+ */
+export type CalendarFeedProblem =
+    | 'INVALID_URL'
+    | 'UNREACHABLE'
+    | 'GONE'
+    | 'NOT_A_CALENDAR'
+    | 'TOO_LARGE';
+
+/**
+ * `GET /me/calendar/feeds`: a calendar read through a link (Apple, Outlook,
+ * any iCalendar feed). The link itself never leaves the server: anybody
+ * holding it can read the calendar. `host` says where it comes from.
+ */
+export interface CalendarFeedDto {
+    id: Uuid;
+    name: string;
+    host: string;
+    /** `reauth_required`: the link no longer works and needs replacing. */
+    status: CalendarConnectionStatus;
+    lastSyncedAt: IsoDateTimeString | null;
+    lastError: CalendarFeedProblem | null;
+    createdAt: IsoDateTimeString;
+}
+
+/** `POST /me/calendar/feeds`. `webcal://` links are read over https. */
+export interface AddCalendarFeedInput {
+    url: string;
+    /** Default: the name the calendar gives itself, else its host. */
+    name?: string;
+}
+
 /** `GET /me/calendar/events`: the owner's own synced events, titles included, for the ignore rules. */
 export interface CalendarEventDto {
     id: Uuid;
-    sourceId: Uuid;
+    /** The Google calendar it came from, or null for one from a link. */
+    sourceId: Uuid | null;
+    /** The calendar link it came from, or null for a Google one. */
+    feedId: Uuid | null;
     recurringEventId: string | null;
     title: string;
     startAt: IsoDateTimeString;

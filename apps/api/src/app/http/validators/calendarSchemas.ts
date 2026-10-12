@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarIgnoreRuleKind } from '@bzim/types';
+import { CALENDAR_FEED, CalendarIgnoreRuleKind } from '@bzim/types';
 
 export const calendarConnectQuerySchema = z.object({
     scope: z.enum(['read', 'readwrite']).default('read'),
@@ -30,4 +30,14 @@ export const ignoreRuleSchema = z.object({
 
 export const ignoreRuleParamSchema = z.object({
     ruleId: z.uuid(),
+});
+
+/** A calendar link as pasted; whether it can be read is the service's to find out. */
+export const addCalendarFeedSchema = z.object({
+    url: z.string().trim().min(1).max(CALENDAR_FEED.URL_MAX_LENGTH),
+    name: z.string().trim().max(CALENDAR_FEED.NAME_MAX_LENGTH).optional(),
+});
+
+export const calendarFeedParamSchema = z.object({
+    feedId: z.uuid(),
 });

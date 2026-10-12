@@ -10,7 +10,7 @@ Inputs for a user `u` and local date `d` (Europe/Amsterdam), daypart `p ∈ {mor
    - all-day event: `start_date ≤ d < end_date` → busy for all three dayparts;
    - timed event: convert `[start_at, end_at)` to Amsterdam local; overlaps `[d p.start, d p.end)` iff `start < p.end && end > p.start` (touching edges don't count);
    - → busy (reason `calendar`, never exposing title to others).
-4. Otherwise **free**. Each user also carries `hasCalendar` (active connection with ≥1 enabled source and a successful sync) for the UI indicator.
+4. Otherwise **free**. Each user also carries `hasCalendar` (active Google connection with ≥1 enabled source and a successful sync, or an active calendar link with a successful read; task 50) for the UI indicator. Events from calendar links go through every step above exactly like Google's.
 
 Computation: `AvailabilityService.matrix(userIds, from, to)` loads all blocks/rules/events for the users and range in 3 queries, builds a `Map<userId, Map<date, Map<daypart, Reason|null>>>` in memory (max ~ 20 users × 84 days × 3 = ~5k cells). The group endpoint strips reasons to `busy/free`; the self endpoint keeps reasons.
 

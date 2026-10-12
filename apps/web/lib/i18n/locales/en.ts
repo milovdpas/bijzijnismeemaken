@@ -1051,7 +1051,7 @@ export const en = {
         menu: 'Open the browser menu and choose "Install app" or "Add to Home Screen".',
     },
     calendarSettings: {
-        title: 'Google Calendar',
+        title: 'Calendar',
         subtitle:
             'Your appointments make you busy for the group, without anyone seeing what they are.',
         cardDescription: 'Let your calendar say when you are busy.',
@@ -1065,6 +1065,7 @@ export const en = {
         freeHint:
             'Every appointment counts as busy, also one marked "Free" in Google. Ignore the ones that should not count from your calendar settings.',
         connectGoogle: 'Connect Google Calendar',
+        connectAny: 'Connect a calendar',
         connected:
             'Connected. Your calendars are listed below; the first sync runs tonight, or press "Sync now".',
         connectErrors: {
@@ -1115,12 +1116,63 @@ export const en = {
         },
         removeRule: 'Count {{label}} again',
     },
+    calendarFeeds: {
+        title: 'Apple, Outlook and other calendars',
+        description:
+            'Add a calendar by its link. It is only ever read: your friends see busy or free, nothing more.',
+        count_one: '{{count}} calendar link',
+        count_other: '{{count}} calendar links',
+        origins: {
+            apple: 'Apple',
+            outlook: 'Outlook',
+            google: 'Google',
+            other: 'Calendar link',
+        },
+        url: 'Calendar link',
+        urlPlaceholder: 'webcal://… or https://…',
+        add: 'Add',
+        added: 'Added "{{name}}". Its appointments count from now on.',
+        addWait_one: 'Added a lot of links just now. You can add another in {{count}} minute.',
+        addWait_other: 'Added a lot of links just now. You can add another in {{count}} minutes.',
+        secret: 'Anybody with this link can read the calendar. We keep it encrypted and never show it again.',
+        syncNow: 'Sync links now',
+        remove: 'Remove {{name}}',
+        removeTitle: 'Remove this calendar?',
+        removeDescription: 'The appointments from "{{name}}" stop counting at once.',
+        removeConfirm: 'Remove',
+        howTitle: 'Where do I find the link?',
+        howApple: 'Apple (iPhone, iPad, Mac)',
+        appleIphone:
+            'On iPhone or iPad: open Calendar, tap Calendars, tap ⓘ next to the calendar, switch on Public Calendar and tap Share Link to copy it.',
+        appleMac:
+            'On a Mac: in Calendar, Control-click the calendar under iCloud, choose Share Calendar, tick Public Calendar and copy the link.',
+        appleWeb:
+            'On icloud.com: open Calendar, click the share icon next to the calendar, tick Public Calendar and copy the link.',
+        howOutlook: 'Outlook (Outlook.com, Microsoft 365)',
+        outlookWeb:
+            'In Outlook on the web: Settings, Calendar, Shared calendars. Under Publish a calendar, pick the calendar, choose Can view all details, press Publish and copy the ICS link.',
+        outlookBusy:
+            '"Can view when I\'m busy" works too, but then every appointment is just called Busy, and ignoring by title does not help.',
+        outlookWork:
+            'A work account may not allow publishing. Ask whoever manages it, or add the calendar from a personal account.',
+        problems: {
+            INVALID_URL: 'That is not a calendar link. It starts with webcal:// or https://.',
+            UNREACHABLE: 'The calendar could not be reached. Check the link, or try again later.',
+            GONE: 'This link no longer works. Share the calendar again and add the new link.',
+            NOT_A_CALENDAR: 'There is no calendar behind this link.',
+            TOO_LARGE: 'This calendar is too large to read.',
+            ALREADY_ADDED: 'This calendar is added already.',
+            TOO_MANY: 'There is no room for another calendar link. Remove one first.',
+        },
+    },
     welcome: {
         step: 'Step {{step}} of {{of}}',
         calendarTitle: 'Your calendar',
         calendarSubtitle:
             'Optional. Connect your Google Calendar and your appointments count as busy, so nobody plans over them.',
         calendarConnected: 'Connected: {{email}}.',
+        calendarLinked: 'Added: {{names}}.',
+        calendarFeedTitle: 'Apple or Outlook? Add your calendar by its link.',
         availabilityTitle: 'Your week',
         availabilitySubtitle:
             'Optional. Mark the dayparts you are usually busy, like every Tuesday evening. You can change this any time under Availability.',

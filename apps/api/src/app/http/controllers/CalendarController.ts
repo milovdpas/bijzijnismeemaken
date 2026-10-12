@@ -1,6 +1,7 @@
 import type {
     CalendarConnectionDto,
     CalendarEventDto,
+    CalendarFeedDto,
     CalendarIgnoreRuleDto,
     CalendarSourceDto,
 } from '@bzim/types';
@@ -10,13 +11,21 @@ import type { Handler } from '../interfaces/IHttp';
 import { paramsOf, queryOf } from '../middleware/ValidateRequest';
 import type { BodyOf } from '../middleware/ValidateRequest';
 import { CalendarEventService } from '../../domain/services/CalendarEventService';
+import { CalendarFeedService } from '../../domain/services/CalendarFeedService';
 import { CalendarService } from '../../domain/services/CalendarService';
 import { CalendarSyncService } from '../../domain/services/CalendarSyncService';
 import { CalendarWriteService } from '../../domain/services/CalendarWriteService';
 import { safeReturnTo } from '../../domain/services/AuthService';
 import { IgnoreRuleService } from '../../domain/services/IgnoreRuleService';
-import { sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
 import {
+    sendConflict,
+    sendNoContent,
+    sendNotFound,
+    sendSuccess,
+    sendValidationFailed,
+} from '../utils/ApiResponses';
+import {
+    addCalendarFeedSchema,
     calendarCallbackQuerySchema,
     calendarConnectQuerySchema,
     calendarSourceParamSchema,
@@ -27,9 +36,10 @@ import {
 import { rangeQuerySchema } from '../validators/commonSchemas';
 
 /**
- * A person's own calendar: the connection, its calendars, a manual sync,
- * the synced events with titles (for the ignore rules) and those rules.
- * Everything here is the signed-in person's; nothing takes a user id.
+ * A person's own calendar: the Google connection, its calendars, a manual
+ * sync, the calendar links (Apple, Outlook), the synced events with titles
+ * (for the ignore rules) and those rules. Everything here is the signed-in
+ * person's; nothing takes a user id. `includeCalendarFeed` loads a link.
  */
 export default class CalendarController {
     status: Handler = async (req, res) => {
@@ -113,6 +123,56 @@ export default class CalendarController {
             res,
             (await CalendarService.reload(connection.id)).toDto(),
         );
+    };
+
+    feeds: Handler = async (req, res) => {
+        sendSuccess<CalendarFeedDto[]>(
+            res,
+            (await CalendarFeedService.list(req.user)).map((feed) => feed.toDto()),
+        );
+    };
+
+    /** Read once on the spot: a link that cannot be read is refused with the reason, not kept. */
+    addFeed: Handler<BodyOf<typeof addCalendarFeedSchema>> = async (req, res) => {
+        const { url, name } = req.body;
+        const result = await CalendarFeedService.add(req.user, url, name);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'ALREADY_ADDED':
+                    sendConflict(res, 'That calendar link is added already', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'TOO_MANY':
+                    sendConflict(res, 'No room for another calendar link', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+                case 'INVALID_URL':
+                case 'UNREACHABLE':
+                case 'GONE':
+                case 'NOT_A_CALENDAR':
+                case 'TOO_LARGE':
+                    sendValidationFailed(res, 'That calendar link cannot be read', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<CalendarFeedDto>(res, result.feed.toDto(), 201);
+    };
+
+    /** Sync now for the links, rate-limited by the route; answers with all of them afterwards. */
+    syncFeeds: Handler = async (req, res) => {
+        sendSuccess<CalendarFeedDto[]>(
+            res,
+            (await CalendarFeedService.syncAllFor(req.user)).map((feed) => feed.toDto()),
+        );
+    };
+
+    removeFeed: Handler = async (req, res) => {
+        await CalendarFeedService.remove(req.calendarFeed);
+        sendNoContent(res);
     };
 
     events: Handler = async (req, res) => {

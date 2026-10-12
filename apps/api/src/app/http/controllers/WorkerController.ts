@@ -2,6 +2,7 @@ import { ERROR_CODES } from '@bzim/types';
 import type { WorkerJobResponse } from '@bzim/types';
 
 import type { Handler } from '../interfaces/IHttp';
+import { CalendarFeedService } from '../../domain/services/CalendarFeedService';
 import { CalendarSyncService } from '../../domain/services/CalendarSyncService';
 import { CleanupService } from '../../domain/services/CleanupService';
 import { ReminderService } from '../../domain/services/ReminderService';
@@ -80,7 +81,10 @@ export default class WorkerController {
         }
     };
 
-    /** Nightly calendar sync (docs/02 §2.7): every connection, every enabled calendar. Same overlap rule as cleanup. */
+    /**
+     * Nightly calendar sync (docs/02 §2.7): every Google connection with its
+     * enabled calendars, then every calendar link. Same overlap rule as cleanup.
+     */
     calendarSync: Handler = async (_req, res) => {
         if (WorkerController.calendarSyncRunning) {
             sendError(res, ERROR_CODES.WORKER_BUSY, 'calendar-sync is still running.', 409);
@@ -89,7 +93,10 @@ export default class WorkerController {
         const startedAt = process.hrtime.bigint();
         WorkerController.calendarSyncRunning = true;
         try {
-            const stats = await CalendarSyncService.syncAll();
+            const stats = {
+                ...(await CalendarSyncService.syncAll()),
+                ...(await CalendarFeedService.syncAll()),
+            };
             sendSuccess<WorkerJobResponse>(res, {
                 job: 'calendar-sync',
                 durationMs: Number((process.hrtime.bigint() - startedAt) / 1_000_000n),

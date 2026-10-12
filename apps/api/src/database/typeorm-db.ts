@@ -20,6 +20,7 @@ import LeaderboardScoreTotal from '../app/domain/models/LeaderboardScoreTotal.en
 import LeaderboardScoreYearly from '../app/domain/models/LeaderboardScoreYearly.entity';
 import CalendarConnection from '../app/domain/models/CalendarConnection.entity';
 import CalendarEvent from '../app/domain/models/CalendarEvent.entity';
+import CalendarFeed from '../app/domain/models/CalendarFeed.entity';
 import CalendarIgnoreRule from '../app/domain/models/CalendarIgnoreRule.entity';
 import CalendarSource from '../app/domain/models/CalendarSource.entity';
 import ManualUnavailability from '../app/domain/models/ManualUnavailability.entity';
@@ -79,6 +80,7 @@ export const AppDataSource = new DataSource({
         OccurrenceParticipant,
         CalendarConnection,
         CalendarSource,
+        CalendarFeed,
         CalendarEvent,
         CalendarIgnoreRule,
         ManualUnavailability,

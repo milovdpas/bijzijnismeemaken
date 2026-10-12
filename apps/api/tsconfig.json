@@ -1,7 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "module": "node18",
+        "module": "node20",
         "outDir": "dist",
         "rootDir": ".",
         // TypeORM entities are declared with decorators and need the runtime type

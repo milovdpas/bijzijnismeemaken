@@ -3,12 +3,20 @@ import { API_ENDPOINTS } from '@bzim/types';
 
 import type { IRoute } from '../../interfaces/IRouter';
 import CalendarController from '../../controllers/CalendarController';
-import { calendarSyncLimit, publicLimit } from '../../middleware/ApiLimits';
+import {
+    calendarFeedAddLimit,
+    calendarFeedSyncLimit,
+    calendarSyncLimit,
+    publicLimit,
+} from '../../middleware/ApiLimits';
+import { includeCalendarFeed } from '../../middleware/IncludeCalendarFeed';
 import { userAuth } from '../../middleware/UserAuth';
 import { validate } from '../../middleware/ValidateRequest';
 import {
+    addCalendarFeedSchema,
     calendarCallbackQuerySchema,
     calendarConnectQuerySchema,
+    calendarFeedParamSchema,
     calendarSourceParamSchema,
     ignoreRuleParamSchema,
     ignoreRuleSchema,
@@ -54,6 +62,27 @@ export default class CalendarRoutes implements IRoute {
             userAuth,
             calendarSyncLimit,
             this.controller.sync,
+        );
+        router.get(API_ENDPOINTS.ME.CALENDAR_FEEDS, userAuth, this.controller.feeds);
+        router.post(
+            API_ENDPOINTS.ME.CALENDAR_FEEDS,
+            userAuth,
+            calendarFeedAddLimit,
+            validate({ body: addCalendarFeedSchema }),
+            this.controller.addFeed,
+        );
+        router.post(
+            API_ENDPOINTS.ME.CALENDAR_FEEDS_SYNC,
+            userAuth,
+            calendarFeedSyncLimit,
+            this.controller.syncFeeds,
+        );
+        router.delete(
+            API_ENDPOINTS.ME.CALENDAR_FEED(':feedId'),
+            userAuth,
+            validate({ params: calendarFeedParamSchema }),
+            includeCalendarFeed,
+            this.controller.removeFeed,
         );
         router.get(
             API_ENDPOINTS.ME.CALENDAR_EVENTS,

@@ -109,3 +109,19 @@ export const calendarSyncLimit = rateLimit({
     windowMs: 5 * MINUTE,
     key: (req: Request) => req.user.id,
 });
+
+/** Adding a calendar link fetches it from the outside world: ten an hour per person. */
+export const calendarFeedAddLimit = rateLimit({
+    name: 'calendar-feed-add',
+    limit: 10,
+    windowMs: 60 * MINUTE,
+    key: (req: Request) => req.user.id,
+});
+
+/** Reading every link again fetches each of them: three every five minutes, like Google's. */
+export const calendarFeedSyncLimit = rateLimit({
+    name: 'calendar-feed-sync',
+    limit: 3,
+    windowMs: 5 * MINUTE,
+    key: (req: Request) => req.user.id,
+});

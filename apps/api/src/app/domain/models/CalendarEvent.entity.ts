@@ -1,14 +1,16 @@
 import { BaseEntity, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import type { CalendarEventDto, CalendarEventType } from '@bzim/types';
 
+import CalendarFeed from './CalendarFeed.entity';
 import CalendarSource from './CalendarSource.entity';
 import User from './User.entity';
 
 /**
  * One synced event (docs/03 `calendar_events`): a window in time, plus what
- * the availability algorithm needs to decide whether it blocks. Replaced
- * wholesale on every sync of its source. The title is only ever shown to
- * its owner, for the ignore rules.
+ * the availability algorithm needs to decide whether it blocks. It comes
+ * from a Google calendar (`sourceId`) or a calendar link (`feedId`), never
+ * both, and is replaced wholesale on every sync of that. The title is only
+ * ever shown to its owner, for the ignore rules.
  */
 @Entity('calendar_events')
 export default class CalendarEvent extends BaseEntity {
@@ -22,12 +24,19 @@ export default class CalendarEvent extends BaseEntity {
     @JoinColumn({ name: 'user_id' })
     user!: User;
 
-    @Column({ name: 'source_id', type: 'char', length: 36 })
-    sourceId!: string;
+    @Column({ name: 'source_id', type: 'char', length: 36, nullable: true })
+    sourceId!: string | null;
 
-    @ManyToOne(() => CalendarSource, { onDelete: 'CASCADE' })
+    @ManyToOne(() => CalendarSource, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'source_id' })
-    source!: CalendarSource;
+    source!: CalendarSource | null;
+
+    @Column({ name: 'feed_id', type: 'char', length: 36, nullable: true })
+    feedId!: string | null;
+
+    @ManyToOne(() => CalendarFeed, { onDelete: 'CASCADE', nullable: true })
+    @JoinColumn({ name: 'feed_id' })
+    feed!: CalendarFeed | null;
 
     @Column({ name: 'provider_event_id', type: 'varchar', length: 255 })
     providerEventId!: string;
@@ -69,6 +78,7 @@ export default class CalendarEvent extends BaseEntity {
         return {
             id: this.id,
             sourceId: this.sourceId,
+            feedId: this.feedId,
             recurringEventId: this.recurringEventId,
             title: this.title,
             startAt: this.startAt.toISOString(),

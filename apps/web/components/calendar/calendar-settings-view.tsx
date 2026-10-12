@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { CalendarEventsCard } from '@/components/calendar/calendar-events-card';
+import { CalendarFeedsCard } from '@/components/calendar/calendar-feeds-card';
 import { ConnectChoice } from '@/components/calendar/connect-choice';
 import { IgnoreRulesCard } from '@/components/calendar/ignore-rules-card';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -28,6 +29,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import {
     useCalendar,
+    useCalendarFeeds,
     useDisconnectCalendar,
     useSyncCalendar,
     useUpdateCalendarSource,
@@ -211,14 +213,18 @@ function SourcesCard({ connection }: { connection: CalendarConnectionDto }) {
 }
 
 /**
- * Google Calendar settings: connect, pick calendars, sync, see what was
- * synced and keep events out of the count. The connect round trip ends on
- * this page with `connected` or `error` in the query.
+ * Calendar settings: Google (connect, pick calendars, sync), calendar links
+ * for Apple, Outlook and the rest, and, once either is there, what was
+ * synced and the events kept out of the count. The Google connect round
+ * trip ends on this page with `connected` or `error` in the query.
  */
 export function CalendarSettingsView() {
     const { t } = useTranslation();
     const params = useSearchParams();
     const calendar = useCalendar();
+    const feeds = useCalendarFeeds();
+    const google = calendar.data ?? null;
+    const anyCalendar = google !== null || (feeds.data?.length ?? 0) > 0;
     const outcome = params.get('connected') === '1' ? 'connected' : params.get('error');
     const today = DateTime.now().setZone(TIME_ZONE).startOf('day');
     const from = today.toISODate() ?? '';
@@ -248,38 +254,45 @@ export function CalendarSettingsView() {
                 </FormMessage>
             )}
 
-            {calendar.isPending && <div className="h-40 animate-pulse rounded-2xl bg-muted" />}
-            {calendar.isError && (
-                <FormMessage tone="error">{t(errorKey(calendar.error))}</FormMessage>
-            )}
-            {calendar.data === null && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Link2 className="size-4 text-muted-foreground" />
-                            {t('calendarSettings.connectTitle')}
-                        </CardTitle>
-                        <CardDescription>
-                            {t('calendarSettings.connectDescription')}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2 text-xs text-muted-foreground">
-                            <p>{t('calendarSettings.privacy')}</p>
-                            <p>{t('calendarSettings.freeHint')}</p>
-                        </div>
-                        <ConnectChoice />
-                    </CardContent>
-                </Card>
-            )}
-            {calendar.data !== null && calendar.data !== undefined && (
-                <div className="grid gap-4">
-                    <ConnectionCard connection={calendar.data} />
-                    <SourcesCard connection={calendar.data} />
-                    <CalendarEventsCard from={from} to={to} />
-                    <IgnoreRulesCard />
-                </div>
-            )}
+            <div className="grid gap-4">
+                {calendar.isPending && <div className="h-40 animate-pulse rounded-2xl bg-muted" />}
+                {calendar.isError && (
+                    <FormMessage tone="error">{t(errorKey(calendar.error))}</FormMessage>
+                )}
+                {calendar.data === null && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Link2 className="size-4 text-muted-foreground" />
+                                {t('calendarSettings.connectTitle')}
+                            </CardTitle>
+                            <CardDescription>
+                                {t('calendarSettings.connectDescription')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2 text-xs text-muted-foreground">
+                                <p>{t('calendarSettings.privacy')}</p>
+                                <p>{t('calendarSettings.freeHint')}</p>
+                            </div>
+                            <ConnectChoice />
+                        </CardContent>
+                    </Card>
+                )}
+                {google !== null && (
+                    <>
+                        <ConnectionCard connection={google} />
+                        <SourcesCard connection={google} />
+                    </>
+                )}
+                <CalendarFeedsCard />
+                {anyCalendar && (
+                    <>
+                        <CalendarEventsCard from={from} to={to} />
+                        <IgnoreRulesCard />
+                    </>
+                )}
+            </div>
         </div>
     );
 }

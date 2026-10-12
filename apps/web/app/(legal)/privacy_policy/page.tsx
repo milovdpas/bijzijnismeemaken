@@ -86,9 +86,9 @@ export default function PrivacyPolicyPage() {
                 <strong>
                     Nobody but you ever sees the titles or details of your appointments.
                 </strong>{' '}
-                Other members only see &ldquo;busy&rdquo; or &ldquo;free&rdquo;. Events you mark as
-                &ldquo;free&rdquo; in Google, and events you tell the app to ignore, never make you
-                busy.
+                Other members only see &ldquo;busy&rdquo; or &ldquo;free&rdquo;. Every event counts
+                as busy, also one marked &ldquo;free&rdquo; in Google; events you tell the app to
+                ignore never make you busy.
             </p>
             <p>
                 The app&rsquo;s use of information received from Google APIs adheres to the{' '}
@@ -110,6 +110,31 @@ export default function PrivacyPolicyPage() {
                 settings.
             </p>
 
+            <h2>Calendar links (Apple, Outlook and others)</h2>
+            <p>
+                Instead of Google, or next to it, you can add a calendar by its sharing link, such
+                as Apple&rsquo;s &ldquo;public calendar&rdquo; link or a calendar published from
+                Outlook. The app&rsquo;s server then fetches that link: when you add it, when you
+                press &ldquo;sync&rdquo;, and once a night.
+            </p>
+            <ul>
+                <li>
+                    <strong>What is stored:</strong> the link itself, encrypted, because anybody who
+                    has it can read that calendar; a name and the address it comes from; and the
+                    events of the coming 180 days (start, end, title, all-day or not), as for
+                    Google.
+                </li>
+                <li>
+                    <strong>Who sees it:</strong> as for Google, titles only you, and busy or free
+                    your groups. The link is never shown again, not even to you.
+                </li>
+                <li>
+                    <strong>How long it is kept:</strong> until you remove the link or delete your
+                    account; removing it deletes the link and its events at once. To stop the link
+                    working anywhere, also switch off sharing in the calendar it came from.
+                </li>
+            </ul>
+
             <h2>Why we store it</h2>
             <p>
                 Only to run the app for you and your friends: to sign you in, to show your groups
@@ -130,6 +155,11 @@ export default function PrivacyPolicyPage() {
                 <li>
                     <strong>Google</strong> for sign-in and, if you connect it, your calendar, as
                     described above.
+                </li>
+                <li>
+                    <strong>Apple, Microsoft or another calendar service</strong> when you add a
+                    calendar link: the app fetches the link from them, so they see the
+                    server&rsquo;s address, not yours.
                 </li>
                 <li>
                     <strong>Unsplash</strong> when a member searches for a photo for an activity or
@@ -164,10 +194,10 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p>
                 Deleting your account (Settings → Delete account) removes your account, your
-                sessions, your calendar connection and events, and takes you out of every group.
-                Scores you entered on leaderboards and activities you created stay in those groups
-                with your display name as it was, so the group&rsquo;s history keeps making sense;
-                they are no longer linked to an account.
+                sessions, your calendar connection, calendar links and events, and takes you out of
+                every group. Scores you entered on leaderboards and activities you created stay in
+                those groups with your display name as it was, so the group&rsquo;s history keeps
+                making sense; they are no longer linked to an account.
             </p>
 
             <h2>Your rights</h2>

@@ -15,12 +15,15 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { useCalendar } from '@/hooks/queries/use-calendar';
+import { useCalendar, useCalendarFeeds } from '@/hooks/queries/use-calendar';
 
-/** Settings: where the calendar stands, and the way to its own page. */
+/** Settings: where the calendars stand, Google and links, and the way to their own page. */
 export function CalendarCard() {
     const { t } = useTranslation();
     const calendar = useCalendar();
+    const feeds = useCalendarFeeds();
+    const links = feeds.data?.length ?? 0;
+    const nothing = calendar.data === null && links === 0;
 
     return (
         <Card>
@@ -31,8 +34,8 @@ export function CalendarCard() {
                 </CardTitle>
                 <CardDescription>{t('calendarSettings.cardDescription')}</CardDescription>
             </CardHeader>
-            <CardContent className="text-sm">
-                {calendar.data === null && (
+            <CardContent className="space-y-1 text-sm">
+                {nothing && (
                     <p className="text-muted-foreground">{t('calendarSettings.notConnected')}</p>
                 )}
                 {calendar.data !== null && calendar.data !== undefined && (
@@ -50,6 +53,7 @@ export function CalendarCard() {
                         </Badge>
                     </p>
                 )}
+                {links > 0 && <p>{t('calendarFeeds.count', { count: links })}</p>}
             </CardContent>
             <CardFooter className="justify-end">
                 <Button
@@ -57,9 +61,7 @@ export function CalendarCard() {
                     nativeButton={false}
                     render={<Link href="/settings/calendar" />}
                 >
-                    {calendar.data === null
-                        ? t('calendarSettings.connectGoogle')
-                        : t('calendarSettings.manage')}
+                    {nothing ? t('calendarSettings.connectAny') : t('calendarSettings.manage')}
                     <ChevronRight />
                 </Button>
             </CardFooter>

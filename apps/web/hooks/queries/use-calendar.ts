@@ -3,21 +3,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
+    AddCalendarFeedInput,
     CalendarConnectionDto,
     CalendarEventDto,
+    CalendarFeedDto,
     CalendarIgnoreRuleDto,
     CalendarIgnoreRuleInput,
     CalendarSourceDto,
 } from '@bzim/types';
 
 import {
+    addCalendarFeed,
     addIgnoreRule,
     disconnectCalendar,
     fetchCalendar,
     fetchCalendarEvents,
+    fetchCalendarFeeds,
     fetchIgnoreRules,
+    removeCalendarFeed,
     removeIgnoreRule,
     syncCalendar,
+    syncCalendarFeeds,
     updateCalendarSource,
 } from '@/lib/api/calendar';
 import { queryKeys } from '@/lib/query-keys';
@@ -96,6 +102,45 @@ export function useRemoveIgnoreRule(): UseMutationResult<void, Error, string> {
     const client = useQueryClient();
     return useMutation({
         mutationFn: removeIgnoreRule,
+        onSuccess: () => invalidateCalendar(client),
+    });
+}
+
+/** The calendars read through a link (Apple, Outlook, any feed). */
+export function useCalendarFeeds(): UseQueryResult<CalendarFeedDto[]> {
+    return useQuery({ queryKey: queryKeys.calendar.feeds, queryFn: fetchCalendarFeeds });
+}
+
+export function useAddCalendarFeed(): UseMutationResult<
+    CalendarFeedDto,
+    Error,
+    AddCalendarFeedInput
+> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: addCalendarFeed,
+        // The form says why a link was refused, or how long to wait.
+        meta: { silent: true },
+        onSuccess: () => invalidateCalendar(client),
+    });
+}
+
+export function useSyncCalendarFeeds(): UseMutationResult<CalendarFeedDto[], Error, void> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: syncCalendarFeeds,
+        meta: { silent: true },
+        onSuccess: (feeds) => {
+            client.setQueryData(queryKeys.calendar.feeds, feeds);
+            invalidateCalendar(client);
+        },
+    });
+}
+
+export function useRemoveCalendarFeed(): UseMutationResult<void, Error, string> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: removeCalendarFeed,
         onSuccess: () => invalidateCalendar(client),
     });
 }

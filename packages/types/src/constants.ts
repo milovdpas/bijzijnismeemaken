@@ -122,6 +122,13 @@ export const AVAILABILITY = {
     CALENDAR_SYNC_DAYS: 180,
 } as const;
 
+/** Calendars read through a link (Apple, Outlook and any other iCalendar feed). */
+export const CALENDAR_FEED = {
+    MAX_PER_USER: 10,
+    URL_MAX_LENGTH: 2000,
+    NAME_MAX_LENGTH: 100,
+} as const;
+
 export const AUTH = {
     /** No composition rules: length is what matters, and a long passphrase beats a short mixed one. */
     PASSWORD_MIN_LENGTH: 10,
@@ -269,6 +276,11 @@ export const API_ENDPOINTS = {
         CALENDAR_EVENTS: `${V1}/me/calendar/events`,
         CALENDAR_IGNORE_RULES: `${V1}/me/calendar/ignore-rules`,
         CALENDAR_IGNORE_RULE: (ruleId: string) => `${V1}/me/calendar/ignore-rules/${ruleId}`,
+        /** GET lists, POST adds a calendar link (`AddCalendarFeedInput`). */
+        CALENDAR_FEEDS: `${V1}/me/calendar/feeds`,
+        CALENDAR_FEED: (feedId: string) => `${V1}/me/calendar/feeds/${feedId}`,
+        /** POST reads every link again now. */
+        CALENDAR_FEEDS_SYNC: `${V1}/me/calendar/feeds/sync`,
         NOTIFICATION_SETTINGS: `${V1}/me/notification-settings`,
         NOTIFICATION_SETTING: (type: string) => `${V1}/me/notification-settings/${type}`,
         PUSH_SUBSCRIPTIONS: `${V1}/me/push-subscriptions`,

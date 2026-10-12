@@ -22,6 +22,7 @@ import type {
 import ActivityInterest from '../models/ActivityInterest.entity';
 import CalendarConnection from '../models/CalendarConnection.entity';
 import CalendarEvent from '../models/CalendarEvent.entity';
+import CalendarFeed from '../models/CalendarFeed.entity';
 import CalendarIgnoreRule from '../models/CalendarIgnoreRule.entity';
 import type Group from '../models/Group.entity';
 import GroupMember from '../models/GroupMember.entity';
@@ -225,7 +226,8 @@ export class AvailabilityService {
     /**
      * The group's days, busy ids per daypart, for the overview. With an
      * activity, only the people who are in for it. `hasCalendar` is true for
-     * somebody with an active, synced connection and at least one calendar on.
+     * somebody with an active, synced Google connection and at least one
+     * calendar on, or an active, synced calendar link.
      */
     static async forGroup(
         group: Group,
@@ -264,6 +266,15 @@ export class AvailabilityService {
                 .filter((connection) => connection.sources.some((source) => source.enabled))
                 .map((connection) => connection.userId),
         );
+        const feeds = await CalendarFeed.find({
+            where: {
+                userId: In(people.map((user) => user.id)),
+                status: CalendarConnectionStatus.ACTIVE,
+                lastSyncedAt: Not(IsNull()),
+            },
+            select: { userId: true },
+        });
+        for (const feed of feeds) withCalendar.add(feed.userId);
         return AvailabilityPresenter.group(
             from,
             to,

@@ -23,6 +23,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 | Who plans | Activity creator + admins/owner. |
 | Recurring | Status lives on the occurrence; each planning = one occurrence. |
 | Calendars | User picks which of their Google calendars count (default: primary). Sync window today + 180 days. |
+| Calendar links (decided 2026-10-12, task 50) | Apple, Outlook and any other calendar join by their sharing link (an iCalendar feed): no account, no stored password, no paid developer account. Read-only, so they only ever make somebody busy; writing planned activities into them stays the e-mail's "add to calendar". Up to 10 links per person, next to Google or instead of it. A link is read on the server when added (refused with the reason when it cannot be read), on "sync" and nightly, over the same window as Google. The link is a secret (anybody holding it reads the calendar): stored encrypted and never shown again. |
 | No calendar | Counts as free unless manually blocked; UI shows "no calendar connected" indicator. |
 | Manual blocks | One-off (date + daypart) AND weekly rules (weekday + daypart, optional validity range). Self-managed only. |
 | Cron | No jobs folder. Each cron job is a `POST /api/v1/worker/<job>` endpoint on a `WorkerController` (carrefour pattern) calling service logic; Ofelia `job-exec` labels in `docker-compose.prod.yml` run a small node script that calls the endpoint with `X-Worker-Token`. |
@@ -82,6 +83,7 @@ Confirmed requirements as user stories grouped by feature, preceded by the decis
 ## 1.4 Availability & planning
 - Connect Google Calendar (separate OAuth consent with read scope; may be a different Google account than login). Choose which calendars count.
 - Nightly sync stores events (today..+180d) in DB. Other members only ever see busy/free.
+- Add Apple, Outlook or any other calendar by its sharing link (task 50): read the same way, counted the same way, with the same ignore rules; settings explain where each app hands the link out.
 - Ignore rules: by exact title (case-insensitive) or by recurring series. Own events list (titles visible to self only) to create rules from.
 - Manual unavailability: one-off date + daypart; weekly rule weekday + daypart with optional valid_from/valid_until.
 - Group calendar overview: per day × daypart who is free/busy; toggle "whole group" vs "only members in for activity X". Members without calendar flagged.
