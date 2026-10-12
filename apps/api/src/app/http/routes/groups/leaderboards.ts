@@ -16,6 +16,7 @@ import {
     historyQuerySchema,
     leaderboardMemberParamSchema,
     leaderboardParamSchema,
+    scoreStepSchema,
     scoresQuerySchema,
     setScoreSchema,
     updateLeaderboardSchema,
@@ -120,6 +121,15 @@ export default class LeaderboardRoutes implements IRoute {
             includeLeaderboard,
             requireLeaderboardEditor,
             this.controller.setScore,
+        );
+        router.post(
+            API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE_STEP(groupId, id, ':memberId'),
+            userAuth,
+            validate({ params: leaderboardMemberParamSchema, body: scoreStepSchema }),
+            member,
+            includeLeaderboard,
+            requireLeaderboardEditor,
+            this.controller.stepScore,
         );
         router.delete(
             API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE(groupId, id, ':memberId'),

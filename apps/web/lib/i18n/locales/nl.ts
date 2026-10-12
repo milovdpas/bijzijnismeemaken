@@ -482,6 +482,8 @@ export const nl: Dict = {
         memberCount_one: '{{count}} op de lijst',
         memberCount_other: '{{count}} op de lijst',
         noScores: 'Nog geen scores.',
+        privateTitle: 'Privé',
+        privateHelp: 'Alleen wie op deze lijsten staat ziet ze.',
     },
     leaderboardDetail: {
         backToList: 'Alle ranglijsten',
@@ -499,6 +501,13 @@ export const nl: Dict = {
         tabTimer: 'Timer',
         tabPlayers_one: '{{count}} speler',
         tabPlayers_other: '{{count}} spelers',
+        private: 'Privé',
+        privateHint: 'Alleen wie op deze lijst staat ziet hem.',
+    },
+    leaderboardProblems: {
+        FULL: 'Deze privélijst zit vol.',
+        LAST_MEMBER: 'Er moet iemand op een privélijst blijven staan. Verwijder de lijst anders.',
+        TIME_BOARD: 'Een tijd gaat niet met één omhoog of omlaag.',
     },
     leaderboardForm: {
         newTitle: 'Nieuwe ranglijst',
@@ -519,11 +528,24 @@ export const nl: Dict = {
         editorsTitle: 'Wie voert scores in',
         editMode: 'Scores ingevoerd door',
         editModeHelp: 'Beheerders van de groep kunnen het altijd.',
+        privacyTitle: 'Wie hem ziet',
+        private: 'Privé',
+        privateHelp:
+            'Alleen wie op de lijst staat ziet hem, ook beheerders niet, en hij komt nooit op het dashboard. Dit kan later niet meer anders.',
+        privateMembersHelp:
+            'Jij staat erop. Kies maximaal {{count}} anderen; gasten voeg je toe vanaf de lijst.',
+        privateEditors:
+            'Op een privélijst voert iedereen die erop staat scores in en past de instellingen aan.',
+        guests: 'Gasten',
+        removeGuest: '{{name}} weghalen',
+        versus: 'tegen',
         create: 'Ranglijst starten',
         problems: {
             NAME_LENGTH: 'De naam moet {{min}} tot {{max}} tekens hebben.',
             NO_PERIOD: 'Laat minstens één ranglijst zien.',
             EDITOR_NOT_MEMBER: 'Een van de gekozen mensen zit niet meer in de groep.',
+            MEMBER_NOT_IN_GROUP: 'Een van de gekozen mensen zit niet meer in de groep.',
+            TOO_MANY_MEMBERS: 'Zoveel mensen passen niet op een privélijst.',
         },
     },
     scoreTypes: {
@@ -880,6 +902,16 @@ export const nl: Dict = {
             points_other: 'met {{count}} punten',
             legs_one: 'met {{count}} leg',
             legs_other: 'met {{count}} legs',
+        },
+        postWin: {
+            button: 'Winst op een lijst zetten',
+            posted: 'Op {{name}} gezet',
+            title: 'Winst voor {{name}}',
+            help: 'Eén winst erbij op een privélijst waar iedereen uit dit spel op staat: deze maand, dit jaar en altijd.',
+            none: 'Op geen van je privélijsten staat iedereen uit dit spel.',
+            newBoard: 'Privélijst voor dit spel starten',
+            board: 'Lijst',
+            confirm: 'Winst erbij',
         },
         editPlayers: 'Spelers',
         players: {

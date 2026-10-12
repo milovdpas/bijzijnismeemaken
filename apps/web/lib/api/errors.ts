@@ -69,3 +69,9 @@ export function retryAfterSeconds(error: unknown): number | null {
         ?.retryAfterSeconds;
     return typeof seconds === 'number' && seconds > 0 ? seconds : null;
 }
+
+/** The sentence key for a refusal: `<namespace>.<rule>` when the API named its rule, else the code's. */
+export function refusalKey(error: unknown, namespace: string): string {
+    const problem = refusalProblem(error);
+    return problem === null ? errorKey(error) : `${namespace}.${problem}`;
+}

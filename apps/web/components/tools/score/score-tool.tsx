@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { FinalStanding } from '@/components/tools/final-standing';
 import { GameActions } from '@/components/tools/game-actions';
 import { GameResult } from '@/components/tools/game-result';
+import { PostWin } from '@/components/tools/post-win';
 import { PlayerAvatar } from '@/components/tools/player-avatar';
 import { PlayerSetup } from '@/components/tools/player-setup';
 import { AmountDialog } from '@/components/tools/score/amount-dialog';
@@ -121,6 +122,9 @@ export function ScoreTool({ groupId, storageKey }: ToolProps) {
                     >
                         {t('tools.changePlayers')}
                     </Button>
+                    {winners.length === 1 && top !== undefined && (
+                        <PostWin groupId={groupId} players={state.players} winner={top} />
+                    )}
                 </GameResult>
                 <FinalStanding
                     rows={rankPlayers(state.players, (player) => sums[player.id] ?? 0)}

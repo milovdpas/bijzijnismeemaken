@@ -10,7 +10,7 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';
 import { useRemoveLeaderboardMember } from '@/hooks/queries/use-leaderboards';
-import { errorKey } from '@/lib/api/errors';
+import { refusalKey } from '@/lib/api/errors';
 
 /**
  * Who is on the board, which is whoever has ever been given a score (the
@@ -66,7 +66,9 @@ export function PlayersTab({
                 </ul>
             )}
             {remove.isError && removing === null && (
-                <FormMessage tone="error">{t(errorKey(remove.error))}</FormMessage>
+                <FormMessage tone="error">
+                    {t(refusalKey(remove.error, 'leaderboardProblems'))}
+                </FormMessage>
             )}
 
             <ConfirmDialog
@@ -79,7 +81,7 @@ export function PlayersTab({
                 confirmLabel={t('players.removeConfirm')}
                 destructive
                 pending={remove.isPending}
-                error={remove.isError ? t(errorKey(remove.error)) : null}
+                error={remove.isError ? t(refusalKey(remove.error, 'leaderboardProblems')) : null}
                 onConfirm={() => {
                     if (removing !== null) {
                         remove.mutate(removing.id, { onSuccess: () => setRemoving(null) });

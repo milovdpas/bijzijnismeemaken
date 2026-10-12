@@ -21,6 +21,7 @@
 | Remove leaderboard member | ✔ | ✔ | only if edit_mode=everyone | | ✔ | ✔ |
 | Set / clear score | ✔ | ✔ | only if edit_mode=everyone | | ✔ | ✔ |
 | View score history | ✔ | ✔ | ✔ | | | |
+| See and use a private leaderboard | only when on it | only when on it | only when on it | | | |
 | View the dashboard | ✔ | ✔ | ✔ | | | |
 | Add, configure, reorder, remove dashboard widgets | ✔ | ✔ | ✘ | | | |
 | Edit past months | ✘ | ✘ | ✘ | | ✘ | ✘ |
@@ -28,5 +29,7 @@
 | Tournament settings, entries, draw, start, advance, finish, delete (organiser = creator) | ✔ | ✔ | ✘ | organiser ✔ | | |
 | Enter a result | ✔ | ✔ | own match only, while it has none | organiser ✔ | | |
 | Correct or clear a result | ✔ | ✔ | ✘ | organiser ✔ | | |
+
+A private leaderboard (task 49) leaves the role columns out: only the people on it see it (`includeLeaderboard` answers 404 to anybody else, admins and the owner included), and every one of them manages it and enters scores (`isManagedBy` and `isEditableBy` on the entity).
 
 Implementation: `requireGroupRole(minRole)` middleware loads `group_members` row for `req.user` + `:groupId` → `req.membership`; 404 if not a member (hides existence) except for public groups (403 `NOT_A_MEMBER`). Resource-level checks that the caller and the row decide alone (creator or organiser, admin, leaderboard edit mode) are route middleware after the row is loaded (`includeTournament` then `requireTournamentManager`, `includeActivity` then `requireActivityManager`, `includeLeaderboard` then `requireLeaderboardManager` or `requireLeaderboardEditor`), with the rule as an entity method. Rules that need more (a player entering their own match result, actions on another member) stay in services returning `{ ok:false, problem:'FORBIDDEN' }`.

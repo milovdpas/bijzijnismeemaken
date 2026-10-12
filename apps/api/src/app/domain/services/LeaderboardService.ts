@@ -12,6 +12,7 @@ import {
 } from '@bzim/types';
 import type {
     AvatarKey,
+    CreateLeaderboardInput,
     LeaderboardDetailDto,
     LeaderboardInput,
     LeaderboardListingDto,
@@ -37,14 +38,23 @@ export type LeaderboardProblem =
     /** None of the three periods switched on; a board must show something. */
     | 'NO_PERIOD'
     /** An editor who is not in the group. */
-    | 'EDITOR_NOT_MEMBER';
+    | 'EDITOR_NOT_MEMBER'
+    /** Somebody to put on a private board who is not in the group, or has no profile yet. */
+    | 'MEMBER_NOT_IN_GROUP'
+    /** More people for a private board than `LEADERBOARD.PRIVATE_MEMBERS_MAX`. */
+    | 'TOO_MANY_MEMBERS';
 
 export type LeaderboardResult =
     { ok: true; leaderboard: Leaderboard } | { ok: false; problem: LeaderboardProblem };
 
 export type AddMemberResult =
     | { ok: true; member: LeaderboardMember }
-    | { ok: false; problem: 'NOT_A_GROUP_MEMBER' | 'NO_PROFILE' };
+    | { ok: false; problem: 'NOT_A_GROUP_MEMBER' | 'NO_PROFILE' | 'FULL' };
+
+export type AddGuestResult =
+    { ok: true; member: LeaderboardMember } | { ok: false; problem: 'FULL' };
+
+export type RemoveMemberResult = { ok: true } | { ok: false; problem: 'LAST_MEMBER' };
 
 const RELATIONS: FindOptionsRelations<Leaderboard> = {
     createdBy: true,
@@ -59,17 +69,45 @@ const RELATIONS: FindOptionsRelations<Leaderboard> = {
  * what removal means.
  */
 export class LeaderboardService {
+    /**
+     * A private board starts with its people on it: the creator always,
+     * since nobody else could see it otherwise, the chosen others, and
+     * guests by name (a game from the tools hands over everybody who played).
+     */
     static async create(
         group: Group,
         creator: User,
-        input: LeaderboardInput,
+        input: CreateLeaderboardInput,
     ): Promise<LeaderboardResult> {
         if (!LeaderboardService.showsSomething(input)) {
             return { ok: false, problem: 'NO_PERIOD' };
         }
-        const editorIds = input.editMode === EditMode.SELECTED ? (input.editorIds ?? []) : [];
+        const isPrivate = input.isPrivate ?? false;
+        // On a private board everybody on it enters scores, so it has no editors.
+        const editorIds =
+            !isPrivate && input.editMode === EditMode.SELECTED ? (input.editorIds ?? []) : [];
         if (!(await LeaderboardService.allMembers(group, editorIds))) {
             return { ok: false, problem: 'EDITOR_NOT_MEMBER' };
+        }
+        const memberIds = isPrivate ? [...new Set([creator.id, ...(input.memberIds ?? [])])] : [];
+        const guestNames = isPrivate ? (input.guestNames ?? []) : [];
+        if (memberIds.length + guestNames.length > LEADERBOARD.PRIVATE_MEMBERS_MAX) {
+            return { ok: false, problem: 'TOO_MANY_MEMBERS' };
+        }
+        const people =
+            memberIds.length === 0
+                ? []
+                : (
+                      await GroupMember.find({
+                          where: { groupId: group.id, userId: In(memberIds) },
+                          relations: { user: true },
+                      })
+                  ).flatMap((membership) => {
+                      const summary = membership.user.toSummary();
+                      return summary === null ? [] : [summary];
+                  });
+        if (people.length !== memberIds.length) {
+            return { ok: false, problem: 'MEMBER_NOT_IN_GROUP' };
         }
         const created = await AppDataSource.transaction(async (manager) => {
             const leaderboard = await manager.save(
@@ -81,17 +119,41 @@ export class LeaderboardService {
                     description: input.description ?? null,
                     scoreType: input.scoreType,
                     sortOrder: input.sortOrder,
-                    editMode: input.editMode,
+                    editMode: isPrivate ? EditMode.EVERYONE : input.editMode,
                     showMonthly: input.showMonthly,
                     showYearly: input.showYearly,
                     showAllTime: input.showAllTime,
                     showSteppers: LeaderboardService.steppersFor(input),
                     cardPeriod: LeaderboardService.cardPeriodFor(input),
+                    isPrivate,
                 }),
             );
             await manager.save(
                 [...new Set(editorIds)].map((userId) =>
                     manager.create(LeaderboardEditor, { leaderboardId: leaderboard.id, userId }),
+                ),
+            );
+            await manager.save(
+                people.map((person) =>
+                    manager.create(LeaderboardMember, {
+                        leaderboardId: leaderboard.id,
+                        userId: person.id,
+                        displayNameSnapshot: person.displayName,
+                        avatarKeySnapshot: person.avatarKey,
+                        addedById: person.id === creator.id ? null : creator.id,
+                    }),
+                ),
+            );
+            await manager.save(
+                guestNames.map((name) =>
+                    manager.create(LeaderboardMember, {
+                        leaderboardId: leaderboard.id,
+                        userId: null,
+                        displayNameSnapshot: name,
+                        avatarKeySnapshot:
+                            AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)],
+                        addedById: creator.id,
+                    }),
                 ),
             );
             return leaderboard;
@@ -124,12 +186,19 @@ export class LeaderboardService {
             : (shown[0] ?? LeaderboardPeriod.TOTAL);
     }
 
-    /** Settings. The editor list is replaced wholesale when given. */
+    /**
+     * Settings. The editor list is replaced wholesale when given. A private
+     * board keeps everybody on it as its editors, so its edit mode and
+     * editors are left as they are.
+     */
     static async update(
         group: Group,
         leaderboard: Leaderboard,
-        patch: Partial<LeaderboardInput>,
+        changes: Partial<LeaderboardInput>,
     ): Promise<LeaderboardResult> {
+        const patch = leaderboard.isPrivate
+            ? { ...changes, editMode: undefined, editorIds: undefined }
+            : changes;
         const merged = { ...leaderboard, ...stripUndefined(patch) };
         if (!LeaderboardService.showsSomething(merged)) {
             return { ok: false, problem: 'NO_PERIOD' };
@@ -173,12 +242,15 @@ export class LeaderboardService {
         });
     }
 
+    /** The group's boards, and of the private ones only those the viewer is on. */
     static async listForGroup(group: Group, viewer: GroupMember): Promise<LeaderboardListingDto[]> {
-        const boards = await Leaderboard.find({
-            where: { groupId: group.id },
-            relations: RELATIONS,
-            order: { createdAt: 'ASC' },
-        });
+        const boards = (
+            await Leaderboard.find({
+                where: { groupId: group.id },
+                relations: RELATIONS,
+                order: { createdAt: 'ASC' },
+            })
+        ).filter((board) => board.isVisibleTo(viewer));
         return Promise.all(
             boards.map(async (board) =>
                 LeaderboardPresenter.listing(
@@ -209,7 +281,8 @@ export class LeaderboardService {
     }
 
     /**
-     * Any group member puts somebody on a board (docs/05). A removed member
+     * Any group member puts somebody on a board (docs/05); on a private board,
+     * anybody on it, up to `LEADERBOARD.PRIVATE_MEMBERS_MAX`. A removed member
      * comes back with their history; a new one starts clean. Nobody without
      * a finished profile can be on a ranking, since there is nothing to show.
      */
@@ -234,11 +307,15 @@ export class LeaderboardService {
             where: { leaderboardId: leaderboard.id, userId },
             relations: { user: true },
         });
+        if (existing?.isActive() === true) {
+            return { ok: true, member: existing };
+        }
+        if (leaderboard.isFull()) {
+            return { ok: false, problem: 'FULL' };
+        }
         if (existing !== null) {
-            if (!existing.isActive()) {
-                existing.removedAt = null;
-                await existing.save();
-            }
+            existing.removedAt = null;
+            await existing.save();
             return { ok: true, member: existing };
         }
         const member = await LeaderboardMember.create({
@@ -260,13 +337,17 @@ export class LeaderboardService {
     /**
      * A player without an account: a name and a face on the board, nothing
      * else. `userId` stays null, so leaving and decoupling never touch it.
+     * A guest takes a place on a private board like anybody else.
      */
     static async addGuest(
         leaderboard: Leaderboard,
         name: string,
         avatarKey: AvatarKey | undefined,
         addedBy: User,
-    ): Promise<LeaderboardMember> {
+    ): Promise<AddGuestResult> {
+        if (leaderboard.isFull()) {
+            return { ok: false, problem: 'FULL' };
+        }
         const member = await LeaderboardMember.create({
             leaderboardId: leaderboard.id,
             userId: null,
@@ -275,23 +356,36 @@ export class LeaderboardService {
                 avatarKey ?? AVATAR_KEYS[Math.floor(Math.random() * AVATAR_KEYS.length)],
             addedById: addedBy.id,
         }).save();
-        return LeaderboardMember.findOneOrFail({
-            where: { id: member.id },
-            relations: { user: true },
-        });
+        return {
+            ok: true,
+            member: await LeaderboardMember.findOneOrFail({
+                where: { id: member.id },
+                relations: { user: true },
+            }),
+        };
     }
 
     /**
      * Off the ranking, history kept: the row stays with `removedAt`, the
      * three score rows go, and the history records a clearing by whoever
      * did it. All in one transaction, so a ranking never shows a removed
-     * member or hides a live one.
+     * member or hides a live one. A private board keeps at least one person
+     * with an account, who can still see it; deleting it is the way out.
      */
     static async removeMember(
         leaderboard: Leaderboard,
         member: LeaderboardMember,
         actor: User,
-    ): Promise<void> {
+    ): Promise<RemoveMemberResult> {
+        if (
+            leaderboard.isPrivate &&
+            member.userId !== null &&
+            !leaderboard.members.some(
+                (other) => other.id !== member.id && other.userId !== null && other.isActive(),
+            )
+        ) {
+            return { ok: false, problem: 'LAST_MEMBER' };
+        }
         const now = DateTime.now().setZone(TIME_ZONE);
         await AppDataSource.transaction(async (manager) => {
             const total = await manager.findOneBy(LeaderboardScoreTotal, {
@@ -318,6 +412,7 @@ export class LeaderboardService {
             member.removedAt = now.toUTC().toJSDate();
             await manager.save(member);
         });
+        return { ok: true };
     }
 
     static findMember(

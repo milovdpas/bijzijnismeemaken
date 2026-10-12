@@ -1,6 +1,7 @@
 import { API_ENDPOINTS } from '@bzim/types';
 import type {
     AddLeaderboardMemberRequest,
+    CreateLeaderboardInput,
     LeaderboardDetailDto,
     LeaderboardInput,
     LeaderboardListingDto,
@@ -27,7 +28,7 @@ export function fetchLeaderboard(
 
 export function createLeaderboard(
     groupId: string,
-    input: LeaderboardInput,
+    input: CreateLeaderboardInput,
 ): Promise<LeaderboardDetailDto> {
     return request<LeaderboardDetailDto>(API_ENDPOINTS.LEADERBOARDS.CREATE(groupId), {
         method: 'POST',
@@ -129,4 +130,17 @@ export function setScore(
     return score === null
         ? request<void>(url, { method: 'DELETE' })
         : request<void>(url, { method: 'PUT', body: { score } });
+}
+
+/** One up or down in this month, this year and all time at once; points only. */
+export function stepScore(
+    groupId: string,
+    leaderboardId: string,
+    memberId: string,
+    delta: 1 | -1,
+): Promise<void> {
+    return request<void>(
+        API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE_STEP(groupId, leaderboardId, memberId),
+        { method: 'POST', body: { delta } },
+    );
 }

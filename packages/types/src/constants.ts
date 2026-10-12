@@ -68,6 +68,8 @@ export const LEADERBOARD = {
     /** A player without an account: a name on the board. Same bounds as a display name. */
     GUEST_NAME_MIN_LENGTH: 2,
     GUEST_NAME_MAX_LENGTH: 40,
+    /** A private board is a small circle: the creator and a few others, guests included. */
+    PRIVATE_MEMBERS_MAX: 8,
 } as const;
 
 /** Tournaments (M4, docs/01 §1.5c). */
@@ -371,6 +373,9 @@ export const API_ENDPOINTS = {
         /** PUT sets, DELETE clears the member's score for the current period. */
         MEMBER_SCORE: (groupId: string, leaderboardId: string, memberId: string) =>
             `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members/${memberId}/score`,
+        /** POST one up or down, in every period at once (`ScoreStepInput`). */
+        MEMBER_SCORE_STEP: (groupId: string, leaderboardId: string, memberId: string) =>
+            `${V1}/groups/${groupId}/leaderboards/${leaderboardId}/members/${memberId}/score/step`,
     },
 
     TOURNAMENTS: {

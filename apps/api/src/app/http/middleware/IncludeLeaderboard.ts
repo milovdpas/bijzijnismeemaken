@@ -19,7 +19,8 @@ declare global {
 /**
  * Loads the leaderboard in `:leaderboardId` onto the request, looked up
  * within `req.group` (it runs after `requireGroupRole`), so another group's
- * board is as unknown as a missing one.
+ * board is as unknown as a missing one. So is a private board the caller is
+ * not on, also for an admin.
  */
 export const includeLeaderboard: RequestHandler = async (
     req: Request,
@@ -28,7 +29,7 @@ export const includeLeaderboard: RequestHandler = async (
 ) => {
     const { leaderboardId } = paramsOf(req, leaderboardParamSchema);
     const leaderboard = await LeaderboardService.findForGroup(req.group, leaderboardId);
-    if (leaderboard === null) {
+    if (leaderboard === null || !leaderboard.isVisibleTo(req.membership)) {
         sendNotFound(res, 'Leaderboard');
         return;
     }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ERROR_CODES } from '@bzim/types';
 
 import { ApiError } from './client';
-import { errorKey, refusalProblem, retryAfterSeconds, toastWorthy } from './errors';
+import { errorKey, refusalKey, refusalProblem, retryAfterSeconds, toastWorthy } from './errors';
 
 describe('toastWorthy', () => {
     it('leaves what a form explains inline to the form', () => {
@@ -63,5 +63,15 @@ describe('retryAfterSeconds', () => {
                 new ApiError(ERROR_CODES.CONFLICT, 409, 'no', { retryAfterSeconds: 5 }),
             ),
         ).toBeNull();
+    });
+});
+
+describe('refusalKey', () => {
+    it('names the rule in the namespace, else falls back to the code', () => {
+        const full = new ApiError(ERROR_CODES.CONFLICT, 409, 'no', { problem: 'FULL' });
+        expect(refusalKey(full, 'leaderboardProblems')).toBe('leaderboardProblems.FULL');
+        expect(refusalKey(new ApiError(ERROR_CODES.CONFLICT, 409, 'no'), 'x')).toBe(
+            'errors.CONFLICT',
+        );
     });
 });

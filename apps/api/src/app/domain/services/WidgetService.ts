@@ -36,7 +36,10 @@ export class WidgetService {
         return GroupWidget.findOneBy({ id: widgetId, groupId: group.id });
     }
 
-    /** Appended at the end. The target of a leaderboard or activity widget must be the group's own. */
+    /**
+     * Appended at the end. The target of a leaderboard or activity widget
+     * must be the group's own, and a leaderboard one not private.
+     */
     static async add(group: Group, user: User, spec: WidgetSpec): Promise<WidgetResult> {
         if ((await GroupWidget.countBy({ groupId: group.id })) >= WIDGETS.MAX_PER_GROUP) {
             return { ok: false, problem: 'TOO_MANY' };
@@ -135,7 +138,12 @@ export class WidgetService {
     private static async targetExists(group: Group, spec: WidgetSpec): Promise<boolean> {
         switch (spec.type) {
             case WidgetType.LEADERBOARD:
-                return Leaderboard.existsBy({ id: spec.config.leaderboardId, groupId: group.id });
+                // The dashboard is the whole group's; a private board is not.
+                return Leaderboard.existsBy({
+                    id: spec.config.leaderboardId,
+                    groupId: group.id,
+                    isPrivate: false,
+                });
             case WidgetType.ACTIVITY:
                 return Activity.existsBy({ id: spec.config.activityId, groupId: group.id });
             default:

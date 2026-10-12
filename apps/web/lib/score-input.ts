@@ -32,8 +32,3 @@ export function scoreToInput(score: number | null, scoreType: ScoreType): string
     if (score === null) return '';
     return scoreType === ScoreType.NUMBER ? String(score) : formatScore(score, scoreType, 'en');
 }
-
-/** One point up or down, never below zero. */
-export function steppedScore(score: number, delta: 1 | -1): number {
-    return Math.max(0, Number((score + delta).toFixed(LEADERBOARD.SCORE_DECIMALS)));
-}

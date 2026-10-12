@@ -22,11 +22,10 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePeriods, useScores } from '@/hooks/queries/use-leaderboards';
 import { useScoreEntry } from '@/hooks/use-score-entry';
-import { errorKey } from '@/lib/api/errors';
+import { errorKey, refusalKey } from '@/lib/api/errors';
 import { formatMonth } from '@/lib/format-date';
 import { currentPeriod, enabledPeriods, periodChoices, scopeFor } from '@/lib/leaderboard-periods';
 import { formatScore } from '@/lib/score-format';
-import { steppedScore } from '@/lib/score-input';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 50;
@@ -111,7 +110,7 @@ export function RankingTab({
                     variant="outline"
                     disabled={entry.busy || item.score === 0}
                     aria-label={t('ranking.minusOne', { name: item.member.displayName })}
-                    onClick={() => saveFor(item.member, steppedScore(item.score, -1))}
+                    onClick={() => entry.step(item.member.id, -1)}
                 >
                     <Minus />
                 </Button>
@@ -133,7 +132,7 @@ export function RankingTab({
                     variant="outline"
                     disabled={entry.busy}
                     aria-label={t('ranking.plusOne', { name: item.member.displayName })}
-                    onClick={() => saveFor(item.member, steppedScore(item.score, 1))}
+                    onClick={() => entry.step(item.member.id, 1)}
                 >
                     <Plus />
                 </Button>
@@ -253,7 +252,9 @@ export function RankingTab({
                 </div>
             )}
             {entry.error !== null && editing === null && !adding && (
-                <FormMessage tone="error">{t(errorKey(entry.error))}</FormMessage>
+                <FormMessage tone="error">
+                    {t(refusalKey(entry.error, 'leaderboardProblems'))}
+                </FormMessage>
             )}
 
             {editing !== null && (
@@ -268,7 +269,11 @@ export function RankingTab({
                         if (!open) setEditing(null);
                     }}
                     pending={entry.busy}
-                    error={entry.error === null ? null : t(errorKey(entry.error))}
+                    error={
+                        entry.error === null
+                            ? null
+                            : t(refusalKey(entry.error, 'leaderboardProblems'))
+                    }
                     onSubmit={(score) =>
                         score === null
                             ? entry.clear(editing.member.id, () => setEditing(null))
@@ -286,7 +291,11 @@ export function RankingTab({
                         if (!open) setAdding(false);
                     }}
                     pending={entry.busy}
-                    error={entry.error === null ? null : t(errorKey(entry.error))}
+                    error={
+                        entry.error === null
+                            ? null
+                            : t(refusalKey(entry.error, 'leaderboardProblems'))
+                    }
                     onSubmit={(target, score) => entry.save(target, score, () => setAdding(false))}
                 />
             )}

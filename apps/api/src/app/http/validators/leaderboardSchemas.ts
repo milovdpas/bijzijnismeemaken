@@ -39,7 +39,21 @@ const leaderboardFields = z.object({
     cardPeriod: z.enum(LeaderboardPeriod).optional(),
 });
 
-export const createLeaderboardSchema = leaderboardFields;
+/** Private or not is decided here, once; the update schema has no such field. */
+export const createLeaderboardSchema = leaderboardFields.extend({
+    isPrivate: z.boolean().optional(),
+    memberIds: z.array(z.uuid()).max(LEADERBOARD.PRIVATE_MEMBERS_MAX).optional(),
+    guestNames: z
+        .array(
+            z
+                .string()
+                .trim()
+                .min(LEADERBOARD.GUEST_NAME_MIN_LENGTH)
+                .max(LEADERBOARD.GUEST_NAME_MAX_LENGTH),
+        )
+        .max(LEADERBOARD.PRIVATE_MEMBERS_MAX)
+        .optional(),
+});
 
 export const updateLeaderboardSchema = leaderboardFields
     .partial()
@@ -69,6 +83,11 @@ export const setScoreSchema = z.object({
         .min(0)
         .max(LEADERBOARD.SCORE_MAX)
         .transform((value) => Number(value.toFixed(LEADERBOARD.SCORE_DECIMALS))),
+});
+
+/** One up or one down: the plus and minus buttons, and a game posted from a tool. */
+export const scoreStepSchema = z.object({
+    delta: z.union([z.literal(1), z.literal(-1)]),
 });
 
 /** A period, and the month or year it refers to; absent means the current one. */

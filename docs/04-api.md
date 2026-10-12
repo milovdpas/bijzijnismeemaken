@@ -92,8 +92,8 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 ## Leaderboards
 | Method | Path | Purpose | Perm |
 |---|---|---|---|
-| GET | `/groups/:groupId/leaderboards` | List with my-rank summary | M |
-| POST | `/groups/:groupId/leaderboards` | Create | M |
+| GET | `/groups/:groupId/leaderboards` | List with my-rank summary; private boards only for the people on them | M |
+| POST | `/groups/:groupId/leaderboards` | Create; `isPrivate` with `memberIds` (the others on it) and `guestNames` (players without an account), at most 8 people with the creator; 422 `MEMBER_NOT_IN_GROUP`, `TOO_MANY_MEMBERS` | M |
 | GET | `/groups/:groupId/leaderboards/:leaderboardId` | Settings + members + editors | M |
 | PATCH | `…/:leaderboardId` | Settings (name, description, periods shown, edit mode, editors, sort order) | C, A |
 | DELETE | `…/:leaderboardId` | Delete | C, A |
@@ -102,8 +102,11 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 | POST | `…/members` | `{ userId }` adds a group member; `{ name, avatarKey? }` adds a guest without an account | M |
 | DELETE | `…/members/:memberId` | Remove member (history kept) | E, A |
 | PUT | `…/members/:memberId/score` | `{ score }` set (current period only) → monthly/yearly/total + history | E, A |
+| POST | `…/members/:memberId/score/step` | `{ delta: 1 \| -1 }` one up or down in month, year and all time at once, never below zero; 409 `TIME_BOARD` on a time board | E, A |
 | DELETE | `…/members/:memberId/score` | Clear current score (history row with new NULL) | E, A |
 | GET | `…/history?page=&pageSize=` | Score history | M |
+
+A private board (task 49) is a 404 on every route for anybody not on it, admins included; for the people on it **C, A** and **E, A** above read "everybody on it". `POST …/members` on a full private board is a 409 `FULL`; taking off the last member with an account is a 409 `LAST_MEMBER`. A private board is never a dashboard widget (422 `TARGET_NOT_FOUND`).
 
 ### Dashboard
 | Method | Path | Purpose | Perm |

@@ -1,6 +1,7 @@
 'use client';
 
-import { Plus, Trophy } from 'lucide-react';
+import type { LeaderboardListingDto } from '@bzim/types';
+import { Lock, Plus, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 
@@ -11,11 +12,27 @@ import { Button } from '@/components/ui/button';
 import { useLeaderboards } from '@/hooks/queries/use-leaderboards';
 import { errorKey } from '@/lib/api/errors';
 
-/** The group's leaderboards, oldest first as the API lists them, and a way to add one. */
+/**
+ * The group's leaderboards, oldest first as the API lists them, then the
+ * private ones the viewer is on, and a way to add one.
+ */
 export function LeaderboardsView({ groupId }: { groupId: string }) {
     const { t } = useTranslation();
     const leaderboards = useLeaderboards(groupId);
     const newHref = `/groups/${groupId}/leaderboards/new`;
+    const grid = (boards: LeaderboardListingDto[]) => (
+        <div className="grid gap-3 md:grid-cols-2">
+            {boards.map((board) => (
+                <LeaderboardCard
+                    key={board.id}
+                    leaderboard={board}
+                    href={`/groups/${groupId}/leaderboards/${board.id}`}
+                />
+            ))}
+        </div>
+    );
+    const shared = leaderboards.data?.filter((board) => !board.isPrivate) ?? [];
+    const own = leaderboards.data?.filter((board) => board.isPrivate) ?? [];
     const newButton = (
         <Button nativeButton={false} render={<Link href={newHref} />}>
             <Plus className="size-4" />
@@ -45,15 +62,23 @@ export function LeaderboardsView({ groupId }: { groupId: string }) {
                         action={newButton}
                     />
                 ) : (
-                    <div className="grid gap-3 md:grid-cols-2">
-                        {leaderboards.data.map((board) => (
-                            <LeaderboardCard
-                                key={board.id}
-                                leaderboard={board}
-                                href={`/groups/${groupId}/leaderboards/${board.id}`}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        {shared.length > 0 && grid(shared)}
+                        {own.length > 0 && (
+                            <section className="space-y-3 pt-2">
+                                <div>
+                                    <h2 className="flex items-center gap-1.5 text-base">
+                                        <Lock className="size-4" />
+                                        {t('leaderboards.privateTitle')}
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('leaderboards.privateHelp')}
+                                    </p>
+                                </div>
+                                {grid(own)}
+                            </section>
+                        )}
+                    </>
                 ))}
         </div>
     );

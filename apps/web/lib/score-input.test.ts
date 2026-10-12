@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ScoreType } from '@bzim/types';
 
-import { parseScore, scoreToInput, steppedScore } from './score-input';
+import { parseScore, scoreToInput } from './score-input';
 
 describe('parseScore', () => {
     it('reads points with a dot or a comma, and refuses anything else', () => {
@@ -31,13 +31,5 @@ describe('scoreToInput', () => {
         expect(scoreToInput(3_723_450, ScoreType.TIME)).toBe('1:02:03.450');
         expect(parseScore(scoreToInput(83_000, ScoreType.TIME), ScoreType.TIME)).toBe(83_000);
         expect(scoreToInput(null, ScoreType.TIME)).toBe('');
-    });
-});
-
-describe('steppedScore', () => {
-    it('steps by one and stops at zero', () => {
-        expect(steppedScore(10, 1)).toBe(11);
-        expect(steppedScore(0.5, -1)).toBe(0);
-        expect(steppedScore(1.1, 1)).toBe(2.1);
     });
 });

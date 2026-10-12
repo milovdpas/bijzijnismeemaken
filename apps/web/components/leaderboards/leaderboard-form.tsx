@@ -2,7 +2,8 @@
 
 import { EditMode, LEADERBOARD, ScoreType, SortOrder } from '@bzim/types';
 import type { LeaderboardPeriod } from '@bzim/types';
-import type { GroupMemberResponse, LeaderboardInput } from '@bzim/types';
+import type { CreateLeaderboardInput, GroupMemberResponse } from '@bzim/types';
+import { X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -14,7 +15,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { leaderboardFormProblem, toLeaderboardInput } from '@/lib/leaderboard-form';
+import {
+    leaderboardFormProblem,
+    toCreateLeaderboardInput,
+    toLeaderboardInput,
+} from '@/lib/leaderboard-form';
 import { enabledPeriods } from '@/lib/leaderboard-periods';
 import type { LeaderboardFormState } from '@/lib/leaderboard-form';
 
@@ -45,12 +50,16 @@ function SwitchRow({
 
 /**
  * Every setting of a leaderboard, for creating and editing alike. The caller
- * owns the request; this turns the inputs into a `LeaderboardInput` once the
- * shared rules agree. `members` feeds the editor picker of the "selected" mode.
+ * owns the request; this turns the inputs into the API's input once the
+ * shared rules agree. `members` feeds the editor picker of the "selected"
+ * mode and, on a new board, the people of a private one; `meId` is left out
+ * of that, being on it anyway. Private or not is chosen once, when creating.
  */
 export function LeaderboardForm({
     initial,
     members,
+    meId,
+    creating,
     submitLabel,
     pending,
     error,
@@ -58,10 +67,12 @@ export function LeaderboardForm({
 }: {
     initial: LeaderboardFormState;
     members: GroupMemberResponse[];
+    meId: string;
+    creating: boolean;
     submitLabel: string;
     pending: boolean;
     error: string | null;
-    onSubmit: (input: LeaderboardInput) => void;
+    onSubmit: (input: CreateLeaderboardInput) => void;
 }) {
     const { t } = useTranslation();
     const [form, setForm] = useState<LeaderboardFormState>(initial);
@@ -84,6 +95,17 @@ export function LeaderboardForm({
                 ? [...form.editorIds, userId]
                 : form.editorIds.filter((id) => id !== userId),
         });
+    const others = members.filter((member) => member.user.id !== meId);
+    const onBoard = new Set(form.memberIds);
+    // The creator takes one of the places.
+    const boardFull =
+        form.memberIds.length + form.guestNames.length >= LEADERBOARD.PRIVATE_MEMBERS_MAX - 1;
+    const toggleOnBoard = (userId: string, on: boolean) =>
+        patch({
+            memberIds: on
+                ? [...form.memberIds, userId]
+                : form.memberIds.filter((id) => id !== userId),
+        });
 
     return (
         <form
@@ -91,7 +113,9 @@ export function LeaderboardForm({
             noValidate
             onSubmit={(event) => {
                 event.preventDefault();
-                if (canSave) onSubmit(toLeaderboardInput(form));
+                if (canSave) {
+                    onSubmit(creating ? toCreateLeaderboardInput(form) : toLeaderboardInput(form));
+                }
             }}
         >
             <Field
@@ -121,6 +145,82 @@ export function LeaderboardForm({
                     onChange={(event) => patch({ description: event.target.value })}
                 />
             </Field>
+
+            {creating && (
+                <section className="space-y-4 rounded-2xl border p-4">
+                    <h2 className="text-base">{t('leaderboardForm.privacyTitle')}</h2>
+                    <SwitchRow
+                        label={t('leaderboardForm.private')}
+                        help={t('leaderboardForm.privateHelp')}
+                        checked={form.isPrivate}
+                        onCheckedChange={(isPrivate) =>
+                            // Mostly a running tally between a few: plus and minus to hand.
+                            patch(isPrivate ? { isPrivate, showSteppers: true } : { isPrivate })
+                        }
+                    />
+                    {form.isPrivate && (
+                        <>
+                            <p className="text-xs text-muted-foreground">
+                                {t('leaderboardForm.privateMembersHelp', {
+                                    count: LEADERBOARD.PRIVATE_MEMBERS_MAX - 1,
+                                })}
+                            </p>
+                            <ul className="divide-y rounded-xl border">
+                                {others.map((member) => (
+                                    <li
+                                        key={member.user.id}
+                                        className="flex items-center gap-3 px-3 py-2"
+                                    >
+                                        <Avatar avatarKey={member.user.avatarKey} size="sm" />
+                                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                                            {member.user.displayName}
+                                        </span>
+                                        <Switch
+                                            checked={onBoard.has(member.user.id)}
+                                            disabled={!onBoard.has(member.user.id) && boardFull}
+                                            aria-label={member.user.displayName}
+                                            onCheckedChange={(on) =>
+                                                toggleOnBoard(member.user.id, on)
+                                            }
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                            {form.guestNames.length > 0 && (
+                                <Field label={t('leaderboardForm.guests')}>
+                                    <ul className="flex flex-wrap gap-2">
+                                        {form.guestNames.map((name) => (
+                                            <li
+                                                key={name}
+                                                className="flex items-center gap-1 rounded-full border py-0.5 pr-0.5 pl-3 text-sm font-semibold"
+                                            >
+                                                {name}
+                                                <Button
+                                                    type="button"
+                                                    size="icon-xs"
+                                                    variant="ghost"
+                                                    aria-label={t('leaderboardForm.removeGuest', {
+                                                        name,
+                                                    })}
+                                                    onClick={() =>
+                                                        patch({
+                                                            guestNames: form.guestNames.filter(
+                                                                (guest) => guest !== name,
+                                                            ),
+                                                        })
+                                                    }
+                                                >
+                                                    <X />
+                                                </Button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </Field>
+                            )}
+                        </>
+                    )}
+                </section>
+            )}
 
             <section className="space-y-4 rounded-2xl border p-4">
                 <h2 className="text-base">{t('leaderboardForm.scoringTitle')}</h2>
@@ -193,18 +293,24 @@ export function LeaderboardForm({
 
             <section className="space-y-4 rounded-2xl border p-4">
                 <h2 className="text-base">{t('leaderboardForm.editorsTitle')}</h2>
-                <Field
-                    label={t('leaderboardForm.editMode')}
-                    help={t('leaderboardForm.editModeHelp')}
-                >
-                    <PillGroup
-                        options={Object.values(EditMode)}
-                        value={form.editMode}
-                        labelFor={(mode) => t(`editModes.${mode}`)}
-                        onChange={(editMode) => patch({ editMode })}
-                    />
-                </Field>
-                {form.editMode === EditMode.SELECTED && (
+                {form.isPrivate ? (
+                    <p className="text-sm text-muted-foreground">
+                        {t('leaderboardForm.privateEditors')}
+                    </p>
+                ) : (
+                    <Field
+                        label={t('leaderboardForm.editMode')}
+                        help={t('leaderboardForm.editModeHelp')}
+                    >
+                        <PillGroup
+                            options={Object.values(EditMode)}
+                            value={form.editMode}
+                            labelFor={(mode) => t(`editModes.${mode}`)}
+                            onChange={(editMode) => patch({ editMode })}
+                        />
+                    </Field>
+                )}
+                {!form.isPrivate && form.editMode === EditMode.SELECTED && (
                     <ul className="divide-y rounded-xl border">
                         {members.map((member) => (
                             <li key={member.user.id} className="flex items-center gap-3 px-3 py-2">

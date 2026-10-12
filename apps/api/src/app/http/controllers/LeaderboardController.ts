@@ -27,6 +27,7 @@ import {
     createLeaderboardSchema,
     historyQuerySchema,
     leaderboardMemberParamSchema,
+    scoreStepSchema,
     scoresQuerySchema,
     setScoreSchema,
     updateLeaderboardSchema,
@@ -35,9 +36,11 @@ import {
 /**
  * Leaderboards inside a group. `requireGroupRole(MEMBER)` has loaded
  * `req.group` and `req.membership`, and on the routes of one board
- * `includeLeaderboard` has loaded `req.leaderboard`. Settings are the
- * creator's or an admin's (`requireLeaderboardManager`); scores and taking
- * people off follow the edit mode (`requireLeaderboardEditor`).
+ * `includeLeaderboard` has loaded `req.leaderboard`, and only when the
+ * caller may see it: a private board is for the people on it. Settings are
+ * the creator's or an admin's (`requireLeaderboardManager`); scores and
+ * taking people off follow the edit mode (`requireLeaderboardEditor`). On a
+ * private board both are everybody on it.
  */
 export default class LeaderboardController {
     list: Handler = async (req, res) => {
@@ -60,6 +63,9 @@ export default class LeaderboardController {
             showAllTime,
             showSteppers,
             cardPeriod,
+            isPrivate,
+            memberIds,
+            guestNames,
         } = req.body;
         const result = await LeaderboardService.create(req.group, req.user, {
             name,
@@ -73,6 +79,9 @@ export default class LeaderboardController {
             showAllTime,
             showSteppers,
             cardPeriod,
+            isPrivate,
+            memberIds,
+            guestNames,
         });
         if (!result.ok) {
             sendValidationFailed(res, 'The settings do not agree', { problem: result.problem });
@@ -163,7 +172,10 @@ export default class LeaderboardController {
         );
     };
 
-    /** Any member puts somebody on the board: a group member by id, or a guest by name. */
+    /**
+     * Anybody who sees the board puts somebody on it: a group member by id,
+     * or a guest by name. A full private board takes nobody more.
+     */
     addMember: Handler<BodyOf<typeof addLeaderboardMemberSchema>> = async (req, res) => {
         const { userId, name, avatarKey } = req.body;
         if (userId === undefined) {
@@ -173,7 +185,13 @@ export default class LeaderboardController {
                 avatarKey,
                 req.user,
             );
-            sendSuccess<LeaderboardMemberDto>(res, guest.toDto(), 201);
+            if (!guest.ok) {
+                sendConflict(res, 'The private board is full', undefined, {
+                    problem: guest.problem,
+                });
+                return;
+            }
+            sendSuccess<LeaderboardMemberDto>(res, guest.member.toDto(), 201);
             return;
         }
         const result = await LeaderboardService.addMember(
@@ -190,6 +208,11 @@ export default class LeaderboardController {
                 case 'NO_PROFILE':
                     sendConflict(res, 'That person has not finished their profile');
                     return;
+                case 'FULL':
+                    sendConflict(res, 'The private board is full', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
             }
         }
         sendSuccess<LeaderboardMemberDto>(res, result.member.toDto(), 201);
@@ -202,7 +225,13 @@ export default class LeaderboardController {
             sendNotFound(res, 'Leaderboard member');
             return;
         }
-        await LeaderboardService.removeMember(req.leaderboard, member, req.user);
+        const result = await LeaderboardService.removeMember(req.leaderboard, member, req.user);
+        if (!result.ok) {
+            sendConflict(res, 'A private board keeps somebody who can see it', undefined, {
+                problem: result.problem,
+            });
+            return;
+        }
         sendNoContent(res);
     };
 
@@ -215,6 +244,22 @@ export default class LeaderboardController {
         }
         const { score } = req.body;
         await ScoreService.set(req.leaderboard, member, req.user, score);
+        sendNoContent(res);
+    };
+
+    /** One up or down in every period at once; for points only. */
+    stepScore: Handler<BodyOf<typeof scoreStepSchema>> = async (req, res) => {
+        const { memberId } = paramsOf(req, leaderboardMemberParamSchema);
+        const member = await LeaderboardService.findMember(req.leaderboard, memberId);
+        if (member === null || !member.isActive()) {
+            sendNotFound(res, 'Leaderboard member');
+            return;
+        }
+        const result = await ScoreService.step(req.leaderboard, member, req.user, req.body.delta);
+        if (!result.ok) {
+            sendConflict(res, 'A time board has no steps', undefined, { problem: result.problem });
+            return;
+        }
         sendNoContent(res);
     };
 

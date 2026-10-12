@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { API_ENDPOINTS, EditMode, GroupRole, LEADERBOARD, ScoreType, SortOrder } from '@bzim/types';
+import {
+    API_ENDPOINTS,
+    EditMode,
+    GroupRole,
+    LEADERBOARD,
+    LeaderboardPeriod,
+    ScoreType,
+    SortOrder,
+    WidgetType,
+} from '@bzim/types';
 import type {
     LeaderboardDetailDto,
     LeaderboardListingDto,
@@ -10,6 +19,7 @@ import type {
     ScoresResponse,
 } from '@bzim/types';
 
+import Leaderboard from '../src/app/domain/models/Leaderboard.entity';
 import LeaderboardScoreHistory from '../src/app/domain/models/LeaderboardScoreHistory.entity';
 import LeaderboardScoreMonthly from '../src/app/domain/models/LeaderboardScoreMonthly.entity';
 import LeaderboardScoreTotal from '../src/app/domain/models/LeaderboardScoreTotal.entity';
@@ -279,5 +289,220 @@ describe('guests and the card ranking', () => {
         expect(
             data<LeaderboardDetailDto>(await asOwner.patch(url, { showMonthly: false })).cardPeriod,
         ).toBe('yearly');
+    });
+});
+
+describe('private boards', () => {
+    it('shows a private board only to the people on it, admins included, and lets each of them run it', async () => {
+        const { group, owner, anna, bob, admin, asOwner, asAnna, asBob } = await setup();
+        const asAdmin = asUser((await sessionFor(admin)).accessToken);
+
+        const created = await asAnna.post(API_ENDPOINTS.LEADERBOARDS.CREATE(group.id), {
+            ...INPUT,
+            name: 'Anna tegen Bob',
+            // A private board has no editors: everybody on it enters scores.
+            editMode: EditMode.SELECTED,
+            editorIds: [owner.id],
+            isPrivate: true,
+            memberIds: [bob.id],
+        });
+        expect(created.status).toBe(201);
+        const board = data<LeaderboardDetailDto>(created);
+        expect(board).toMatchObject({
+            isPrivate: true,
+            editMode: EditMode.EVERYONE,
+            editors: [],
+            memberCount: 2,
+            canManage: true,
+            canEditScores: true,
+        });
+        expect(board.members.map((member) => member.user?.id).sort()).toEqual(
+            [anna.id, bob.id].sort(),
+        );
+
+        const listFor = async (client: typeof asOwner) =>
+            data<LeaderboardListingDto[]>(
+                await client.get(API_ENDPOINTS.LEADERBOARDS.LIST(group.id)),
+            ).map((listing) => listing.id);
+        expect(await listFor(asBob)).toEqual([board.id]);
+        expect(await listFor(asOwner)).toEqual([]);
+        expect(await listFor(asAdmin)).toEqual([]);
+
+        // To anybody not on it, the board does not exist, admins and owner included.
+        const url = API_ENDPOINTS.LEADERBOARDS.DETAIL(group.id, board.id);
+        expect((await asOwner.get(url)).status).toBe(404);
+        expect((await asAdmin.get(url)).status).toBe(404);
+        expect((await asOwner.patch(url, { name: 'Nee' })).status).toBe(404);
+        expect((await asAdmin.delete(url)).status).toBe(404);
+        expect(
+            (await asOwner.get(API_ENDPOINTS.LEADERBOARDS.HISTORY(group.id, board.id))).status,
+        ).toBe(404);
+
+        // Bob did not make it, and runs it all the same; the edit mode stays.
+        const renamed = data<LeaderboardDetailDto>(
+            await asBob.patch(url, { name: 'Bob tegen Anna', editMode: EditMode.CREATOR }),
+        );
+        expect(renamed).toMatchObject({ name: 'Bob tegen Anna', editMode: EditMode.EVERYONE });
+        const annaOnBoard = board.members.find((member) => member.user?.id === anna.id);
+        expect(
+            (
+                await asBob.post(
+                    API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE_STEP(
+                        group.id,
+                        board.id,
+                        annaOnBoard?.id ?? '',
+                    ),
+                    { delta: 1 },
+                )
+            ).status,
+        ).toBe(204);
+
+        // Never on the dashboard, which is the whole group's.
+        const widget = await asOwner.post(API_ENDPOINTS.WIDGETS.CREATE(group.id), {
+            type: WidgetType.LEADERBOARD,
+            config: { leaderboardId: board.id, period: LeaderboardPeriod.TOTAL, limit: 3 },
+        });
+        expect(widget.status).toBe(422);
+        expect(error(widget).details).toEqual({ problem: 'TARGET_NOT_FOUND' });
+
+        expect((await asBob.delete(url)).status).toBe(204);
+        expect(await Leaderboard.existsBy({ id: board.id })).toBe(false);
+    });
+
+    it('caps a private board, keeps somebody who can see it, and goes with the last of them', async () => {
+        const { group, owner, anna, bob, asAnna, asBob } = await setup();
+        const create = (memberIds: string[]) =>
+            asAnna.post(API_ENDPOINTS.LEADERBOARDS.CREATE(group.id), {
+                ...INPUT,
+                isPrivate: true,
+                memberIds,
+            });
+
+        const outsider = await seedUser();
+        const notInGroup = await create([bob.id, outsider.id]);
+        expect(notInGroup.status).toBe(422);
+        expect(error(notInGroup).details).toEqual({ problem: 'MEMBER_NOT_IN_GROUP' });
+        const crowd = [];
+        for (let index = 0; index < LEADERBOARD.PRIVATE_MEMBERS_MAX; index += 1) {
+            const user = await seedUser();
+            await seedMember(group, user);
+            crowd.push(user.id);
+        }
+        const tooMany = await create(crowd);
+        expect(tooMany.status).toBe(422);
+        expect(error(tooMany).details).toEqual({ problem: 'TOO_MANY_MEMBERS' });
+
+        // Guests count towards the cap from the start too.
+        const crowded = await asAnna.post(API_ENDPOINTS.LEADERBOARDS.CREATE(group.id), {
+            ...INPUT,
+            isPrivate: true,
+            memberIds: [bob.id],
+            guestNames: Array.from(
+                { length: LEADERBOARD.PRIVATE_MEMBERS_MAX - 1 },
+                (_, index) => `Gast ${String(index)}`,
+            ),
+        });
+        expect(error(crowded).details).toEqual({ problem: 'TOO_MANY_MEMBERS' });
+
+        // Anna, Bob and a guest from a game, then more guests up to the cap.
+        const board = data<LeaderboardDetailDto>(
+            await asAnna.post(API_ENDPOINTS.LEADERBOARDS.CREATE(group.id), {
+                ...INPUT,
+                isPrivate: true,
+                memberIds: [bob.id],
+                guestNames: [' Opa Jan '],
+            }),
+        );
+        expect(board.memberCount).toBe(3);
+        expect(board.members.find((member) => member.user === null)?.displayName).toBe('Opa Jan');
+        const membersUrl = API_ENDPOINTS.LEADERBOARDS.MEMBERS(group.id, board.id);
+        for (let index = 3; index < LEADERBOARD.PRIVATE_MEMBERS_MAX; index += 1) {
+            expect((await asBob.post(membersUrl, { name: `Gast ${String(index)}` })).status).toBe(
+                201,
+            );
+        }
+        const full = await asBob.post(membersUrl, { name: 'Te veel' });
+        expect(full.status).toBe(409);
+        expect(error(full).details).toEqual({ problem: 'FULL' });
+        expect((await asBob.post(membersUrl, { userId: owner.id })).status).toBe(409);
+        // Somebody already on it is no new place.
+        expect((await asBob.post(membersUrl, { userId: anna.id })).status).toBe(201);
+
+        // Bob may go; Anna, the last with an account, may not: deleting is the way out.
+        const memberUrl = (userId: string) =>
+            API_ENDPOINTS.LEADERBOARDS.MEMBER(
+                group.id,
+                board.id,
+                board.members.find((member) => member.user?.id === userId)?.id ?? '',
+            );
+        expect((await asBob.delete(memberUrl(bob.id))).status).toBe(204);
+        expect(
+            (await asBob.get(API_ENDPOINTS.LEADERBOARDS.DETAIL(group.id, board.id))).status,
+        ).toBe(404);
+        const last = await asAnna.delete(memberUrl(anna.id));
+        expect(last.status).toBe(409);
+        expect(error(last).details).toEqual({ problem: 'LAST_MEMBER' });
+
+        // When Anna leaves the group nobody can see it any more, so it goes; a group board stays.
+        const shared = await seedLeaderboard(group, anna);
+        expect((await asAnna.post(API_ENDPOINTS.GROUPS.LEAVE(group.id))).status).toBe(204);
+        expect(await Leaderboard.existsBy({ id: board.id })).toBe(false);
+        expect(await Leaderboard.existsBy({ id: shared.id })).toBe(true);
+    });
+});
+
+describe('score steps', () => {
+    it('steps one up or down in every period at once, never below zero, on points only', async () => {
+        const { group, owner, anna, asOwner } = await setup();
+        const board = await seedLeaderboard(group, owner, { showSteppers: true });
+        const member = await seedLeaderboardMember(board, anna);
+        const stepUrl = API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE_STEP(group.id, board.id, member.id);
+        const values = async () => {
+            const { year, month } = ScoreService.currentPeriod();
+            return [
+                (await LeaderboardScoreMonthly.findOneBy({ memberId: member.id, year, month }))
+                    ?.score ?? null,
+                (await LeaderboardScoreYearly.findOneBy({ memberId: member.id, year }))?.score ??
+                    null,
+                (await LeaderboardScoreTotal.findOneBy({ memberId: member.id }))?.score ?? null,
+            ];
+        };
+
+        // Nothing to take one off yet: no rows, no history.
+        expect((await asOwner.post(stepUrl, { delta: -1 })).status).toBe(204);
+        expect(await values()).toEqual([null, null, null]);
+        expect(await LeaderboardScoreHistory.countBy({ memberId: member.id })).toBe(0);
+
+        expect(
+            (
+                await asOwner.put(
+                    API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE(group.id, board.id, member.id),
+                    { score: 5 },
+                )
+            ).status,
+        ).toBe(204);
+        // A new month: this month starts empty while the year and all time keep counting.
+        await LeaderboardScoreMonthly.delete({ memberId: member.id });
+        expect((await asOwner.post(stepUrl, { delta: 1 })).status).toBe(204);
+        expect(await values()).toEqual([1, 6, 6]);
+        expect((await asOwner.post(stepUrl, { delta: -1 })).status).toBe(204);
+        expect((await asOwner.post(stepUrl, { delta: -1 })).status).toBe(204);
+        expect(await values()).toEqual([0, 4, 4]);
+        const latest = await LeaderboardScoreHistory.find({
+            where: { memberId: member.id },
+            order: { createdAt: 'DESC' },
+        });
+        expect(latest).toHaveLength(4);
+        expect(latest[0]).toMatchObject({ oldScore: 5, newScore: 4 });
+
+        expect((await asOwner.post(stepUrl, { delta: 2 })).status).toBe(422);
+        const timed = await seedLeaderboard(group, owner, { scoreType: ScoreType.TIME });
+        const runner = await seedLeaderboardMember(timed, anna);
+        const refused = await asOwner.post(
+            API_ENDPOINTS.LEADERBOARDS.MEMBER_SCORE_STEP(group.id, timed.id, runner.id),
+            { delta: 1 },
+        );
+        expect(refused.status).toBe(409);
+        expect(error(refused).details).toEqual({ problem: 'TIME_BOARD' });
     });
 });

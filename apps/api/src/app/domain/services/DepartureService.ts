@@ -135,6 +135,20 @@ export class DepartureService {
                 { changedById: userId, leaderboardId: In(leaderboardIds) },
                 { changedById: null, changedByNameSnapshot: name },
             );
+            // A private board is seen by the people on it only. With the last
+            // of them gone nobody ever could again, so it goes, scores and all.
+            const unseen = (
+                await manager.find(Leaderboard, {
+                    where: { groupId: group.id, isPrivate: true },
+                    relations: { members: true },
+                })
+            ).filter(
+                (board) =>
+                    !board.members.some((member) => member.userId !== null && member.isActive()),
+            );
+            if (unseen.length > 0) {
+                await manager.delete(Leaderboard, { id: In(unseen.map((board) => board.id)) });
+            }
         }
 
         // Tournaments: entries and organiser keep the name, not the person.

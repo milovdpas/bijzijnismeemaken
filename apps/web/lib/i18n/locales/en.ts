@@ -483,6 +483,8 @@ export const en = {
         memberCount_one: '{{count}} on the board',
         memberCount_other: '{{count}} on the board',
         noScores: 'No scores yet.',
+        privateTitle: 'Private',
+        privateHelp: 'Only the people on these boards see them.',
     },
     leaderboardDetail: {
         backToList: 'All leaderboards',
@@ -500,6 +502,13 @@ export const en = {
         tabTimer: 'Timer',
         tabPlayers_one: '{{count}} player',
         tabPlayers_other: '{{count}} players',
+        private: 'Private',
+        privateHint: 'Only the people on this board see it.',
+    },
+    leaderboardProblems: {
+        FULL: 'This private board is full.',
+        LAST_MEMBER: 'Somebody has to stay on a private board. Delete the board instead.',
+        TIME_BOARD: 'A time does not go up or down by one.',
     },
     leaderboardForm: {
         newTitle: 'New leaderboard',
@@ -520,11 +529,23 @@ export const en = {
         editorsTitle: 'Who enters scores',
         editMode: 'Scores entered by',
         editModeHelp: 'Group admins always can.',
+        privacyTitle: 'Who sees it',
+        private: 'Private',
+        privateHelp:
+            'Only the people on the board see it, group admins included, and it never goes on the dashboard. This cannot be changed later.',
+        privateMembersHelp:
+            'You are on it. Pick up to {{count}} others; add guests from the board.',
+        privateEditors: 'Everybody on a private board enters scores and changes its settings.',
+        guests: 'Guests',
+        removeGuest: 'Remove {{name}}',
+        versus: 'vs',
         create: 'Start leaderboard',
         problems: {
             NAME_LENGTH: 'The name needs {{min}} to {{max}} characters.',
             NO_PERIOD: 'Show at least one ranking.',
             EDITOR_NOT_MEMBER: 'One of the chosen editors is not in the group any more.',
+            MEMBER_NOT_IN_GROUP: 'One of the chosen people is not in the group any more.',
+            TOO_MANY_MEMBERS: 'That is more people than a private board holds.',
         },
     },
     scoreTypes: {
@@ -880,6 +901,16 @@ export const en = {
             points_other: 'with {{count}} points',
             legs_one: 'with {{count}} leg',
             legs_other: 'with {{count}} legs',
+        },
+        postWin: {
+            button: 'Add the win to a board',
+            posted: 'Added to {{name}}',
+            title: "{{name}}'s win",
+            help: 'One win up on a private board with everybody from this game on it: this month, this year and all time.',
+            none: 'None of your private boards has everybody from this game on it.',
+            newBoard: 'Start a private board for this game',
+            board: 'Board',
+            confirm: 'Add the win',
         },
         editPlayers: 'Players',
         players: {

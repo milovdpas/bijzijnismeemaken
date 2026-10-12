@@ -117,7 +117,8 @@ export function WidgetConfigDialog({
                     />
                 );
             case WidgetType.LEADERBOARD: {
-                const boards = leaderboards.data ?? [];
+                // The dashboard is the whole group's: a private board is not offered.
+                const boards = (leaderboards.data ?? []).filter((board) => !board.isPrivate);
                 const chosen = boards.find((board) => board.id === spec.config.leaderboardId);
                 const periods = chosen === undefined ? [] : enabledPeriods(chosen);
                 return (

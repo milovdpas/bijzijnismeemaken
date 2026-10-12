@@ -1,7 +1,7 @@
 'use client';
 
 import { ERROR_CODES, ScoreType } from '@bzim/types';
-import { ArrowLeft, Hash, History, Pencil, Timer, Trash2, Trophy } from 'lucide-react';
+import { ArrowLeft, Hash, History, Lock, Pencil, Timer, Trash2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -89,6 +89,12 @@ export function LeaderboardDetailView({
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                             <h2 className="text-xl md:text-2xl">{data.name}</h2>
+                            {data.isPrivate && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                                    <Lock className="size-3" />
+                                    {t('leaderboardDetail.private')}
+                                </span>
+                            )}
                         </div>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                             {t('leaderboardDetail.by', {
@@ -131,6 +137,11 @@ export function LeaderboardDetailView({
                 </div>
                 {data.description !== null && (
                     <p className="text-sm whitespace-pre-line">{data.description}</p>
+                )}
+                {data.isPrivate && (
+                    <p className="text-xs text-muted-foreground">
+                        {t('leaderboardDetail.privateHint')}
+                    </p>
                 )}
             </header>
 

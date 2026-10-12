@@ -14,6 +14,8 @@ export function DartsTool({ groupId, storageKey }: ToolProps) {
     if (state.phase === 'setup') {
         return <DartsSetup groupId={groupId} state={state} update={update} />;
     }
-    if (state.phase === 'finished') return <DartsResult state={state} update={update} />;
+    if (state.phase === 'finished') {
+        return <DartsResult groupId={groupId} state={state} update={update} />;
+    }
     return <DartsBoard state={state} update={update} />;
 }

@@ -528,6 +528,11 @@ export interface LeaderboardDto {
     showSteppers: boolean;
     /** The ranking the board's card shows the top of; always one of the shown periods. */
     cardPeriod: LeaderboardPeriod;
+    /**
+     * Seen only by the people on it, admins included, and never on the
+     * dashboard. Everybody on it manages it and enters scores. Set at creation.
+     */
+    isPrivate: boolean;
     creator: UserSummary | null;
     creatorName: string | null;
     createdAt: IsoDateTimeString;
@@ -539,9 +544,9 @@ export interface LeaderboardListingDto extends LeaderboardDto {
     memberCount: number;
     /** The head of the `cardPeriod` ranking, now; at most `LEADERBOARD.CARD_TOP` entries. */
     top: ScoreEntryDto[];
-    /** Settings and deletion: creator or group admin. */
+    /** Settings and deletion: creator or group admin; on a private board, everybody on it. */
     canManage: boolean;
-    /** Setting scores: by edit mode, plus group admins. */
+    /** Setting scores: by edit mode, plus group admins; on a private board, everybody on it. */
     canEditScores: boolean;
 }
 
@@ -581,6 +586,28 @@ export interface LeaderboardInput {
     showSteppers?: boolean;
     /** Default: the first shown period; a hidden one is replaced by that. */
     cardPeriod?: LeaderboardPeriod;
+}
+
+/** `POST /groups/:id/leaderboards`: the settings, and whether only the people on it see it. */
+export interface CreateLeaderboardInput extends LeaderboardInput {
+    /** Default false. Fixed once created. */
+    isPrivate?: boolean;
+    /**
+     * Only read on a private board: who is on it besides the creator, who
+     * always is. At most `LEADERBOARD.PRIVATE_MEMBERS_MAX` people in all,
+     * guests included.
+     */
+    memberIds?: Uuid[];
+    /** Only read on a private board: players without an account to put on it at once, by name. */
+    guestNames?: string[];
+}
+
+/**
+ * `POST …/members/:memberId/score/step`: one up or down on a points board,
+ * in this month, this year and all time alike; never below zero.
+ */
+export interface ScoreStepInput {
+    delta: 1 | -1;
 }
 
 /** One row of a ranking. */

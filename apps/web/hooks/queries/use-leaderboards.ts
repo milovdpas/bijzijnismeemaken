@@ -1,9 +1,16 @@
 'use client';
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    keepPreviousData,
+    useMutation,
+    useQueries,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
     AddLeaderboardMemberRequest,
+    CreateLeaderboardInput,
     LeaderboardDetailDto,
     LeaderboardInput,
     LeaderboardListingDto,
@@ -26,6 +33,7 @@ import {
     fetchScores,
     removeLeaderboardMember,
     setScore,
+    stepScore,
     updateLeaderboard,
 } from '@/lib/api/leaderboards';
 import type { ScoresQuery } from '@/lib/api/leaderboards';
@@ -59,12 +67,26 @@ export function useLeaderboard(
     });
 }
 
+/** Several boards with their members at once, sharing `useLeaderboard`'s cache. */
+export function useLeaderboardDetails(
+    groupId: string,
+    leaderboardIds: string[],
+): UseQueryResult<LeaderboardDetailDto>[] {
+    return useQueries({
+        queries: leaderboardIds.map((leaderboardId) => ({
+            queryKey: queryKeys.leaderboards.detail(groupId, leaderboardId),
+            queryFn: () => fetchLeaderboard(groupId, leaderboardId),
+            retry: retryUnlessNotFound,
+        })),
+    });
+}
+
 export function useCreateLeaderboard(
     groupId: string,
-): UseMutationResult<LeaderboardDetailDto, Error, LeaderboardInput> {
+): UseMutationResult<LeaderboardDetailDto, Error, CreateLeaderboardInput> {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: (input: LeaderboardInput) => createLeaderboard(groupId, input),
+        mutationFn: (input: CreateLeaderboardInput) => createLeaderboard(groupId, input),
         onSuccess: (board) => {
             client.setQueryData(queryKeys.leaderboards.detail(groupId, board.id), board);
             void client.invalidateQueries({ queryKey: queryKeys.leaderboards.list(groupId) });
@@ -166,6 +188,16 @@ export function useSetScore(
 ): UseMutationResult<void, Error, { memberId: string; score: number | null }> {
     return useMemberChange(groupId, leaderboardId, ({ memberId, score }) =>
         setScore(groupId, leaderboardId, memberId, score),
+    );
+}
+
+/** One up or down for somebody on the board, in every period at once. */
+export function useStepScore(
+    groupId: string,
+    leaderboardId: string,
+): UseMutationResult<void, Error, { memberId: string; delta: 1 | -1 }> {
+    return useMemberChange(groupId, leaderboardId, ({ memberId, delta }) =>
+        stepScore(groupId, leaderboardId, memberId, delta),
     );
 }
 
