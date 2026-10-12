@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { CategoryPicker } from '@/components/activities/category-picker';
 import { DaypartPicker } from '@/components/activities/daypart-picker';
 import { ImageField } from '@/components/common/image-field';
+import { DateField } from '@/components/common/date-field';
 import { Field } from '@/components/common/field';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';
@@ -157,10 +158,9 @@ export function ActivityForm({
                                     : null
                             }
                         >
-                            <Input
-                                type="date"
+                            <DateField
                                 value={form.specificDate}
-                                onChange={(event) => patch({ specificDate: event.target.value })}
+                                onChange={(specificDate) => patch({ specificDate })}
                             />
                         </Field>
                     )}
@@ -212,11 +212,10 @@ export function ActivityForm({
                                         : null
                                 }
                             >
-                                <Input
-                                    type="date"
+                                <DateField
                                     value={form.periodStart}
                                     max={form.periodEnd === '' ? undefined : form.periodEnd}
-                                    onChange={(event) => patch({ periodStart: event.target.value })}
+                                    onChange={(periodStart) => patch({ periodStart })}
                                 />
                             </Field>
                             <Field
@@ -231,11 +230,10 @@ export function ActivityForm({
                                           : null
                                 }
                             >
-                                <Input
-                                    type="date"
+                                <DateField
                                     value={form.periodEnd}
                                     min={form.periodStart === '' ? undefined : form.periodStart}
-                                    onChange={(event) => patch({ periodEnd: event.target.value })}
+                                    onChange={(periodEnd) => patch({ periodEnd })}
                                 />
                             </Field>
                         </>

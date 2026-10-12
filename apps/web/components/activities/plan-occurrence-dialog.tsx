@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { SuggestionList } from '@/components/activities/suggestion-list';
 import { Avatar } from '@/components/common/avatar';
+import { DateField } from '@/components/common/date-field';
 import { Field } from '@/components/common/field';
 import { FormMessage } from '@/components/common/form-message';
 import { Button } from '@/components/ui/button';
@@ -134,11 +135,9 @@ export function PlanOccurrenceDialog({
                     </Field>
                     <div className="grid items-start gap-4 sm:grid-cols-2">
                         <Field label={t('planDialog.date')}>
-                            <Input
-                                type="date"
-                                autoFocus
+                            <DateField
                                 value={form.date}
-                                onChange={(event) => setForm({ ...form, date: event.target.value })}
+                                onChange={(date) => setForm({ ...form, date })}
                             />
                         </Field>
                         <Field label={t('planDialog.startTime')}>

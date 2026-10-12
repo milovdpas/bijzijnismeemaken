@@ -505,6 +505,12 @@ export const en = {
         private: 'Private',
         privateHint: 'Only the people on this board see it.',
     },
+    dateField: {
+        placeholder: 'dd/mm/yyyy',
+        open: 'Pick a date',
+        previous: 'Previous month',
+        next: 'Next month',
+    },
     leaderboardProblems: {
         FULL: 'This private board is full.',
         LAST_MEMBER: 'Somebody has to stay on a private board. Delete the board instead.',

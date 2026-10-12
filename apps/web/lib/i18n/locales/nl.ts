@@ -504,6 +504,12 @@ export const nl: Dict = {
         private: 'Privé',
         privateHint: 'Alleen wie op deze lijst staat ziet hem.',
     },
+    dateField: {
+        placeholder: 'dd/mm/jjjj',
+        open: 'Kies een datum',
+        previous: 'Vorige maand',
+        next: 'Volgende maand',
+    },
     leaderboardProblems: {
         FULL: 'Deze privélijst zit vol.',
         LAST_MEMBER: 'Er moet iemand op een privélijst blijven staan. Verwijder de lijst anders.',
