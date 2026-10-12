@@ -26,6 +26,7 @@ import Tournament from '../models/Tournament.entity';
 import TournamentEntry from '../models/TournamentEntry.entity';
 import TournamentEntryMember from '../models/TournamentEntryMember.entity';
 import type User from '../models/User.entity';
+import { knockoutPlan } from '../tournaments/bracket';
 import { snakeGroups } from '../tournaments/round-robin';
 import TournamentPresenter from '../presenters/TournamentPresenter';
 import { shuffle } from '../../infrastructure/utils/Random';
@@ -334,6 +335,37 @@ export class TournamentService {
     }
 
     /**
+     * Two entries trade places in the draw: seed and group. Seeds are unique
+     * per tournament, so one steps aside through the offset while the other
+     * takes its place. An entry swapped with itself stays where it is.
+     */
+    static async swapEntries(
+        tournament: Tournament,
+        entry: TournamentEntry,
+        other: TournamentEntry,
+    ): Promise<TournamentResult<'NOT_DRAFT'>> {
+        if (tournament.status !== TournamentStatus.DRAFT) {
+            return { ok: false, problem: 'NOT_DRAFT' };
+        }
+        if (entry.id !== other.id) {
+            await AppDataSource.transaction(async (manager) => {
+                await manager.update(TournamentEntry, entry.id, {
+                    seed: SEED_OFFSET + entry.seed,
+                });
+                await manager.update(TournamentEntry, other.id, {
+                    seed: entry.seed,
+                    groupNo: entry.groupNo,
+                });
+                await manager.update(TournamentEntry, entry.id, {
+                    seed: other.seed,
+                    groupNo: other.groupNo,
+                });
+            });
+        }
+        return { ok: true, tournament: await TournamentService.reload(tournament.id) };
+    }
+
+    /**
      * The draw: the seeds in a random order, and in a group stage the groups
      * dealt again from them. With `teams`, everybody in the entries is first
      * dealt into random teams, as even as they come out: as many teams as
@@ -432,6 +464,18 @@ export class TournamentService {
             canFinish: TournamentPlayService.canFinish(tournament),
             groups: TournamentPlayService.groupTables(tournament),
             canReport: (match) => TournamentPlayService.canReport(tournament, match, viewer),
+            preview:
+                tournament.status === TournamentStatus.DRAFT &&
+                tournament.format === TournamentFormat.KNOCKOUT &&
+                tournament.entries.length >= TOURNAMENT.MIN_ENTRIES
+                    ? knockoutPlan(
+                          TournamentService.bySeed(tournament.entries).map((entry) => ({
+                              id: entry.id,
+                              group: null,
+                          })),
+                          tournament.thirdPlace,
+                      )
+                    : [],
         });
     }
 

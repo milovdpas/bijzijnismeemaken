@@ -19,6 +19,7 @@ import {
     drawSchema,
     listTournamentsQuerySchema,
     matchResultSchema,
+    swapEntrySchema,
     tournamentEntryParamSchema,
     tournamentMatchParamSchema,
     updateEntrySchema,
@@ -237,6 +238,31 @@ export default class TournamentController {
                     return;
                 case 'NOT_A_GROUP_MEMBER':
                     sendValidationFailed(res, 'Somebody is not in the group or has no profile', {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
+        sendSuccess<TournamentDetailDto>(
+            res,
+            TournamentService.detail(result.tournament, req.membership),
+        );
+    };
+
+    swapEntry: Handler<BodyOf<typeof swapEntrySchema>> = async (req, res) => {
+        const { entryId } = paramsOf(req, tournamentEntryParamSchema);
+        const { withEntryId } = req.body;
+        const entry = req.tournament.entries.find((candidate) => candidate.id === entryId);
+        const other = req.tournament.entries.find((candidate) => candidate.id === withEntryId);
+        if (entry === undefined || other === undefined) {
+            sendNotFound(res, 'Entry');
+            return;
+        }
+        const result = await TournamentService.swapEntries(req.tournament, entry, other);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'NOT_DRAFT':
+                    sendConflict(res, 'The draw is fixed once it has started', undefined, {
                         problem: result.problem,
                     });
                     return;

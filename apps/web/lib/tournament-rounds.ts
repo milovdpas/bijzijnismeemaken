@@ -32,11 +32,14 @@ export function knockoutRoundName(round: number, lastRound: number): RoundName {
     }
 }
 
-export interface KnockoutRound {
+/** Where a knockout match sits; played matches and the draft's preview both have this. */
+type Placed = Pick<TournamentMatchView, 'stage' | 'round' | 'position'>;
+
+export interface KnockoutRound<T extends Placed = TournamentMatchView> {
     round: number;
     name: RoundName;
     /** Top to bottom of the bracket. */
-    matches: TournamentMatchView[];
+    matches: T[];
 }
 
 /**
@@ -44,15 +47,17 @@ export interface KnockoutRound {
  * the final's round at position 1; it is taken out of the columns and
  * returned apart, so the last column holds the final alone.
  */
-export function knockoutRounds(matches: readonly TournamentMatchView[]): {
-    rounds: KnockoutRound[];
-    thirdPlace: TournamentMatchView | null;
+export function knockoutRounds<T extends Placed>(
+    matches: readonly T[],
+): {
+    rounds: KnockoutRound<T>[];
+    thirdPlace: T | null;
 } {
     const knockout = matches.filter((match) => match.stage === MatchStage.KNOCKOUT);
     const lastRound = Math.max(0, ...knockout.map((match) => match.round));
     const thirdPlace =
         knockout.find((match) => match.round === lastRound && match.position === 1) ?? null;
-    const rounds: KnockoutRound[] = [];
+    const rounds: KnockoutRound<T>[] = [];
     for (let round = 1; round <= lastRound; round += 1) {
         rounds.push({
             round,

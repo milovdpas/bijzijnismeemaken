@@ -382,6 +382,9 @@ export const API_ENDPOINTS = {
             `${V1}/groups/${groupId}/tournaments/${tournamentId}/entries`,
         ENTRY: (groupId: string, tournamentId: string, entryId: string) =>
             `${V1}/groups/${groupId}/tournaments/${tournamentId}/entries/${entryId}`,
+        /** POST: the entry and `withEntryId` trade places in the draw (seed and group). */
+        SWAP: (groupId: string, tournamentId: string, entryId: string) =>
+            `${V1}/groups/${groupId}/tournaments/${tournamentId}/entries/${entryId}/swap`,
         DRAW: (groupId: string, tournamentId: string) =>
             `${V1}/groups/${groupId}/tournaments/${tournamentId}/draw`,
         START: (groupId: string, tournamentId: string) =>

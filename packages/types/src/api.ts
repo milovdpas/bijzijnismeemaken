@@ -820,6 +820,11 @@ export interface TournamentEntryPatch {
     groupNo?: number;
 }
 
+/** `POST …/entries/:id/swap`: the two entries trade places in the draw, seed and group. */
+export interface TournamentSwapInput {
+    withEntryId: Uuid;
+}
+
 /** `POST …/draw`: shuffle the seeds; with `teams`, first deal the people into random teams. */
 export interface TournamentDrawInput {
     teams?: boolean;
@@ -866,6 +871,20 @@ export interface TournamentMatchDto {
     /** One side empty, the other through without playing. */
     isBye: boolean;
     playedAt: IsoDateTimeString | null;
+}
+
+/**
+ * A knockout match as the start would make it from the draw as it stands:
+ * no id and no result yet. A bye's entry is already in the next round.
+ */
+export interface TournamentPreviewMatchDto {
+    stage: MatchStage;
+    round: number;
+    position: number;
+    homeEntryId: Uuid | null;
+    awayEntryId: Uuid | null;
+    /** One side empty, the other through without playing. */
+    isBye: boolean;
 }
 
 /** A match as one viewer sees it in the detail. */
@@ -933,6 +952,8 @@ export interface TournamentDetailDto extends TournamentListingDto {
     /** The final is played. */
     canFinish: boolean;
     entries: TournamentEntryDto[];
+    /** While a knockout is a draft: its bracket as the start would draw it. Empty otherwise. */
+    preview: TournamentPreviewMatchDto[];
     matches: TournamentMatchView[];
     /** One table per group, for a group stage; empty for a knockout. */
     groups: TournamentGroupDto[];

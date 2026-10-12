@@ -3,6 +3,7 @@ import type { TournamentDetailDto, TournamentListingDto } from '@bzim/types';
 
 import type Tournament from '../models/Tournament.entity';
 import type TournamentMatch from '../models/TournamentMatch.entity';
+import type { PlannedMatch } from '../tournaments/bracket';
 import type { StandingRow } from '../tournaments/standings';
 
 /** What the services worked out for the viewer; the presenter only lays it out. */
@@ -14,6 +15,8 @@ export interface TournamentView {
     canFinish: boolean;
     groups: { groupNo: number; rows: StandingRow[] }[];
     canReport: (match: TournamentMatch) => boolean;
+    /** A knockout draft's bracket as the start would draw it; empty otherwise. */
+    preview: PlannedMatch[];
 }
 
 /**
@@ -51,6 +54,14 @@ export default class TournamentPresenter {
             entries: [...tournament.entries]
                 .sort((a, b) => a.seed - b.seed)
                 .map((entry) => entry.toDto()),
+            preview: view.preview.map((match) => ({
+                stage: match.stage,
+                round: match.round,
+                position: match.position,
+                homeEntryId: match.homeId,
+                awayEntryId: match.awayId,
+                isBye: match.round === 1 && match.winnerId !== null,
+            })),
             matches: [...tournament.matches]
                 .sort(
                     (a, b) =>

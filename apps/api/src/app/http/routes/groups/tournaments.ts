@@ -15,6 +15,7 @@ import {
     drawSchema,
     listTournamentsQuerySchema,
     matchResultSchema,
+    swapEntrySchema,
     tournamentEntryParamSchema,
     tournamentMatchParamSchema,
     tournamentParamSchema,
@@ -104,6 +105,15 @@ export default class TournamentRoutes implements IRoute {
             includeTournament,
             requireTournamentManager,
             this.controller.removeEntry,
+        );
+        router.post(
+            API_ENDPOINTS.TOURNAMENTS.SWAP(groupId, id, ':entryId'),
+            userAuth,
+            validate({ params: tournamentEntryParamSchema, body: swapEntrySchema }),
+            member,
+            includeTournament,
+            requireTournamentManager,
+            this.controller.swapEntry,
         );
         router.post(
             API_ENDPOINTS.TOURNAMENTS.DRAW(groupId, id),

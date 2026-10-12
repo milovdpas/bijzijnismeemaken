@@ -120,10 +120,11 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 |---|---|---|---|
 | GET | `/groups/:groupId/tournaments?status=&activityId=` | List. No status: running, then drafts, newest first; `status=finished` is the archive. With `activityId` and no status: that activity's tournaments, any status | M |
 | POST | `/groups/:groupId/tournaments` | Create (draft; optional `activityId` of a `tournament`-category activity) | M |
-| GET | `…/:tournamentId` | Detail: settings, entries with members, matches (with `isBye` and the viewer's `canReport`), group standings (`qualifies`), winner, and `canManage`, `myEntryIds`, `startProblem` (draft), `canAdvance`, `canFinish` | M |
+| GET | `…/:tournamentId` | Detail: settings, entries with members, matches (with `isBye` and the viewer's `canReport`), group standings (`qualifies`), winner, and `canManage`, `myEntryIds`, `startProblem` (draft), `canAdvance`, `canFinish`. A knockout draft also has `preview`: every match as the start would draw it from the seeds now, byes through to round 2 | M |
 | PATCH | `…/:tournamentId` | Settings. Name and description any time, the rest while a draft (409 `NOT_DRAFT`); settings that do not apply are cleared (players have no team size, a knockout no groups); a new group count deals the groups again by seed | C, A |
 | DELETE | `…/:tournamentId` | Delete | C, A |
 | POST | `…/entries` | Add an entry: `{ userId }`, `{ name }` (guest) or `{ name?, members: [{ userId } or { name }] }` (team). In a team tournament a single person is a team of one (the people random teams are dealt from). Next seed; in a group stage the group that seed is dealt. Nobody in two entries (409 `ALREADY_IN`) | C, A (draft) |
+| POST | `…/entries/:entryId/swap` | `{ withEntryId }`: the two entries trade seed and group, which is what dragging one name onto another in the preview does | C, A (draft) |
 | PATCH | `…/entries/:entryId` | Name, members (a player's name follows), seed (moves it; the others shift), group | C, A (draft) |
 | DELETE | `…/entries/:entryId` | Remove; the seeds behind it close up | C, A (draft) |
 | POST | `…/draw` | `{ teams?: boolean }`, body optional: shuffle the seeds and deal the groups again; with `teams`, first deal everybody into random teams, as many as the team size needs, sizes differing by one at most (422 `TOO_FEW_PEOPLE` under two teams) | C, A (draft) |

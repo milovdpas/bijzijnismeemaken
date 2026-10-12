@@ -308,6 +308,83 @@ describe('the draw', () => {
     });
 });
 
+describe('the preview', () => {
+    /** The entry by name, to read seeds and ids without depending on the order. */
+    const named = (detail: TournamentDetailDto, name: string) => {
+        const entry = detail.entries.find((candidate) => candidate.name === name);
+        if (entry === undefined) throw new Error(`no entry ${name}`);
+        return entry;
+    };
+
+    it('shows a knockout draft as the start would draw it, byes to the top seeds', async () => {
+        const w = await world();
+        const detail = await addGuests(w, await create(w), 'A', 'B', 'C', 'D', 'E');
+        const first = detail.preview.filter((match) => match.round === 1);
+        expect(first).toHaveLength(4);
+        expect(first.filter((match) => match.isBye)).toHaveLength(3);
+        const played = first.find((match) => !match.isBye);
+        expect([played?.homeEntryId, played?.awayEntryId]).toEqual([
+            named(detail, 'D').id,
+            named(detail, 'E').id,
+        ]);
+        // The byes are already in the next round, where seed 2 meets seed 3.
+        const second = detail.preview.filter((match) => match.round === 2);
+        expect(second.map((match) => [match.homeEntryId, match.awayEntryId])).toEqual([
+            [named(detail, 'A').id, null],
+            [named(detail, 'B').id, named(detail, 'C').id],
+        ]);
+        expect(detail.preview.filter((match) => match.round === 3)).toHaveLength(1);
+    });
+
+    it('swaps two entries in the draw, for the organiser and admins only', async () => {
+        const w = await world();
+        const detail = await addGuests(w, await create(w), 'A', 'B', 'C', 'D', 'E');
+        const a = named(detail, 'A');
+        const e = named(detail, 'E');
+        const url = T.SWAP(w.group.id, detail.id, a.id);
+
+        expect((await w.asBob.post(url, { withEntryId: e.id })).status).toBe(403);
+        const unknown = '11111111-1111-4111-8111-111111111111';
+        expect((await w.asAnna.post(url, { withEntryId: unknown })).status).toBe(404);
+
+        const swapped = data<TournamentDetailDto>(await w.asCas.post(url, { withEntryId: e.id }));
+        expect(named(swapped, 'E').seed).toBe(1);
+        expect(named(swapped, 'A').seed).toBe(5);
+        const played = swapped.preview.find((match) => match.round === 1 && !match.isBye);
+        expect([played?.homeEntryId, played?.awayEntryId]).toEqual([named(swapped, 'D').id, a.id]);
+
+        await w.asAnna.post(T.START(w.group.id, detail.id));
+        const late = await w.asAnna.post(url, { withEntryId: e.id });
+        expect(late.status).toBe(409);
+        expect(error(late).details).toEqual({ problem: 'NOT_DRAFT' });
+    });
+
+    it('trades groups as well in a group stage, which has no bracket preview yet', async () => {
+        const w = await world();
+        const detail = await addGuests(
+            w,
+            await create(w, {
+                format: TournamentFormat.GROUPS_KNOCKOUT,
+                groupCount: 2,
+                advancePerGroup: 1,
+            }),
+            'A',
+            'B',
+            'C',
+            'D',
+        );
+        expect(detail.preview).toEqual([]);
+        const a = named(detail, 'A');
+        const b = named(detail, 'B');
+        expect([a.groupNo, b.groupNo]).toEqual([1, 2]);
+        const swapped = data<TournamentDetailDto>(
+            await w.asAnna.post(T.SWAP(w.group.id, detail.id, a.id), { withEntryId: b.id }),
+        );
+        expect([named(swapped, 'A').groupNo, named(swapped, 'B').groupNo]).toEqual([2, 1]);
+        expect([named(swapped, 'A').seed, named(swapped, 'B').seed]).toEqual([2, 1]);
+    });
+});
+
 describe('the list', () => {
     it('shows what is on, running first, and keeps the archive apart', async () => {
         const w = await world();

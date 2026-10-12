@@ -1,6 +1,6 @@
 'use client';
 
-import { ParticipantMode, TournamentFormat } from '@bzim/types';
+import { ParticipantMode } from '@bzim/types';
 import type { TournamentDetailDto } from '@bzim/types';
 import { Play, Shuffle, UserPlus, Users } from 'lucide-react';
 import { useState } from 'react';
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { FormMessage } from '@/components/common/form-message';
 import { AddEntryDialog } from '@/components/tournaments/add-entry-dialog';
-import { DraftEntries } from '@/components/tournaments/draft-entries';
+import { DraftPreview } from '@/components/tournaments/draft-preview';
 import { Button } from '@/components/ui/button';
 import { useDrawTournament, useStartTournament } from '@/hooks/queries/use-tournaments';
 import { canDealTeams, randomTeamCount } from '@/lib/tournament-draft';
@@ -76,14 +76,7 @@ export function TournamentDraft({
                         </div>
                     )}
                 </div>
-                {manage && tournament.entries.length > 1 && (
-                    <p className="text-xs text-muted-foreground">
-                        {tournament.format === TournamentFormat.GROUPS_KNOCKOUT
-                            ? t('tournamentDraft.orderHelpGroups')
-                            : t('tournamentDraft.orderHelpKnockout')}
-                    </p>
-                )}
-                <DraftEntries groupId={groupId} tournament={tournament} />
+                <DraftPreview groupId={groupId} tournament={tournament} />
                 {failure !== null && (
                     <FormMessage tone="error">{t(tournamentErrorKey(failure))}</FormMessage>
                 )}

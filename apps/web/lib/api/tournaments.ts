@@ -85,6 +85,19 @@ export function updateTournamentEntry(
     );
 }
 
+/** The two entries trade places in the draw, seed and group. */
+export function swapTournamentEntries(
+    groupId: string,
+    tournamentId: string,
+    entryId: string,
+    withEntryId: string,
+): Promise<TournamentDetailDto> {
+    return request<TournamentDetailDto>(
+        API_ENDPOINTS.TOURNAMENTS.SWAP(groupId, tournamentId, entryId),
+        { method: 'POST', body: { withEntryId } },
+    );
+}
+
 export function removeTournamentEntry(
     groupId: string,
     tournamentId: string,

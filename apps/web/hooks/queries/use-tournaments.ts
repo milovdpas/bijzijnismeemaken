@@ -27,6 +27,7 @@ import {
     removeTournamentEntry,
     reportResult,
     startTournament,
+    swapTournamentEntries,
     updateTournament,
     updateTournamentEntry,
 } from '@/lib/api/tournaments';
@@ -146,6 +147,18 @@ export function useUpdateEntry(
         groupId,
         ({ entryId, patch }: { entryId: string; patch: TournamentEntryPatch }) =>
             updateTournamentEntry(groupId, tournamentId, entryId, patch),
+    );
+}
+
+/** Two entries trade places in the draw: what a drop or a second tap in the preview does. */
+export function useSwapEntries(
+    groupId: string,
+    tournamentId: string,
+): UseMutationResult<TournamentDetailDto, Error, { entryId: string; withEntryId: string }> {
+    return useTournamentChange(
+        groupId,
+        ({ entryId, withEntryId }: { entryId: string; withEntryId: string }) =>
+            swapTournamentEntries(groupId, tournamentId, entryId, withEntryId),
     );
 }
 

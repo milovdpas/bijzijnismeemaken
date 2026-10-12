@@ -47,42 +47,14 @@ export function canDealTeams(
 }
 
 /**
- * Where an entry goes when it is dropped on another: that entry's seed, and
- * in a group stage its group too. The API moves it there and shifts the
- * rest, so it lands before an entry dropped on from below and after one
- * dropped on from above, as a list reorders.
+ * Sent to a group rather than swapped with an entry in it: how an entry gets
+ * into an emptier group. Null when it is in that group already.
  */
-export function dropPatch(
-    dragged: TournamentEntryDto,
-    target: TournamentEntryDto,
-): TournamentEntryPatch | null {
-    if (dragged.id === target.id) return null;
-    return target.groupNo !== null && target.groupNo !== dragged.groupNo
-        ? { seed: target.seed, groupNo: target.groupNo }
-        : { seed: target.seed };
-}
-
-/** Dropped on a group rather than on an entry in it, as an empty group only can be. */
 export function groupPatch(
     dragged: TournamentEntryDto,
     groupNo: number,
 ): TournamentEntryPatch | null {
     return dragged.groupNo === groupNo ? null : { groupNo };
-}
-
-/**
- * One step up or down within a list (the whole draw, or one group): the
- * neighbour's seed, which swaps the two, whatever other groups hold in
- * between. Null at either end.
- */
-export function stepPatch(
-    list: readonly TournamentEntryDto[],
-    entryId: string,
-    step: -1 | 1,
-): TournamentEntryPatch | null {
-    const index = list.findIndex((entry) => entry.id === entryId);
-    const neighbour = index === -1 ? undefined : list[index + step];
-    return neighbour === undefined ? null : { seed: neighbour.seed };
 }
 
 /** A team's name when none is typed: its people, joined, as the API names it. */

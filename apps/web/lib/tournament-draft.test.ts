@@ -6,11 +6,9 @@ import {
     bySeed,
     canDealTeams,
     draftGroups,
-    dropPatch,
     groupPatch,
     playingUserIds,
     randomTeamCount,
-    stepPatch,
     teamNameFor,
 } from './tournament-draft';
 
@@ -72,24 +70,10 @@ describe('tournament draft', () => {
         expect(canDealTeams({ ...teams(4), participantMode: ParticipantMode.PLAYERS })).toBe(false);
     });
 
-    it('drops onto another entry: its seed, and its group when that differs', () => {
+    it('sends an entry to another group, and nowhere when it is there already', () => {
         const a = entry('a', 1, 1);
-        const b = entry('b', 4, 1);
-        const c = entry('c', 2, 2);
-        expect(dropPatch(a, a)).toBeNull();
-        expect(dropPatch(a, b)).toEqual({ seed: 4 });
-        expect(dropPatch(a, c)).toEqual({ seed: 2, groupNo: 2 });
         expect(groupPatch(a, 1)).toBeNull();
         expect(groupPatch(a, 3)).toEqual({ groupNo: 3 });
-    });
-
-    it('steps to the neighbour in the same list, not past either end', () => {
-        const group = [entry('a', 1, 1), entry('b', 4, 1), entry('c', 6, 1)];
-        expect(stepPatch(group, 'b', -1)).toEqual({ seed: 1 });
-        expect(stepPatch(group, 'b', 1)).toEqual({ seed: 6 });
-        expect(stepPatch(group, 'a', -1)).toBeNull();
-        expect(stepPatch(group, 'c', 1)).toBeNull();
-        expect(stepPatch(group, 'nobody', 1)).toBeNull();
     });
 
     it('names a team after its people', () => {

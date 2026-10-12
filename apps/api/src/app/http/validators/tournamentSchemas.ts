@@ -10,6 +10,11 @@ export const tournamentEntryParamSchema = tournamentParamSchema.extend({
     entryId: z.uuid(),
 });
 
+/** The entry in the path trades places with this one. */
+export const swapEntrySchema = z.object({
+    withEntryId: z.uuid(),
+});
+
 export const tournamentMatchParamSchema = tournamentParamSchema.extend({
     matchId: z.uuid(),
 });

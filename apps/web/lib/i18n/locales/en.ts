@@ -671,18 +671,22 @@ export const en = {
         randomTeamsTitle: 'Deal random teams?',
         randomTeamsDescription:
             'The {{people}} people below are dealt into {{teams}} teams, as even as they come out. The teams there are now make way.',
-        orderHelpKnockout:
-            'The order is the draw: the top seeds meet as late as possible. Drag to reorder, or use the arrows on a phone.',
-        orderHelpGroups:
-            'Everybody in a group plays everybody; the best go through. Drag entries to another place or group, or use the arrows and the group picker on a phone.',
+        previewHelpKnockout:
+            'This is the draw: the top seeds meet as late as possible. Drag a name onto another to swap them, or tap one and then the other. Shuffle draws it all again.',
+        previewHelpGroups:
+            'These are the groups: everybody plays everybody, the best go through. Drag a name onto another to swap them, or onto a group to move it there; on a phone, tap one and then the other.',
+        previewSoon: 'The bracket shows from two entries.',
+        picked: '{{name}} is picked. Tap another entry to swap them.',
+        pickedGroups: '{{name}} is picked. Tap another entry to swap them, or move it to a group.',
+        moveHere: 'Move here',
+        renameAction: 'Rename',
+        removeAction: 'Remove',
+        seed: 'Seed {{seed}}',
         start: 'Start tournament',
         startHelp: 'The matches are drawn, and the entries are fixed from then on.',
         group: 'Group {{number}}',
         groupEmpty: 'Nobody in this group yet.',
         guest: 'no account',
-        moveUp: 'Move {{name}} up',
-        moveDown: 'Move {{name}} down',
-        moveToGroup: 'Group of {{name}}',
         rename: 'Rename {{name}}',
         renameTitle: 'Team name',
         remove: 'Remove {{name}}',

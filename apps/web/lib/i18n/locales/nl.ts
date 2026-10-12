@@ -670,18 +670,23 @@ export const nl: Dict = {
         randomTeamsTitle: 'Willekeurige teams maken?',
         randomTeamsDescription:
             'De {{people}} mensen hieronder worden verdeeld over {{teams}} teams, zo gelijk als het uitkomt. De teams van nu maken plaats.',
-        orderHelpKnockout:
-            'De volgorde is de loting: de hoogst geplaatsten treffen elkaar zo laat mogelijk. Sleep om te verplaatsen, of gebruik de pijltjes op een telefoon.',
-        orderHelpGroups:
-            'In een poule speelt iedereen tegen iedereen; de besten gaan door. Sleep deelnemers naar een andere plek of poule, of gebruik de pijltjes en de poulekeuze op een telefoon.',
+        previewHelpKnockout:
+            'Dit is de loting: de hoogst geplaatsten treffen elkaar zo laat mogelijk. Sleep een naam op een andere om ze te ruilen, of tik de ene en dan de andere aan. Schudden loot alles opnieuw.',
+        previewHelpGroups:
+            'Dit zijn de poules: iedereen speelt tegen iedereen, de besten gaan door. Sleep een naam op een andere om ze te ruilen, of op een poule om hem daarheen te zetten; op een telefoon tik je de ene en dan de andere aan.',
+        previewSoon: 'Het schema verschijnt vanaf twee deelnemers.',
+        picked: '{{name}} is gekozen. Tik een andere deelnemer aan om ze te ruilen.',
+        pickedGroups:
+            '{{name}} is gekozen. Tik een andere deelnemer aan om ze te ruilen, of zet hem in een poule.',
+        moveHere: 'Hierheen',
+        renameAction: 'Hernoemen',
+        removeAction: 'Verwijderen',
+        seed: 'Plaatsing {{seed}}',
         start: 'Toernooi starten',
         startHelp: 'De wedstrijden worden geloot, en daarna liggen de deelnemers vast.',
         group: 'Poule {{number}}',
         groupEmpty: 'Nog niemand in deze poule.',
         guest: 'geen account',
-        moveUp: '{{name}} omhoog',
-        moveDown: '{{name}} omlaag',
-        moveToGroup: 'Poule van {{name}}',
         rename: '{{name}} hernoemen',
         renameTitle: 'Teamnaam',
         remove: '{{name}} verwijderen',
