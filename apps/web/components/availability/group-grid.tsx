@@ -44,7 +44,7 @@ export function GroupGrid({
 
     return (
         <div className={cn('rounded-2xl border bg-card', className)}>
-            <div className="sticky top-(--h-topbar) z-(--z-sticky) grid grid-cols-[4.5rem_repeat(3,1fr)] gap-1 rounded-t-2xl border-b bg-card px-2 py-2 text-[11px] font-semibold text-muted-foreground">
+            <div className="sticky top-(--h-topbar) z-(--z-sticky) grid grid-cols-[4.5rem_repeat(3,minmax(0,1fr))] gap-1 rounded-t-2xl border-b bg-card px-2 py-2 text-[11px] font-semibold text-muted-foreground">
                 <span />
                 {DAYPART_ORDER.map((daypart) => (
                     <span key={daypart} className="text-center">
@@ -57,7 +57,7 @@ export function GroupGrid({
                     <div
                         key={day.date}
                         className={cn(
-                            'grid grid-cols-[4.5rem_repeat(3,1fr)] items-center gap-1 px-2 py-1',
+                            'grid grid-cols-[4.5rem_repeat(3,minmax(0,1fr))] items-center gap-1 px-2 py-1',
                             isWeekend(day.date) && 'bg-muted/30',
                             day.date === today && 'bg-brand/10',
                         )}

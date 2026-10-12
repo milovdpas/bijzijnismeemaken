@@ -48,7 +48,7 @@ export function DaypartGrid({
 
     const cellClass = (state: CellState, locked: boolean) =>
         cn(
-            'flex h-10 w-full items-center justify-center gap-1 rounded-lg text-xs font-semibold transition-colors',
+            'flex h-10 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg text-xs font-semibold transition-colors',
             state === 'free' && 'bg-free/30 text-foreground hover:bg-free/50',
             state === 'manual' && 'bg-busy/80 text-white hover:bg-busy',
             state === 'rule' &&
@@ -62,7 +62,7 @@ export function DaypartGrid({
     return (
         <div className={cn('rounded-2xl border bg-card', className)}>
             {/* Sticky under the top bar: thirty rows down, the columns still say what they are. */}
-            <div className="sticky top-(--h-topbar) z-(--z-sticky) grid grid-cols-[4.5rem_repeat(3,1fr)] gap-1 rounded-t-2xl border-b bg-card px-2 py-2 text-[11px] font-semibold text-muted-foreground">
+            <div className="sticky top-(--h-topbar) z-(--z-sticky) grid grid-cols-[4.5rem_repeat(3,minmax(0,1fr))] gap-1 rounded-t-2xl border-b bg-card px-2 py-2 text-[11px] font-semibold text-muted-foreground">
                 <span />
                 {DAYPART_ORDER.map((daypart) => (
                     <span key={daypart} className="text-center">
@@ -75,7 +75,7 @@ export function DaypartGrid({
                     <div
                         key={row.key}
                         className={cn(
-                            'grid grid-cols-[4.5rem_repeat(3,1fr)] items-center gap-1 px-2 py-1',
+                            'grid grid-cols-[4.5rem_repeat(3,minmax(0,1fr))] items-center gap-1 px-2 py-1',
                             row.shaded && 'bg-muted/30',
                             row.highlight && 'bg-brand/10',
                         )}
