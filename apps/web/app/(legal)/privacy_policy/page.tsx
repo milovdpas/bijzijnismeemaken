@@ -69,7 +69,11 @@ export default function PrivacyPolicyPage() {
                     database and refreshed nightly; the access and refresh tokens Google issues are
                     stored encrypted (AES-256-GCM) with a key kept separate from the rest of the
                     data; the account e-mail is stored encrypted. Everything travels over HTTPS, and
-                    only the app&rsquo;s operator has access to the server and the database.
+                    only the app&rsquo;s operator has access to the server and the database. See{' '}
+                    <a className="underline" href="#data-protection">
+                        How we protect your data
+                    </a>{' '}
+                    for every measure.
                 </li>
                 <li>
                     <strong>Who it is shared with:</strong> nobody. Other members only ever see
@@ -135,6 +139,44 @@ export default function PrivacyPolicyPage() {
                     <strong>How long it is kept:</strong> until you remove the link or delete your
                     account; removing it deletes the link and its events at once. To stop the link
                     working anywhere, also switch off sharing in the calendar it came from.
+                </li>
+            </ul>
+
+            <h2 id="data-protection">How we protect your data</h2>
+            <p>
+                Sensitive data, including your Google Calendar data and the access that comes with
+                it, is protected with these measures:
+            </p>
+            <ul>
+                <li>
+                    <strong>Encryption in transit:</strong> the app, its server and Google only talk
+                    over HTTPS (TLS); nothing travels over plain HTTP.
+                </li>
+                <li>
+                    <strong>Encryption at rest:</strong> the access and refresh tokens Google
+                    issues, and calendar links, are encrypted with AES-256-GCM under a key kept
+                    apart from the database. E-mail addresses are encrypted with AES-256 and looked
+                    up through a keyed hash. Passwords are stored only as salted scrypt hashes, and
+                    sign-in tokens only as hashes.
+                </li>
+                <li>
+                    <strong>Access control:</strong> every request is checked against who is signed
+                    in. Your calendar data and its titles are only ever returned to you; other
+                    members of your groups only receive &ldquo;busy&rdquo; or &ldquo;free&rdquo;,
+                    and group data only reaches members of that group. Sign-in cookies are httpOnly,
+                    Secure and SameSite, so scripts and other sites cannot use them, and sign-in
+                    attempts are rate limited.
+                </li>
+                <li>
+                    <strong>Least access:</strong> the app asks Google for the narrowest calendar
+                    permissions that do the job, and for the permission to add events only when you
+                    turn that on. You can revoke it at any time, in the app or in your Google
+                    account.
+                </li>
+                <li>
+                    <strong>Operations:</strong> the server and the database are in the European
+                    Union, and only the app&rsquo;s operator has access to them. Calendar data is
+                    never sold, shared or used for anything but the features described here.
                 </li>
             </ul>
 

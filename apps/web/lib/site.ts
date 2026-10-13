@@ -27,4 +27,4 @@ export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'dev';
 /** Where questions about the privacy policy and the terms go. */
 export const LEGAL_CONTACT_EMAIL = 'vanderpasmilo@gmail.com';
 /** The date on the legal pages; bump it when their wording changes in a way that matters. */
-export const LEGAL_UPDATED = '12 October 2026';
+export const LEGAL_UPDATED = '13 October 2026';
