@@ -9,7 +9,7 @@ const weekday = z.literal([1, 2, 3, 4, 5, 6, 7]);
 export const unavailabilitySchema = z.object({
     date: z.iso.date(),
     daypart: z.enum(Daypart),
-    free: z.boolean().optional(),
+    free: z.boolean().default(false),
 });
 
 const ruleFields = z.object({

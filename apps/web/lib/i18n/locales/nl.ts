@@ -363,6 +363,10 @@ export const nl: Dict = {
         ruleHint: 'Uit je weekschema. Tik om alleen deze datum vrij te zijn.',
         freedHint:
             'Vrij op deze datum, al zegt je weekschema bezet. Tik om het schema weer te volgen.',
+        problems: {
+            NO_RULE:
+                'Je weekschema maakt dat dagdeel niet meer bezet; er valt niets vrij te geven.',
+        },
         weeklyTitle: 'Elke week',
         weeklyHelp:
             'Vaste afspraken, zoals elke dinsdagavond. Tik om in te stellen, tik nog eens om te wissen. Dit geldt voor elke week.',

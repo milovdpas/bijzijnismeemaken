@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { API_ENDPOINTS, Daypart, Weekday } from '@bzim/types';
+import { API_ENDPOINTS, CalendarEventType, Daypart, Weekday } from '@bzim/types';
 import type {
     GroupAvailabilityResponse,
     MyAvailabilityResponse,
@@ -7,14 +7,17 @@ import type {
     UnavailabilityRuleDto,
 } from '@bzim/types';
 
+import CalendarEvent from '../src/app/domain/models/CalendarEvent.entity';
 import ManualUnavailability from '../src/app/domain/models/ManualUnavailability.entity';
 import WeeklyUnavailabilityRule from '../src/app/domain/models/WeeklyUnavailabilityRule.entity';
 import { AvailabilityService } from '../src/app/domain/services/AvailabilityService';
 import { sessionFor } from './support/auth';
-import { asUser, data } from './support/client';
+import { asUser, data, error } from './support/client';
 import {
     seedActivity,
     seedBlock,
+    seedCalendarConnection,
+    seedCalendarSource,
     seedGroup,
     seedInterest,
     seedMember,
@@ -150,6 +153,63 @@ describe('/me/unavailability', () => {
             dayparts: { [Daypart.MORNING]: 'rule' },
             freed: { [Daypart.MORNING]: false },
         });
+
+        // Nothing to free where no weekly rule makes the daypart busy.
+        const wednesday = await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, {
+            date: '2026-11-04',
+            daypart: Daypart.MORNING,
+            free: true,
+        });
+        expect(wednesday.status).toBe(409);
+        expect(error(wednesday).details).toEqual({ problem: 'NO_RULE' });
+
+        // Two taps that arrive at once: both answered, one row.
+        const both = await Promise.all([
+            client.put(API_ENDPOINTS.ME.UNAVAILABILITY, dayOff),
+            client.put(API_ENDPOINTS.ME.UNAVAILABILITY, dayOff),
+        ]);
+        expect(both.map((response) => response.status)).toEqual([204, 204]);
+        expect(await ManualUnavailability.countBy({ userId: user.id })).toBe(1);
+    });
+
+    it('lets the calendar count on a freed daypart, and drops a freed day with its last rule', async () => {
+        const user = await seedUser();
+        const client = asUser((await sessionFor(user)).accessToken);
+        const monday = await seedRule(user, Weekday.MONDAY, Daypart.MORNING);
+        await seedBlock(user, '2026-11-02', Daypart.MORNING, true);
+        await seedBlock(user, '2026-11-02', Daypart.EVENING);
+        // A dentist at ten that Monday: the day off from work does not cover it.
+        const source = await seedCalendarSource(await seedCalendarConnection(user));
+        await CalendarEvent.create({
+            userId: user.id,
+            sourceId: source.id,
+            feedId: null,
+            providerEventId: 'dentist',
+            recurringEventId: null,
+            title: 'Tandarts',
+            startAt: new Date('2026-11-02T09:00:00Z'),
+            endAt: new Date('2026-11-02T10:00:00Z'),
+            allDay: false,
+            startDate: null,
+            endDate: null,
+            transparent: false,
+            eventType: CalendarEventType.DEFAULT,
+            syncedAt: new Date(),
+        }).save();
+        const matrix = await AvailabilityService.matrix([user.id], WEEK.from, WEEK.to);
+        expect(matrix.get(user.id)?.get('2026-11-02')?.get(Daypart.MORNING)).toBe('calendar');
+
+        // Without the Monday rule the freed day means nothing, and a new rule starts clean.
+        expect((await client.delete(API_ENDPOINTS.ME.UNAVAILABILITY_RULE(monday.id))).status).toBe(
+            204,
+        );
+        expect(await ManualUnavailability.findBy({ userId: user.id })).toMatchObject([
+            { daypart: Daypart.EVENING, free: false },
+        ]);
+        await seedRule(user, Weekday.MONDAY, Daypart.MORNING);
+        await CalendarEvent.delete({ userId: user.id });
+        const again = await AvailabilityService.matrix([user.id], WEEK.from, WEEK.to);
+        expect(again.get(user.id)?.get('2026-11-02')?.get(Daypart.MORNING)).toBe('rule');
     });
 });
 

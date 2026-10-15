@@ -1,15 +1,11 @@
 import { API_ENDPOINTS } from '@bzim/types';
 import type {
-    Daypart,
     GroupAvailabilityResponse,
-    IsoDateString,
     MyAvailabilityResponse,
-    UnavailabilityDto,
+    UnavailabilityInput,
     UnavailabilityRuleDto,
     UnavailabilityRuleInput,
 } from '@bzim/types';
-
-import type { BlockChangeKind } from '@/lib/my-availability';
 
 import { request } from './client';
 
@@ -28,19 +24,14 @@ export function fetchGroupAvailability(
     });
 }
 
-/** Block or free one daypart of one day. Both are idempotent on the API. */
-/** Blocks a date's daypart, frees it from a weekly rule, or clears either. */
-export function setBlock(
-    date: IsoDateString,
-    daypart: Daypart,
-    change: BlockChangeKind,
-): Promise<void> {
-    const body: UnavailabilityDto =
-        change === 'clear' ? { date, daypart } : { date, daypart, free: change === 'free' };
-    return request<void>(API_ENDPOINTS.ME.UNAVAILABILITY, {
-        method: change === 'clear' ? 'DELETE' : 'PUT',
-        body,
-    });
+/** Blocks a date's daypart, or with `free` frees it from a weekly rule. Idempotent. */
+export function putBlock(input: UnavailabilityInput): Promise<void> {
+    return request<void>(API_ENDPOINTS.ME.UNAVAILABILITY, { method: 'PUT', body: input });
+}
+
+/** Removes whichever one-off is on that daypart, block or freed day. */
+export function deleteBlock(input: UnavailabilityInput): Promise<void> {
+    return request<void>(API_ENDPOINTS.ME.UNAVAILABILITY, { method: 'DELETE', body: input });
 }
 
 export function fetchRules(): Promise<UnavailabilityRuleDto[]> {

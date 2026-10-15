@@ -19,7 +19,7 @@ import {
     useRules,
     useSetBlock,
 } from '@/hooks/queries/use-availability';
-import { errorKey } from '@/lib/api/errors';
+import { errorKey, refusalKey } from '@/lib/api/errors';
 import { currentMonth, monthLabel, monthRange, shiftMonth } from '@/lib/month';
 import { changeForTap } from '@/lib/my-availability';
 import { todayIso } from '@/lib/occurrence-format';
@@ -113,7 +113,9 @@ export function MyAvailabilityView() {
                         <FormMessage tone="error">{t(errorKey(availability.error))}</FormMessage>
                     )}
                     {block.isError && (
-                        <FormMessage tone="error">{t(errorKey(block.error))}</FormMessage>
+                        <FormMessage tone="error">
+                            {t(refusalKey(block.error, 'availability.problems'))}
+                        </FormMessage>
                     )}
                     {availability.data === undefined ? (
                         <div className="h-96 animate-pulse rounded-2xl bg-muted" />

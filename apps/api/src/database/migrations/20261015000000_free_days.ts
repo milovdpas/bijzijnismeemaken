@@ -8,7 +8,7 @@ import type { Knex } from 'knex';
  */
 export async function up(knex: Knex): Promise<void> {
     await knex.schema.alterTable('manual_unavailability', (table) => {
-        table.boolean('free').notNullable().defaultTo(false);
+        table.boolean('free').notNullable().defaultTo(false).after('daypart');
     });
 }
 

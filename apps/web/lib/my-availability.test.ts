@@ -41,6 +41,9 @@ describe('cellState', () => {
         // Freed from the rule, but the calendar still says busy.
         expect(cellState(monday, Daypart.EVENING)).toBe('calendar');
         expect(cellState(day({}), Daypart.MORNING)).toBe('free');
+        // An API from before free days sends no `freed`: plain free, no crash.
+        const older = { ...day({ [Daypart.MORNING]: 'rule' }), freed: undefined };
+        expect(cellState(older as unknown as MyAvailabilityDay, Daypart.AFTERNOON)).toBe('free');
     });
 });
 

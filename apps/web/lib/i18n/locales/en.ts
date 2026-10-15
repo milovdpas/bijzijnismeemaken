@@ -364,6 +364,10 @@ export const en = {
         ruleHint: 'From your weekly schedule. Tap to be free this date only.',
         freedHint:
             'Free this date, though your weekly schedule says busy. Tap to follow the schedule again.',
+        problems: {
+            NO_RULE:
+                'Your weekly schedule does not make that daypart busy any more; nothing to free.',
+        },
         weeklyTitle: 'Every week',
         weeklyHelp:
             'Fixed commitments, such as every Tuesday evening. Tap to set, tap again to clear. These apply to every week.',

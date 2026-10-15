@@ -11,7 +11,7 @@ import type { BodyOf } from '../middleware/ValidateRequest';
 import Activity from '../../domain/models/Activity.entity';
 import { AvailabilityService } from '../../domain/services/AvailabilityService';
 import { UnavailabilityService } from '../../domain/services/UnavailabilityService';
-import { sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
+import { sendConflict, sendNoContent, sendNotFound, sendSuccess } from '../utils/ApiResponses';
 import {
     createRuleSchema,
     groupAvailabilityQuerySchema,
@@ -62,7 +62,16 @@ export default class AvailabilityController {
 
     addBlock: Handler<BodyOf<typeof unavailabilitySchema>> = async (req, res) => {
         const { date, daypart, free } = req.body;
-        await UnavailabilityService.addBlock(req.user, date, daypart, free ?? false);
+        const result = await UnavailabilityService.addBlock(req.user, date, daypart, free);
+        if (!result.ok) {
+            switch (result.problem) {
+                case 'NO_RULE':
+                    sendConflict(res, 'No weekly rule makes that daypart busy', undefined, {
+                        problem: result.problem,
+                    });
+                    return;
+            }
+        }
         sendNoContent(res);
     };
 

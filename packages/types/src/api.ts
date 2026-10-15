@@ -468,14 +468,24 @@ export interface GroupAvailabilityResponse {
     days: GroupAvailabilityDay[];
 }
 
-/** A one-off block: this date, this daypart. `PUT` adds, `DELETE` removes, both with this body. */
+/**
+ * A one-off as stored: this date, this daypart, busy; or with `free`, free
+ * then even though a weekly rule says busy.
+ */
 export interface UnavailabilityDto {
     date: IsoDateString;
     daypart: Daypart;
-    /**
-     * Free that date and daypart even though a weekly rule says busy, instead
-     * of busy. `PUT` sets either (default busy); `DELETE` removes whichever.
-     */
+    free: boolean;
+}
+
+/**
+ * `PUT` and `DELETE /me/unavailability`. `PUT` blocks the daypart, or with
+ * `free` frees it from a weekly rule for that date: refused (409 `NO_RULE`)
+ * when no weekly rule makes it busy then. `DELETE` removes whichever is there.
+ */
+export interface UnavailabilityInput {
+    date: IsoDateString;
+    daypart: Daypart;
     free?: boolean;
 }
 

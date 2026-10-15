@@ -3,10 +3,11 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
+    Daypart,
     GroupAvailabilityResponse,
     GroupOccurrenceDto,
+    IsoDateString,
     MyAvailabilityResponse,
-    UnavailabilityDto,
     UnavailabilityRuleDto,
     UnavailabilityRuleInput,
 } from '@bzim/types';
@@ -17,7 +18,8 @@ import {
     fetchGroupAvailability,
     fetchMyAvailability,
     fetchRules,
-    setBlock,
+    deleteBlock,
+    putBlock,
 } from '@/lib/api/availability';
 import { fetchGroupOccurrences } from '@/lib/api/occurrences';
 import { applyChange } from '@/lib/my-availability';
@@ -36,17 +38,22 @@ export function useMyAvailability(
     });
 }
 
-export interface BlockChange extends UnavailabilityDto {
+export interface BlockChange {
+    date: IsoDateString;
+    daypart: Daypart;
     change: BlockChangeKind;
     /** The range on screen, so the optimistic update lands in the right cache entry. */
     from: string;
     to: string;
 }
 
+/** Every tap on the month grid, to tell whether another is still waiting. */
+const BLOCK_KEY = ['availability', 'block'] as const;
+
 /**
  * Tapping a cell flips it at once and the API catches up; a failure flips it
- * back. Every cached month is refetched afterwards, since a block can sit in
- * two overlapping ranges.
+ * back. Taps are saved one at a time, and every cached month is refetched
+ * once the last is in, since a block can sit in two overlapping ranges.
  */
 export function useSetBlock(): UseMutationResult<
     void,
@@ -56,7 +63,14 @@ export function useSetBlock(): UseMutationResult<
 > {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: ({ date, daypart, change }) => setBlock(date, daypart, change),
+        mutationFn: ({ date, daypart, change }) =>
+            change === 'clear'
+                ? deleteBlock({ date, daypart })
+                : putBlock({ date, daypart, free: change === 'free' }),
+        mutationKey: BLOCK_KEY,
+        // One change at a time, in tap order: a quick free-then-clear must not
+        // let the clear arrive first and leave the freed day behind.
+        scope: { id: 'my-availability-block' },
         onMutate: async ({ date, daypart, change, from, to }) => {
             const key = queryKeys.availability.mine(from, to);
             await client.cancelQueries({ queryKey: key });
@@ -77,7 +91,11 @@ export function useSetBlock(): UseMutationResult<
             }
         },
         onSettled: () => {
-            void client.invalidateQueries({ queryKey: queryKeys.availability.mineAll });
+            // Refetched once the last queued tap is in: a refetch between two
+            // taps would show the first one's result for a moment.
+            if (client.isMutating({ mutationKey: BLOCK_KEY }) === 1) {
+                void client.invalidateQueries({ queryKey: queryKeys.availability.mineAll });
+            }
         },
     });
 }
