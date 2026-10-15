@@ -358,9 +358,12 @@ export const en = {
         previousMonth: 'Previous month',
         nextMonth: 'Next month',
         gridHelp:
-            'Tap a daypart to block it, tap again to free it. Days with a repeat mark come from a rule below.',
+            'Tap a daypart to block it, tap again to free it. A repeat mark comes from your weekly schedule: tap it to be free that date only, for a holiday, and tap again to follow the schedule.',
         busy: 'Busy',
-        ruleHint: 'From the week schedule; change it there.',
+        free: 'Free',
+        ruleHint: 'From your weekly schedule. Tap to be free this date only.',
+        freedHint:
+            'Free this date, though your weekly schedule says busy. Tap to follow the schedule again.',
         weeklyTitle: 'Every week',
         weeklyHelp:
             'Fixed commitments, such as every Tuesday evening. Tap to set, tap again to clear. These apply to every week.',

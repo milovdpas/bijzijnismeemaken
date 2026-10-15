@@ -357,9 +357,12 @@ export const nl: Dict = {
         previousMonth: 'Vorige maand',
         nextMonth: 'Volgende maand',
         gridHelp:
-            'Tik op een dagdeel om het te blokkeren, tik nog eens om het vrij te geven. Dagen met een herhaalteken komen uit een regel hieronder.',
+            'Tik op een dagdeel om het te blokkeren, tik nog eens om het vrij te geven. Een herhaalteken komt uit je weekschema: tik erop om alleen die datum vrij te zijn, voor een vakantie, en tik nog eens om het schema weer te volgen.',
         busy: 'Bezet',
-        ruleHint: 'Komt uit je weekschema; pas het daar aan.',
+        free: 'Vrij',
+        ruleHint: 'Uit je weekschema. Tik om alleen deze datum vrij te zijn.',
+        freedHint:
+            'Vrij op deze datum, al zegt je weekschema bezet. Tik om het schema weer te volgen.',
         weeklyTitle: 'Elke week',
         weeklyHelp:
             'Vaste afspraken, zoals elke dinsdagavond. Tik om in te stellen, tik nog eens om te wissen. Dit geldt voor elke week.',

@@ -1,11 +1,15 @@
 import { API_ENDPOINTS } from '@bzim/types';
 import type {
+    Daypart,
     GroupAvailabilityResponse,
+    IsoDateString,
     MyAvailabilityResponse,
     UnavailabilityDto,
     UnavailabilityRuleDto,
     UnavailabilityRuleInput,
 } from '@bzim/types';
+
+import type { BlockChangeKind } from '@/lib/my-availability';
 
 import { request } from './client';
 
@@ -25,10 +29,17 @@ export function fetchGroupAvailability(
 }
 
 /** Block or free one daypart of one day. Both are idempotent on the API. */
-export function setBlock(block: UnavailabilityDto, busy: boolean): Promise<void> {
+/** Blocks a date's daypart, frees it from a weekly rule, or clears either. */
+export function setBlock(
+    date: IsoDateString,
+    daypart: Daypart,
+    change: BlockChangeKind,
+): Promise<void> {
+    const body: UnavailabilityDto =
+        change === 'clear' ? { date, daypart } : { date, daypart, free: change === 'free' };
     return request<void>(API_ENDPOINTS.ME.UNAVAILABILITY, {
-        method: busy ? 'PUT' : 'DELETE',
-        body: block,
+        method: change === 'clear' ? 'DELETE' : 'PUT',
+        body,
     });
 }
 

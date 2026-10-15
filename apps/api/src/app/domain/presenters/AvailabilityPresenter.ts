@@ -14,12 +14,13 @@ type UserMatrix = Map<IsoDateString, Map<Daypart, AvailabilityReason>>;
 
 /** Shapes the in-memory availability matrix into the two response forms. */
 export default class AvailabilityPresenter {
-    /** Every day in range, every daypart, the reason or null. */
+    /** Every day in range, every daypart, the reason or null, and whether a rule was freed by hand. */
     static mine(
         from: IsoDateString,
         to: IsoDateString,
         days: IsoDateString[],
         matrix: UserMatrix,
+        freed: Map<IsoDateString, Set<Daypart>>,
         titles: Map<IsoDateString, Map<Daypart, string[]>>,
     ): MyAvailabilityResponse {
         return {
@@ -33,6 +34,12 @@ export default class AvailabilityPresenter {
                         matrix.get(date)?.get(daypart) ?? null,
                     ]),
                 ) as Record<Daypart, AvailabilityReason | null>,
+                freed: Object.fromEntries(
+                    DAYPART_ORDER.map((daypart) => [
+                        daypart,
+                        freed.get(date)?.has(daypart) === true,
+                    ]),
+                ) as Record<Daypart, boolean>,
                 calendarTitles: Object.fromEntries(
                     DAYPART_ORDER.map((daypart) => [daypart, titles.get(date)?.get(daypart) ?? []]),
                 ) as Record<Daypart, string[]>,

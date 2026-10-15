@@ -3,8 +3,8 @@
 
 Inputs for a user `u` and local date `d` (Europe/Amsterdam), daypart `p ∈ {morning [08:00,12:00), afternoon [12:00,18:00), evening [18:00,24:00)}`:
 
-1. **Manual one-off**: row in `manual_unavailability (u, d, p)` → busy (reason `manual`).
-2. **Weekly rule**: row with `weekday = weekday(d)`, `daypart = p`, `(valid_from IS NULL OR ≤ d)`, `(valid_until IS NULL OR ≥ d)` → busy (reason `rule`).
+1. **Manual one-off**: row in `manual_unavailability (u, d, p)` with `free = false` → busy (reason `manual`).
+2. **Weekly rule**: row with `weekday = weekday(d)`, `daypart = p`, `(valid_from IS NULL OR ≤ d)`, `(valid_until IS NULL OR ≥ d)` → busy (reason `rule`), unless a one-off with `free = true` exists for `(u, d, p)`: then the rule does not count that date (the owner's own view marks the daypart `freed`), and the calendar step still applies.
 3. **Calendar**: any `calendar_events` of `u` from an enabled source where NOT ignored, and overlaps (an event marked "Free" in Google counts too, since 2026-10-12):
    - ignored if `lower(title)` ∈ ignore titles, or `recurring_event_id` ∈ ignored series;
    - all-day event: `start_date ≤ d < end_date` → busy for all three dayparts;

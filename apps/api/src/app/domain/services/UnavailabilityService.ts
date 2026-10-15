@@ -21,12 +21,25 @@ export class UnavailabilityService {
         });
     }
 
-    /** Blocking a daypart twice is fine: the row exists either way. */
-    static async addBlock(user: User, date: IsoDateString, daypart: Daypart): Promise<void> {
-        if (await ManualUnavailability.existsBy({ userId: user.id, date, daypart })) {
+    /**
+     * Blocks a daypart, or with `free` frees it from a weekly rule, for one
+     * date. Setting the same twice is fine; the other replaces it.
+     */
+    static async addBlock(
+        user: User,
+        date: IsoDateString,
+        daypart: Daypart,
+        free: boolean,
+    ): Promise<void> {
+        const existing = await ManualUnavailability.findOneBy({ userId: user.id, date, daypart });
+        if (existing === null) {
+            await ManualUnavailability.create({ userId: user.id, date, daypart, free }).save();
             return;
         }
-        await ManualUnavailability.create({ userId: user.id, date, daypart }).save();
+        if (existing.free !== free) {
+            existing.free = free;
+            await existing.save();
+        }
     }
 
     static async removeBlock(user: User, date: IsoDateString, daypart: Daypart): Promise<void> {

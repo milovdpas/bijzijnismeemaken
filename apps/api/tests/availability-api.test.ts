@@ -93,7 +93,7 @@ describe('/me/unavailability', () => {
         const listed = data<UnavailabilityDto[]>(
             await client.get(`${API_ENDPOINTS.ME.UNAVAILABILITY}?from=${WEEK.from}&to=${WEEK.to}`),
         );
-        expect(listed).toEqual([block]);
+        expect(listed).toEqual([{ ...block, free: false }]);
         const outside = data<UnavailabilityDto[]>(
             await client.get(`${API_ENDPOINTS.ME.UNAVAILABILITY}?from=2026-12-01&to=2026-12-07`),
         );
@@ -104,6 +104,52 @@ describe('/me/unavailability', () => {
         expect((await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, { date: 'soon' })).status).toBe(
             422,
         );
+    });
+
+    it('frees a daypart from a weekly rule for one date, and the rule holds again once removed', async () => {
+        const user = await seedUser();
+        const group = await seedGroup(user);
+        const client = asUser((await sessionFor(user)).accessToken);
+        // Work every Monday and Tuesday morning; a day off on Monday the 2nd.
+        await seedRule(user, Weekday.MONDAY, Daypart.MORNING);
+        await seedRule(user, Weekday.TUESDAY, Daypart.MORNING);
+        const dayOff = { date: '2026-11-02', daypart: Daypart.MORNING, free: true };
+        expect((await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, dayOff)).status).toBe(204);
+
+        const mine = () =>
+            client.get(`${API_ENDPOINTS.ME.AVAILABILITY}?from=${WEEK.from}&to=${WEEK.to}`);
+        const day = async (date: string) =>
+            data<MyAvailabilityResponse>(await mine()).days.find((entry) => entry.date === date);
+        expect(await day('2026-11-02')).toMatchObject({
+            dayparts: { [Daypart.MORNING]: null },
+            freed: { [Daypart.MORNING]: true, [Daypart.AFTERNOON]: false },
+        });
+        expect(await day('2026-11-03')).toMatchObject({
+            dayparts: { [Daypart.MORNING]: 'rule' },
+            freed: { [Daypart.MORNING]: false },
+        });
+
+        // The group sees that Monday morning free, and the Tuesday busy.
+        const groupDays = data<GroupAvailabilityResponse>(
+            await client.get(
+                `${API_ENDPOINTS.GROUPS.AVAILABILITY(group.id)}?from=${WEEK.from}&to=${WEEK.to}`,
+            ),
+        ).days;
+        const busyOn = (date: string) =>
+            groupDays.find((entry) => entry.date === date)?.dayparts[Daypart.MORNING].busy;
+        expect(busyOn('2026-11-02')).toEqual([]);
+        expect(busyOn('2026-11-03')).toEqual([user.id]);
+
+        // Blocking it instead replaces the free day; removing it brings the rule back.
+        await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, { ...dayOff, free: false });
+        expect(await ManualUnavailability.count()).toBe(1);
+        expect((await day('2026-11-02'))?.dayparts[Daypart.MORNING]).toBe('manual');
+        await client.put(API_ENDPOINTS.ME.UNAVAILABILITY, dayOff);
+        expect((await client.delete(API_ENDPOINTS.ME.UNAVAILABILITY, dayOff)).status).toBe(204);
+        expect(await day('2026-11-02')).toMatchObject({
+            dayparts: { [Daypart.MORNING]: 'rule' },
+            freed: { [Daypart.MORNING]: false },
+        });
     });
 });
 

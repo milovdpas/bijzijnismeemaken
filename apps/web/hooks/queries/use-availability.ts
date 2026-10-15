@@ -20,6 +20,8 @@ import {
     setBlock,
 } from '@/lib/api/availability';
 import { fetchGroupOccurrences } from '@/lib/api/occurrences';
+import { applyChange } from '@/lib/my-availability';
+import type { BlockChangeKind } from '@/lib/my-availability';
 import { queryKeys } from '@/lib/query-keys';
 
 /** The caller's own days with reasons. The previous month stays while the next loads. */
@@ -35,7 +37,7 @@ export function useMyAvailability(
 }
 
 export interface BlockChange extends UnavailabilityDto {
-    busy: boolean;
+    change: BlockChangeKind;
     /** The range on screen, so the optimistic update lands in the right cache entry. */
     from: string;
     to: string;
@@ -54,8 +56,8 @@ export function useSetBlock(): UseMutationResult<
 > {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: ({ date, daypart, busy }) => setBlock({ date, daypart }, busy),
-        onMutate: async ({ date, daypart, busy, from, to }) => {
+        mutationFn: ({ date, daypart, change }) => setBlock(date, daypart, change),
+        onMutate: async ({ date, daypart, change, from, to }) => {
             const key = queryKeys.availability.mine(from, to);
             await client.cancelQueries({ queryKey: key });
             const previous = client.getQueryData<MyAvailabilityResponse>(key);
@@ -63,12 +65,7 @@ export function useSetBlock(): UseMutationResult<
                 client.setQueryData<MyAvailabilityResponse>(key, {
                     ...previous,
                     days: previous.days.map((day) =>
-                        day.date === date
-                            ? {
-                                  ...day,
-                                  dayparts: { ...day.dayparts, [daypart]: busy ? 'manual' : null },
-                              }
-                            : day,
+                        day.date === date ? applyChange(day, daypart, change) : day,
                     ),
                 });
             }

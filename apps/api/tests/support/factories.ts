@@ -189,12 +189,14 @@ export async function seedParticipant(
     }).save();
 }
 
+/** A daypart blocked by hand, or with `free` freed from a weekly rule. */
 export async function seedBlock(
     user: User,
     date: string,
     daypart: Daypart,
+    free = false,
 ): Promise<ManualUnavailability> {
-    return ManualUnavailability.create({ userId: user.id, date, daypart }).save();
+    return ManualUnavailability.create({ userId: user.id, date, daypart, free }).save();
 }
 
 export async function seedRule(

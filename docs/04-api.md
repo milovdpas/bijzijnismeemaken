@@ -78,7 +78,7 @@ Permission shorthand: **M** = group member, **A** = admin or owner, **O** = owne
 |---|---|---|---|
 | GET | `/groups/:groupId/availability?from=&to=&activityId=` | Day × daypart matrix for group or activity's "in" members; users meta `hasCalendar` | M |
 | GET | `/me/availability?from=&to=` | My own computed availability + reasons (calendar/manual/rule) | S |
-| GET/PUT/DELETE | `/me/unavailability` (`{ date, daypart }`) | One-off blocks (list in range, add, remove) | S |
+| GET/PUT/DELETE | `/me/unavailability` (`{ date, daypart, free? }`) | One-off blocks (list in range, add, remove); `free: true` on PUT frees a weekly rule's daypart for that date instead of blocking it, and replaces a block there (and the other way round). `GET /me/availability` marks such dayparts in `freed` | S |
 | GET/POST/PATCH/DELETE | `/me/unavailability-rules` | Weekly rules | S |
 | GET | `/me/calendar` | Connection status, sources, last sync | S |
 | GET | `/me/calendar/connect?scope=read|readwrite&returnTo=` | Start provider OAuth (redirect); `returnTo` is a path to land on afterwards, default the calendar settings; starting marks the calendar setup step seen | S |

@@ -432,6 +432,11 @@ export type AvailabilityReason = 'manual' | 'rule' | 'calendar';
 export interface MyAvailabilityDay {
     date: IsoDateString;
     dayparts: Record<Daypart, AvailabilityReason | null>;
+    /**
+     * A weekly rule says busy, but this date was set free by hand (a holiday).
+     * The daypart is free then, unless the calendar says otherwise.
+     */
+    freed: Record<Daypart, boolean>;
     /** For the owner's eyes only: the titles of the calendar events that make each daypart busy. */
     calendarTitles: Record<Daypart, string[]>;
 }
@@ -467,6 +472,11 @@ export interface GroupAvailabilityResponse {
 export interface UnavailabilityDto {
     date: IsoDateString;
     daypart: Daypart;
+    /**
+     * Free that date and daypart even though a weekly rule says busy, instead
+     * of busy. `PUT` sets either (default busy); `DELETE` removes whichever.
+     */
+    free?: boolean;
 }
 
 /** A weekly rule: every `weekday`, this daypart, within the optional validity range. */

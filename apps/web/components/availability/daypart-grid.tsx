@@ -2,13 +2,11 @@
 
 import { DAYPART_ORDER } from '@bzim/types';
 import type { Daypart } from '@bzim/types';
-import { Repeat } from 'lucide-react';
+import { Repeat, RepeatOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import type { CellState } from '@/lib/my-availability';
 import { cn } from '@/lib/utils';
-
-/** What one cell shows. `rule` is busy by the week schedule, `manual` busy by hand. */
-export type CellState = 'free' | 'manual' | 'rule' | 'calendar';
 
 export interface GridRow {
     key: string;
@@ -27,9 +25,11 @@ export interface GridRow {
 /**
  * Rows of something down, the three dayparts across, one tap per cell. The
  * week schedule and the month view are the same grid with different rows,
- * so the two read the same and teach each other. A `rule` cell is only
- * tappable where rules are edited (the week grid); in the month grid it is
- * a mark, and the week grid above is where to change it.
+ * so the two read the same and teach each other. Where rules are edited
+ * (the week grid) a `rule` cell is a plain busy one; in the month grid it is
+ * lighter, and a tap frees that date alone, which then shows as `freed`.
+ * A calendar cell is never tapped. `onToggle` gets the cell's state, and
+ * the caller decides what a tap means.
  */
 export function DaypartGrid({
     rows,
@@ -41,7 +41,7 @@ export function DaypartGrid({
     rows: GridRow[];
     rulesEditable: boolean;
     pending: boolean;
-    onToggle: (rowKey: string, daypart: Daypart, busy: boolean) => void;
+    onToggle: (rowKey: string, daypart: Daypart, state: CellState) => void;
     className?: string;
 }) {
     const { t } = useTranslation();
@@ -49,12 +49,13 @@ export function DaypartGrid({
     const cellClass = (state: CellState, locked: boolean) =>
         cn(
             'flex h-10 w-full min-w-0 items-center justify-center gap-1 overflow-hidden rounded-lg text-xs font-semibold transition-colors',
-            state === 'free' && 'bg-free/30 text-foreground hover:bg-free/50',
+            (state === 'free' || state === 'freed') &&
+                'bg-free/30 text-foreground hover:bg-free/50',
             state === 'manual' && 'bg-busy/80 text-white hover:bg-busy',
             state === 'rule' &&
                 (rulesEditable
                     ? 'bg-busy/80 text-white hover:bg-busy'
-                    : 'cursor-default bg-busy/40 text-foreground'),
+                    : 'bg-busy/40 text-foreground hover:bg-busy/60'),
             state === 'calendar' && 'cursor-default bg-busy/40 text-foreground',
             locked && 'opacity-40',
         );
@@ -91,28 +92,32 @@ export function DaypartGrid({
                         {DAYPART_ORDER.map((daypart) => {
                             const state = row.cells[daypart];
                             const titles = row.titles?.[daypart] ?? [];
-                            const tappable =
-                                state === 'free' ||
-                                state === 'manual' ||
-                                (state === 'rule' && rulesEditable);
                             return (
                                 <button
                                     key={daypart}
                                     type="button"
-                                    disabled={!tappable || row.locked === true}
-                                    aria-pressed={state !== 'free'}
+                                    disabled={state === 'calendar' || row.locked === true}
+                                    aria-pressed={state !== 'free' && state !== 'freed'}
                                     aria-label={`${row.label} ${t(`dayparts.${daypart}`)}`}
                                     title={
                                         state === 'calendar' && titles.length > 0
                                             ? titles.join('\n')
                                             : state === 'rule' && !rulesEditable
                                               ? t('availability.ruleHint')
-                                              : undefined
+                                              : state === 'freed'
+                                                ? t('availability.freedHint')
+                                                : undefined
                                     }
-                                    onClick={() => onToggle(row.key, daypart, state === 'free')}
+                                    onClick={() => onToggle(row.key, daypart, state)}
                                     className={cellClass(state, row.locked === true)}
                                 >
                                     {state === 'rule' && <Repeat className="size-3.5" />}
+                                    {state === 'freed' && (
+                                        <>
+                                            <RepeatOff className="size-3.5 text-muted-foreground" />
+                                            {t('availability.free')}
+                                        </>
+                                    )}
                                     {(state === 'manual' || (state === 'rule' && rulesEditable)) &&
                                         t('availability.busy')}
                                     {state === 'calendar' && titles.length > 0 && (

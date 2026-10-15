@@ -5,10 +5,11 @@ import { rangeQuerySchema } from './commonSchemas';
 
 const weekday = z.literal([1, 2, 3, 4, 5, 6, 7]);
 
-/** `PUT` and `DELETE /me/unavailability` carry the same block. */
+/** `PUT` and `DELETE /me/unavailability` carry the same block; `free` only counts on `PUT`. */
 export const unavailabilitySchema = z.object({
     date: z.iso.date(),
     daypart: z.enum(Daypart),
+    free: z.boolean().optional(),
 });
 
 const ruleFields = z.object({

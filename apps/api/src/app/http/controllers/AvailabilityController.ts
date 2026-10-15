@@ -61,8 +61,8 @@ export default class AvailabilityController {
     };
 
     addBlock: Handler<BodyOf<typeof unavailabilitySchema>> = async (req, res) => {
-        const { date, daypart } = req.body;
-        await UnavailabilityService.addBlock(req.user, date, daypart);
+        const { date, daypart, free } = req.body;
+        await UnavailabilityService.addBlock(req.user, date, daypart, free ?? false);
         sendNoContent(res);
     };
 

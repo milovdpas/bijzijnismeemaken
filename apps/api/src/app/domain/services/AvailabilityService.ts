@@ -36,30 +36,49 @@ import { eventCells } from '../utils/EventCells';
 /** user → date → daypart → why busy, or absent when free. */
 export type AvailabilityMatrix = Map<string, Map<IsoDateString, Map<Daypart, AvailabilityReason>>>;
 
+/** user → date → the dayparts a weekly rule would make busy, but that were freed by hand. */
+type FreedCells = Map<string, Map<IsoDateString, Set<Daypart>>>;
+
 /**
  * Who is free when: what people said about their own time, and what their
  * synced calendar says (docs/06). Three sources feed one matrix; a one-off
  * block wins over a rule, and both over the calendar, for the reason shown.
+ * A one-off can also free a daypart from a weekly rule for one date; the
+ * calendar still counts then.
  *
  * Reasons stay inside the API except for the person themselves: a group
  * only ever learns busy or free.
  */
 export class AvailabilityService {
-    /**
-     * Three queries for any number of people and days, then pure bookkeeping.
-     * A one-off block wins over a rule for the reason shown, since it is the
-     * more deliberate statement; both mean busy.
-     */
+    /** Who is busy when, and why; see `compute`. */
     static async matrix(
         userIds: string[],
         from: IsoDateString,
         to: IsoDateString,
     ): Promise<AvailabilityMatrix> {
+        return (await AvailabilityService.compute(userIds, from, to)).busy;
+    }
+
+    /**
+     * Three queries for any number of people and days, then pure bookkeeping.
+     * A one-off block wins over a rule for the reason shown, since it is the
+     * more deliberate statement; both mean busy. A one-off marked free takes
+     * that daypart away from a weekly rule for that date, and says so in
+     * `freed` for the owner's own view.
+     */
+    private static async compute(
+        userIds: string[],
+        from: IsoDateString,
+        to: IsoDateString,
+    ): Promise<{ busy: AvailabilityMatrix; freed: FreedCells }> {
         const matrix: AvailabilityMatrix = new Map(
             userIds.map((id) => [id, new Map<IsoDateString, Map<Daypart, AvailabilityReason>>()]),
         );
+        const freed: FreedCells = new Map(
+            userIds.map((id) => [id, new Map<IsoDateString, Set<Daypart>>()]),
+        );
         if (userIds.length === 0) {
-            return matrix;
+            return { busy: matrix, freed };
         }
         const windowStart = DateTime.fromISO(from, { zone: TIME_ZONE })
             .startOf('day')
@@ -112,12 +131,21 @@ export class AvailabilityService {
             byDate.set(date, byDaypart);
         };
 
+        const freedByHand = new Set<string>();
         for (const block of blocks) {
-            mark(block.userId, block.date, block.daypart, 'manual');
+            if (block.free) {
+                freedByHand.add(`${block.userId}|${block.date}|${block.daypart}`);
+            } else {
+                mark(block.userId, block.date, block.daypart, 'manual');
+            }
         }
         for (const rule of rules) {
             for (const date of daysByWeekday.get(rule.weekday) ?? []) {
-                if (rule.appliesOn(date, rule.weekday)) {
+                if (!rule.appliesOn(date, rule.weekday)) continue;
+                if (freedByHand.has(`${rule.userId}|${date}|${rule.daypart}`)) {
+                    const byDate = freed.get(rule.userId);
+                    byDate?.set(date, (byDate.get(date) ?? new Set<Daypart>()).add(rule.daypart));
+                } else {
                     mark(rule.userId, date, rule.daypart, 'rule');
                 }
             }
@@ -134,7 +162,7 @@ export class AvailabilityService {
                 if (inWindow.has(date)) mark(event.userId, date, daypart, 'calendar');
             }
         }
-        return matrix;
+        return { busy: matrix, freed };
     }
 
     /** The events that block, minus the ones their owner told the app to ignore. */
@@ -210,15 +238,16 @@ export class AvailabilityService {
         from: IsoDateString,
         to: IsoDateString,
     ): Promise<MyAvailabilityResponse> {
-        const [matrix, titles] = await Promise.all([
-            AvailabilityService.matrix([user.id], from, to),
+        const [{ busy, freed }, titles] = await Promise.all([
+            AvailabilityService.compute([user.id], from, to),
             AvailabilityService.calendarTitles(user.id, from, to),
         ]);
         return AvailabilityPresenter.mine(
             from,
             to,
             eachDay(from, to),
-            matrix.get(user.id) ?? new Map<IsoDateString, Map<Daypart, AvailabilityReason>>(),
+            busy.get(user.id) ?? new Map<IsoDateString, Map<Daypart, AvailabilityReason>>(),
+            freed.get(user.id) ?? new Map<IsoDateString, Set<Daypart>>(),
             titles,
         );
     }

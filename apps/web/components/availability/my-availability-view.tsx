@@ -21,6 +21,7 @@ import {
 } from '@/hooks/queries/use-availability';
 import { errorKey } from '@/lib/api/errors';
 import { currentMonth, monthLabel, monthRange, shiftMonth } from '@/lib/month';
+import { changeForTap } from '@/lib/my-availability';
 import { todayIso } from '@/lib/occurrence-format';
 
 /**
@@ -121,9 +122,12 @@ export function MyAvailabilityView() {
                             days={availability.data.days}
                             today={today}
                             pending={availability.isPlaceholderData}
-                            onToggle={(date, daypart, busy) =>
-                                block.mutate({ date, daypart, busy, from, to })
-                            }
+                            onToggle={(date, daypart, state) => {
+                                const change = changeForTap(state);
+                                if (change !== null) {
+                                    block.mutate({ date, daypart, change, from, to });
+                                }
+                            }}
                         />
                     )}
                 </section>

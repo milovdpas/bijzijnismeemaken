@@ -7,12 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { DaypartGrid } from '@/components/availability/daypart-grid';
 import type { GridRow } from '@/components/availability/daypart-grid';
 import { dayLabel, isWeekend } from '@/lib/month';
+import { cellState } from '@/lib/my-availability';
+import type { CellState } from '@/lib/my-availability';
 
 /**
- * A month as rows of the daypart grid. Rule cells are marks here, not
- * buttons: the week schedule is where rules change. Calendar cells carry
- * the event's title, since this is the owner's own view. Past days are left
- * out; blocking them serves nobody.
+ * A month as rows of the daypart grid. A rule cell here frees that date
+ * alone (a holiday in a week of work mornings); the week schedule is where
+ * the rule itself changes. Calendar cells carry the event's title, since
+ * this is the owner's own view. Past days are left out; blocking them
+ * serves nobody.
  */
 export function MonthGrid({
     days,
@@ -24,7 +27,7 @@ export function MonthGrid({
     days: MyAvailabilityDay[];
     today: string;
     pending: boolean;
-    onToggle: (date: string, daypart: Daypart, busy: boolean) => void;
+    onToggle: (date: string, daypart: Daypart, state: CellState) => void;
     className?: string;
 }) {
     const { i18n } = useTranslation();
@@ -38,7 +41,7 @@ export function MonthGrid({
             highlight: day.date === today,
             shaded: isWeekend(day.date),
             cells: Object.fromEntries(
-                DAYPART_ORDER.map((daypart) => [daypart, day.dayparts[daypart] ?? 'free']),
+                DAYPART_ORDER.map((daypart) => [daypart, cellState(day, daypart)]),
             ) as GridRow['cells'],
             titles: day.calendarTitles,
         }));

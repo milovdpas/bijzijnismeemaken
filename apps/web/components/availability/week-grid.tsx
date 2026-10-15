@@ -51,7 +51,9 @@ export function WeekGrid({
             rows={rows}
             rulesEditable
             pending={pending}
-            onToggle={(key, daypart, busy) => onToggle(Number(key) as Weekday, daypart, busy)}
+            onToggle={(key, daypart, state) =>
+                onToggle(Number(key) as Weekday, daypart, state === 'free')
+            }
             className={className}
         />
     );
