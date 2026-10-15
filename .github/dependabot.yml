@@ -5,6 +5,8 @@
 version: 2
 updates:
     - package-ecosystem: npm
+      assignees:
+          - milovdpas
       directory: /
       schedule:
           interval: weekly
@@ -32,6 +34,8 @@ updates:
           prefix: 'chore'
 
     - package-ecosystem: github-actions
+      assignees:
+          - milovdpas
       directory: /
       schedule:
           interval: weekly
@@ -44,6 +48,8 @@ updates:
     # The images stay on the Node LTS line (even majors); a move to the next
     # LTS is done by hand, together with CI and the engines field.
     - package-ecosystem: docker
+      assignees:
+          - milovdpas
       directory: /apps/api
       schedule:
           interval: weekly
@@ -57,6 +63,8 @@ updates:
           prefix: 'chore'
 
     - package-ecosystem: docker
+      assignees:
+          - milovdpas
       directory: /apps/web
       schedule:
           interval: weekly
