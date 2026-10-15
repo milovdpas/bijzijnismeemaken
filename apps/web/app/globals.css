@@ -152,11 +152,15 @@
  * Dialogs are sized and centred against the *visual* viewport, so an open
  * keyboard cannot push their footer off the screen. `components/ui/dialog.tsx`
  * sets the two variables; the fallbacks here are the usual defaults, so
- * nothing changes until a keyboard actually opens.
+ * nothing changes until a keyboard actually opens. A dialog taller than that
+ * (a picked photo on a phone) scrolls inside itself, so its buttons stay
+ * reachable, without scrolling the page behind it.
  */
 [data-slot='dialog-content'] {
     top: calc(var(--vv-top, 0px) + var(--vv-h, 100dvh) / 2);
     max-height: calc(var(--vv-h, 100dvh) * 0.9);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 @layer base {
