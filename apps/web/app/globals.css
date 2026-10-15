@@ -169,6 +169,11 @@
     }
     body {
         @apply bg-background text-foreground;
+        /* A long link or word in what people write (a description, a note)
+           breaks instead of pushing its card wider than a phone, which would
+           make the whole page scroll sideways or zoom out. Only words that
+           would overflow are broken. */
+        overflow-wrap: break-word;
     }
     html {
         @apply font-sans;

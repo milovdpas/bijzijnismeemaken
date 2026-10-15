@@ -111,7 +111,8 @@ export function DateField({
                 >
                     <CalendarDays />
                 </PopoverTrigger>
-                <PopoverContent align="end">
+                {/* On a short screen (a phone on its side) the month scrolls rather than being cut off. */}
+                <PopoverContent align="end" className="max-h-(--available-height) overflow-y-auto">
                     <div className="flex items-center justify-between gap-2">
                         <Button
                             type="button"
