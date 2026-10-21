@@ -19,6 +19,10 @@ declare module '@tanstack/react-query' {
  * One QueryClient per browser tab, created inside state so a re-render of the
  * provider never throws the cache away.
  *
+ * Data is kept for half an hour after its screen closes, so coming back to a
+ * tab shows what was there at once and replaces it when the fresh answer
+ * arrives (after `staleTime`, it is refetched in the background).
+ *
  * Retries are for flaky networks, not for refusals: a 404 or 403 will not get
  * better by asking again, so only server errors and network failures retry.
  *
@@ -39,6 +43,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
                 defaultOptions: {
                     queries: {
                         staleTime: 30_000,
+                        gcTime: 30 * 60_000,
                         retry: (failureCount, error) =>
                             failureCount < 2 && !(error instanceof ApiError && error.status < 500),
                     },

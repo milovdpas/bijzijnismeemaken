@@ -24,6 +24,15 @@ const nextConfig: NextConfig = {
      */
     transpilePackages: ['@bzim/types'],
 
+    experimental: {
+        /**
+         * Keep visited pages in the browser's router for half an hour, so
+         * going back to a tab needs no round trip to the server. Safe because
+         * every page in the app is a shell: the data is fetched in the browser
+         * by TanStack Query, which shows what it has and refreshes it.
+         */
+        staleTimes: { dynamic: 1800 },
+    },
 };
 
 export default nextConfig;
