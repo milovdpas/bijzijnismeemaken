@@ -25,6 +25,8 @@ export const queryKeys = {
     },
     activities: {
         all: (groupId: string) => ['activities', groupId] as const,
+        /** Every list of the group's activities, whatever its filter. */
+        lists: (groupId: string) => ['activities', groupId, 'list'] as const,
         list: (groupId: string, label: string | undefined, sort: string) =>
             ['activities', groupId, 'list', label ?? 'all', sort] as const,
         detail: (groupId: string, activityId: string) =>

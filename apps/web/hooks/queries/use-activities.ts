@@ -1,7 +1,7 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import type { QueryKey, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import type {
     ActivityDetailDto,
     ActivityInput,
@@ -28,7 +28,7 @@ import {
     updateOccurrence,
 } from '@/lib/api/activities';
 import type { ActivityFilters } from '@/lib/api/activities';
-import { applyInterest } from '@/lib/interest';
+import { applyInterest, applyMyInterest } from '@/lib/interest';
 import { queryKeys } from '@/lib/query-keys';
 
 /** The group's list under the current filter. The previous list stays while a new filter loads. */
@@ -94,6 +94,58 @@ export function useDeleteActivity(groupId: string): UseMutationResult<void, Erro
         mutationFn: (activityId: string) => deleteActivity(groupId, activityId),
         onSuccess: (_result, activityId) => {
             client.removeQueries({ queryKey: queryKeys.activities.detail(groupId, activityId) });
+            void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
+        },
+    });
+}
+
+/**
+ * "I'm in" straight from a card. Every cached list of the group's activities
+ * and the activity's own page flip at once, and flip back if the server
+ * disagrees; the refetch afterwards brings who else is in.
+ */
+export function useSetMyInterest(
+    groupId: string,
+): UseMutationResult<
+    void,
+    Error,
+    { activityId: string; inFor: boolean },
+    { lists: [QueryKey, ActivityListingDto[] | undefined][]; detail?: ActivityDetailDto }
+> {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: ({ activityId, inFor }) => setMyInterest(groupId, activityId, inFor),
+        onMutate: async ({ activityId, inFor }) => {
+            await client.cancelQueries({ queryKey: queryKeys.activities.all(groupId) });
+            const lists = client.getQueriesData<ActivityListingDto[]>({
+                queryKey: queryKeys.activities.lists(groupId),
+            });
+            for (const [key, list] of lists) {
+                if (list === undefined) continue;
+                client.setQueryData(
+                    key,
+                    list.map((item) =>
+                        item.id === activityId ? applyMyInterest(item, inFor) : item,
+                    ),
+                );
+            }
+            const detailKey = queryKeys.activities.detail(groupId, activityId);
+            const detail = client.getQueryData<ActivityDetailDto>(detailKey);
+            if (detail !== undefined) {
+                client.setQueryData(detailKey, applyMyInterest(detail, inFor));
+            }
+            return { lists, detail };
+        },
+        onError: (_error, { activityId }, context) => {
+            for (const [key, list] of context?.lists ?? []) client.setQueryData(key, list);
+            if (context?.detail !== undefined) {
+                client.setQueryData(
+                    queryKeys.activities.detail(groupId, activityId),
+                    context.detail,
+                );
+            }
+        },
+        onSettled: () => {
             void client.invalidateQueries({ queryKey: queryKeys.activities.all(groupId) });
         },
     });

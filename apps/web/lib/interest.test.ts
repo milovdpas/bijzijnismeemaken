@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { ActivityDetailDto, UserSummary } from '@bzim/types';
+import type { ActivityDetailDto, ActivityListingDto, UserSummary } from '@bzim/types';
 
-import { applyInterest } from './interest';
+import { applyInterest, applyMyInterest } from './interest';
 
 const anna: UserSummary = { id: 'anna', handle: 'anna', displayName: 'Anna', avatarKey: 'cat' };
 const bob: UserSummary = { id: 'bob', handle: 'bob', displayName: 'Bob', avatarKey: 'dog' };
@@ -37,5 +37,16 @@ describe('applyInterest', () => {
         expect(applyInterest(activity, { userId: 'anna', isMe: false, summary: anna }, true)).toBe(
             activity,
         );
+    });
+});
+
+describe('applyMyInterest', () => {
+    const listed = { iAmIn: false, interestCount: 2 } as unknown as ActivityListingDto;
+
+    it('puts the viewer in or out with the count, and leaves an unchanged one alone', () => {
+        const joined = applyMyInterest(listed, true);
+        expect(joined).toMatchObject({ iAmIn: true, interestCount: 3 });
+        expect(applyMyInterest(joined, false)).toMatchObject({ iAmIn: false, interestCount: 2 });
+        expect(applyMyInterest(listed, false)).toBe(listed);
     });
 });

@@ -1,4 +1,4 @@
-import type { ActivityDetailDto, UserSummary } from '@bzim/types';
+import type { ActivityDetailDto, ActivityListingDto, UserSummary } from '@bzim/types';
 
 /**
  * The activity as it will read once the server agrees: the person in or
@@ -24,5 +24,18 @@ export function applyInterest(
         interests,
         interestCount: activity.interestCount + (inFor ? 1 : -1),
         iAmIn: target.isMe ? inFor : activity.iAmIn,
+    };
+}
+
+/**
+ * A listed activity once the viewer is in or out: `iAmIn` and the count.
+ * Works on the detail too; who else is in comes with the next refetch.
+ */
+export function applyMyInterest<T extends ActivityListingDto>(activity: T, inFor: boolean): T {
+    if (activity.iAmIn === inFor) return activity;
+    return {
+        ...activity,
+        iAmIn: inFor,
+        interestCount: Math.max(0, activity.interestCount + (inFor ? 1 : -1)),
     };
 }
